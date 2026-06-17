@@ -29,7 +29,11 @@
 #     elyonchain/validatornode:latest
 #   open http://localhost:3000   # lands on /manager (the validator panel)
 # =============================================================================
-FROM elyonchain/node:latest
+# elyonchain/adminnode is the published Elyon chain runtime — it supplies the
+# patched Nethermind binaries, the entrypoint, and the Node runtime. This build
+# strips everything admin from its dashboard, producing the validator-only node
+# that is itself published as `elyonchain/node`.
+FROM elyonchain/adminnode:latest
 
 # Replace the bundled dashboard with the validator-only build. node_modules from
 # the base image is preserved (same package.json — no new dependencies added),

@@ -4,7 +4,7 @@
 
 **Run your own Elyon Chain validator. Join the network, stake, serve transactions, and earn your tier‑based share of the gas fees.**
 
-[![Docker](https://img.shields.io/badge/docker-elyonchain%2Fvalidatornode-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/elyonchain/validatornode)
+[![Docker](https://img.shields.io/badge/docker-elyonchain%2Fnode-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/elyonchain/node)
 [![Consensus](https://img.shields.io/badge/consensus-APOS%20(Proof%20of%20Stake)-15a878)](#how-validators-earn)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -101,7 +101,7 @@ docker run -d --name elyon-validator --restart unless-stopped \
   -p 3000:3000 -p 8545:8545 -p 30303:30303 -p 30303:30303/udp \
   -v elyon-validator-data:/data \
   -e ADMIN_URL=http://<ADMIN_NODE_IP>:3000 \
-  elyonchain/validatornode:latest
+  elyonchain/node:latest
 ```
 
 Then open **`http://<your-server-ip>:3000`** — it lands on the validator panel (`/manager`).
@@ -181,7 +181,7 @@ All settings are environment variables — no rebuild needed.
 # docker-compose.yml
 services:
   validator:
-    image: elyonchain/validatornode:latest
+    image: elyonchain/node:latest
     container_name: elyon-validator
     restart: unless-stopped
     environment:
@@ -231,7 +231,7 @@ server {
 ## Updating
 
 ```bash
-docker pull elyonchain/validatornode:latest
+docker pull elyonchain/node:latest
 docker rm -f elyon-validator
 # re-run the same `docker run …` command — your /data volume is preserved
 ```
@@ -255,16 +255,16 @@ docker run --rm -v elyon-validator-data:/data -v "$PWD":/backup alpine \
 ```bash
 git clone https://github.com/Elyon/elyon-validator-node.git
 cd elyon-validator-node
-docker build -t elyonchain/validatornode:latest .
+docker build -t elyonchain/node:latest .
 ```
 
-The image builds **on top of the published chain engine** (`FROM elyonchain/node`), which supplies the patched Nethermind binaries and entrypoint; this repo replaces the dashboard with the validator‑only build.
+The image builds **on top of the published chain engine** (`FROM elyonchain/adminnode`), which supplies the patched Nethermind binaries and entrypoint; this repo replaces the dashboard with the validator‑only build.
 
 ## What's inside
 
 ```
 .
-├── Dockerfile          # builds the validator image (FROM elyonchain/node)
+├── Dockerfile          # builds the validator image (FROM elyonchain/adminnode)
 ├── README.md
 └── dashboard/          # the validator-only web app (Node.js + Express)
     ├── server.js       #   routes + RPC proxy; admin routes removed, admin API hard-disabled

@@ -12,7 +12,6 @@
 
 ---
 
-> **This is the validator‑only distribution.** It contains everything you need to run a validator and **nothing about administering the chain** — there is no `/admin` dashboard, no chain‑creation/approval/tier controls, and no faucet. Those belong to the network's admin node. See [What's intentionally not here](#whats-intentionally-not-here).
 
 ## Table of contents
 
@@ -33,19 +32,18 @@
 - [Troubleshooting](#troubleshooting)
 - [FAQ](#faq)
 - [Glossary](#glossary)
-- [What's intentionally not here](#whats-intentionally-not-here)
 - [License](#license)
 
 ---
 
 ## Overview
 
-**Elyon Chain** is an EVM Layer‑2 network running a patched [Nethermind](https://nethermind.io) client with **APOS** (Authorized Proof of Stake) consensus and a native coin, **ELN**. Gas follows the standard Ethereum EIP‑1559 model: the base fee is burned, and the priority tip is split between the **relaying validator** (by tier) and the network admin.
+**Elyon Chain** is an EVM Layer‑2 network running a patched [Nethermind](https://nethermind.io) client with **APOS** (Authorized Proof of Stake) consensus and a native coin, **ELN**. Gas follows the standard Ethereum EIP‑1559 model: the base fee is burned, and the priority tip is split between the **relaying validator** (by tier) and the network.
 
 A **validator node** is an operator‑run node that:
 
 1. Joins an existing Elyon chain and stays in sync.
-2. Stakes ELN through an admin‑published **staking package** to become an approved validator.
+2. Stakes ELN through a network‑published **staking package** to become an approved validator.
 3. Relays user transactions through its own RPC and earns a **tier‑based share** of their tips.
 4. Publishes its own **delegator packages** so others can delegate ELN into the validator's pool (which raises the validator's tier).
 
@@ -58,7 +56,7 @@ Every transaction pays `gasUsed × effectiveGasPrice`, made of two parts:
 | Part | Who gets it |
 |---|---|
 | **Base fee** (EIP‑1559) | 🔥 **Burned** — nobody receives it |
-| **Priority tip** (`effectiveGasPrice − baseFee`) | Split: **your tier %** to the relaying validator, the remainder to the admin |
+| **Priority tip** (`effectiveGasPrice − baseFee`) | Split: **your tier %** to the relaying validator, the remainder to the network |
 
 - Your **fee‑share %** is set by the network's **tier curve**: as your **pool** (your own stake **+** your delegators' deposits) crosses each threshold, your share rises to that tier.
 - You earn a tip share **only on transactions relayed through your node's RPC** (your node signs a verified attestation for each one) and **only while you are an `ACTIVE` validator**.
@@ -73,7 +71,6 @@ Every transaction pays `gasUsed × effectiveGasPrice`, made of two parts:
 - ✅ Key stays in your browser tab — signed per‑transaction, never uploaded.
 - ✅ Publishes your own delegator packages (rate, lock, minimum, early‑exit penalty).
 - ✅ Runs as a non‑root user inside the container; data persisted to a Docker volume.
-- ✅ **No admin surface** — this node can never administer the chain.
 
 ## Requirements
 
@@ -92,7 +89,7 @@ Every transaction pays `gasUsed × effectiveGasPrice`, made of two parts:
 | `8545` | JSON‑RPC | Only if you need external RPC |
 | `30303` (TCP+UDP) | P2P with the chain | **Yes** (so the node can peer) |
 
-You also need the **admin node URL** of the chain you're joining, e.g. `http://203.0.113.10:3000`, and some **ELN** in your validator wallet to stake (ask the network admin / use the network faucet).
+You also need the **admin node URL** of the chain you're joining, e.g. `http://203.0.113.10:3000`, and some **ELN** in your validator wallet to stake (use the network faucet).
 
 ## Quick start
 
@@ -132,13 +129,13 @@ If you used "Create a key", joining is automatic. Otherwise the node fetches the
 
 Open **My Validator → Apply**:
 
-1. Pick one of the admin's **staking packages** (each has a lock term, minimum stake, and APR).
+1. Pick one of the network's **staking packages** (each has a lock term, minimum stake, and APR).
 2. Enter your **stake amount** — at least the larger of the network minimum and the package minimum. Your stake **locks for the package term**.
 3. Press **🚀 Apply as Validator**. Your application is now staked and **pending**.
 
 ### 5. Get approved
 
-The network admin reviews applications and approves yours, issuing your **public Elyon code** (e.g. `VAL‑ABC123`). Your panel refreshes automatically to **ACTIVE** and shows the code — share it with delegators so they can fund your pool.
+Your application is reviewed and approved, and you receive your **public Elyon code** (e.g. `VAL‑ABC123`). Your panel refreshes automatically to **ACTIVE** and shows the code — share it with delegators so they can fund your pool.
 
 ### 6. Publish a package for delegators
 
@@ -267,12 +264,12 @@ The image builds **on top of the published chain engine** (`FROM elyonchain/admi
 ├── Dockerfile          # builds the validator image (FROM elyonchain/adminnode)
 ├── README.md
 └── dashboard/          # the validator-only web app (Node.js + Express)
-    ├── server.js       #   routes + RPC proxy; admin routes removed, admin API hard-disabled
+    ├── server.js       #   routes + JSON-RPC proxy
     ├── apos.js         #   validator/delegator + read endpoints
     ├── operator-panel.js, simple-admin.js, leaderboard.js, bridge.js
     ├── *-build.json    #   contract ABIs/bytecode (registry, pointer, token, staking)
     └── public/
-        ├── simple-admin/   # /manager — the validator panel (no admin tabs)
+        ├── simple-admin/   # /manager — the validator panel
         ├── operator/       # /node    — join / earnings portal
         ├── owner.html      #            delegator portal
         ├── validator.html  #            your public validator page
@@ -283,7 +280,6 @@ The image builds **on top of the published chain engine** (`FROM elyonchain/admi
 
 - 🔑 **Your key never leaves the browser tab** — it's used to sign each transaction client‑side and is never persisted server‑side.
 - 👤 The container runs the dashboard as a **non‑root** user; code under `/dashboard` and `/nethermind` is read‑only.
-- 🚫 **No admin capability** — admin API paths return `404` and there is no admin UI, so a compromised validator panel cannot administer the chain.
 - 🌐 Don't expose port `3000` directly to the internet without a reverse proxy + access control. Expose `30303` for P2P.
 - 💾 Treat your key file like cash. Anyone with it controls your validator wallet.
 
@@ -297,14 +293,13 @@ The image builds **on top of the published chain engine** (`FROM elyonchain/admi
 | Transaction rejected as too cheap | The chain enforces a minimum gas price. Use the node's suggested gas price (the wallet does this automatically). |
 | `Pruned history unavailable` on a receipt | A harmless race right after a tx mines; the dashboard retries automatically. |
 | Apply fails: "stake below minimum" | Stake at least the larger of the network minimum and the package minimum. |
-| Can't withdraw stake yet | Your package lock hasn't elapsed. Withdrawals are allowed after the lock (or if the admin rejects/suspends you). |
+| Can't withdraw stake yet | Your package lock hasn't elapsed. Withdrawals are allowed once the lock has elapsed. |
 | Container unhealthy | `docker logs elyon-validator` — usually a missing `ADMIN_URL` or unreachable admin node. |
 
 ## FAQ
 
-**Do I need the whole chain history?** No — the node syncs from the admin/peers and prunes history; you don't reburn genesis.
+**Do I need the whole chain history?** No — the node syncs from its peers and prunes history; you don't reburn genesis.
 
-**Can this node create or administer a chain?** No. This is validator‑only by design. Admin functions live on the admin node.
 
 **How much do I need to stake?** At least the larger of the network minimum and your chosen package's minimum. More stake (and more delegations) raises your tier and fee share.
 
@@ -319,21 +314,10 @@ The image builds **on top of the published chain engine** (`FROM elyonchain/admi
 - **ELN** — Elyon Chain's native coin (gas + staking).
 - **APOS** — Authorized Proof of Stake, Elyon's consensus.
 - **Pool** — your own stake **+** delegators' deposits; drives your tier.
-- **Tier** — pool threshold → fee‑share %, set by the admin's tier curve.
-- **Staking package** — admin‑published terms (lock, min, APR) you stake through.
+- **Tier** — pool threshold → fee‑share %, set by the network's tier curve.
+- **Staking package** — network‑published terms (lock, min, APR) you stake through.
 - **Delegator package** — terms **you** publish for delegators (rate, lock, min, penalty).
 - **Elyon code** — your public validator code (e.g. `VAL‑ABC123`) for delegators.
-
-## What's intentionally not here
-
-To keep validators safe and the network clean, this distribution **omits all admin functionality**:
-
-- ❌ `/admin` and `/setup` routes + the admin wizard page
-- ❌ Admin API: approve/reject/suspend validators, set tiers, create/convert a chain, deploy/manage the registry, withdraw admin fees (all return `404`)
-- ❌ Admin tabs in the panel (Validators, Tier Curve, Faucet, LB Weights)
-- ❌ The faucet service
-
-If you operate the **admin** node, use the admin distribution instead.
 
 ## License
 

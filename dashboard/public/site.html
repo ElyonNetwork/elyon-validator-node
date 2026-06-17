@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Elyon Chain — The validator economy.</title>
+<meta name="description" content="Elyon Chain — a self-hosted EVM Layer 1 with APOS consensus. Validators stake into the APOS registry, earn admin approval and a public code, and share transaction fees by tier. Delegators fund validator pools by code and earn validator-paid rewards.">
+<link rel="icon" href="site-assets/icon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="/elyon-theme.css">
+<link rel="stylesheet" href="/elyon-fx.css">
+<script defer src="/elyon-fx.js"></script>
+<link rel="stylesheet" href="/elyon-app.css">
+<style>
+/* ════════════════════════════════════════════════════════════════════
+   ELYON HOME v10 — light premium identity (matches the rest of the app).
+   #f6f8fa base · #ffffff cards · emerald #15a878→#0e7d5a gradients ·
+   dark ink #1c2733 / #5a6b7a secondary · thin rgba(20,40,60,.08) borders.
+   All data wiring (role-info, validators, faucet, admin gating) preserved.
+   ════════════════════════════════════════════════════════════════════ */
+:root{
+  --sp-bg:#f6f8fa; --sp-surf:#ffffff; --sp-line:rgba(20,40,60,.08);
+  --sp-text:#1c2733; --sp-text2:#5a6b7a; --sp-text3:#5a6b7a;
+  --em:#15a878; --tl:#0e7d5a; --cy:#0c8f68;
+  --grad:linear-gradient(120deg,#15a878,#0e7d5a);
+  --grad-text:linear-gradient(120deg,#0c8f68,#0e7d5a);
+  --fh:'Space Grotesk','Inter',sans-serif;
+  --fm:'JetBrains Mono','Fira Code',Consolas,monospace;
+  --ease:cubic-bezier(.16,1,.3,1);
+}
+body.elx-shelled{color:var(--sp-text)}
+.elx-work{max-width:1320px}
+h1,h2,h3{font-family:var(--fh);color:var(--sp-text)}
+a{color:var(--tl)}
+.hide{display:none!important}
+
+.net-banner{background:linear-gradient(90deg,rgba(21,168,120,.10),rgba(14,125,90,.06));color:#0e7d5a;
+  text-align:center;font-size:.82rem;font-weight:600;padding:10px 16px;letter-spacing:.2px;
+  border:1px solid rgba(21,168,120,.25);border-radius:14px;margin-bottom:22px}
+
+/* ───────────────────────── HERO — full viewport ───────────────────────── */
+.hero{position:relative;min-height:calc(100vh - 150px);display:flex;align-items:center;padding:30px 0 60px;text-align:left;justify-content:flex-start}
+/* elyon-theme.css (legacy marketing CSS, loaded first) paints a WHITE radial
+   vignette over .hero via .hero::after (z-index:1) — on the light page it
+   washed the CTA + all hero text to near-invisible. Kill it and keep the
+   hero content stacked above any leftover theme overlay layers. */
+.hero::after{content:none!important;display:none!important}
+.hero-inner{position:relative;z-index:2}
+.hero-inner{display:grid;grid-template-columns:1.12fr .88fr;gap:48px;align-items:center;width:100%}
+@media(max-width:980px){.hero-inner{grid-template-columns:1fr;gap:34px}.hero{min-height:0;padding:18px 0 40px}}
+.hero h1{font-size:clamp(2.8rem,6.6vw,5.2rem);margin:18px 0 14px}
+.hero .sub{font-family:var(--fh);font-weight:600;font-size:clamp(1.05rem,2vw,1.5rem);color:var(--sp-text2);letter-spacing:-.01em;margin-bottom:14px}
+.hero .sub b{color:var(--sp-text)}
+.hero .lead{font-size:clamp(.95rem,1.4vw,1.06rem);color:var(--sp-text2);line-height:1.75;max-width:560px;margin-bottom:30px}
+.cta-row{display:flex;gap:14px;flex-wrap:wrap}
+.cta-row .fx-btn-neo{font-size:1rem;padding:15px 30px}
+
+/* live network widget — floating premium card */
+.live-widget{position:relative;padding:24px;animation:lwFloat 7s ease-in-out infinite}
+@keyframes lwFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+.live-widget .lw-head{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.live-widget .lw-head .dot{width:9px;height:9px;border-radius:50%;background:var(--em);box-shadow:0 0 8px rgba(21,168,120,.5);animation:fxPulse 1.8s ease-in-out infinite}
+.live-widget .lw-head span{font-family:var(--fm);font-size:.68rem;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--tl)}
+.lw-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.lw-stat{background:#f8fafb;border:1px solid var(--sp-line);border-radius:15px;padding:14px 15px;transition:border-color .3s}
+.lw-stat:hover{border-color:rgba(21,168,120,.35)}
+.lw-stat .lbl{font-family:var(--fm);font-size:.6rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;color:var(--sp-text3)}
+.lw-stat .val{font-family:var(--fh);font-weight:800;font-size:1.42rem;color:var(--sp-text);margin-top:6px;line-height:1.1;font-variant-numeric:tabular-nums;word-break:break-word}
+.lw-stat .val.accent{color:#0e7d5a}
+/* latest-blocks ticker */
+.lw-ticker{margin-top:14px;border-top:1px solid var(--sp-line);padding-top:13px}
+.lw-ticker .tl{font-family:var(--fm);font-size:.58rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:var(--sp-text3);margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.lw-ticker .tl i{color:var(--cy);font-size:.66rem}
+#blk-ticker{display:flex;gap:8px;overflow:hidden;flex-wrap:nowrap}
+.blk-chip{flex:0 0 auto;font-family:var(--fm);font-size:.7rem;font-weight:600;color:#0e7d5a;
+  background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.30);border-radius:9px;padding:5px 10px;
+  animation:chipIn .55s var(--ease)}
+.blk-chip.new{border-color:rgba(21,168,120,.60);color:#0a5c43;box-shadow:0 0 10px rgba(21,168,120,.22)}
+@keyframes chipIn{from{opacity:0;transform:translateX(-16px) scale(.85)}to{opacity:1;transform:none}}
+
+/* ─────────────────────── SCROLL STORY (3 chapters) ─────────────────────── */
+.story{position:relative;display:grid;grid-template-columns:230px 1fr;gap:30px;padding:64px 0 30px;border:0}
+@media(max-width:880px){.story{grid-template-columns:1fr;gap:14px;padding:44px 0 20px}}
+.story .ghost{position:relative}
+.story .ghost .num{position:sticky;top:110px;font-family:var(--fh);font-weight:800;font-size:clamp(4.4rem,9vw,8rem);
+  line-height:1;color:transparent;-webkit-text-stroke:1px rgba(14,125,90,.30);letter-spacing:-.04em;display:block}
+.story .ghost .num::after{content:attr(data-l);position:absolute;left:3px;top:3px;-webkit-text-stroke:0;
+  background:linear-gradient(160deg,rgba(14,125,90,.20),rgba(21,168,120,.06));-webkit-background-clip:text;background-clip:text;color:transparent}
+@media(max-width:880px){.story .ghost .num{position:static;font-size:3.4rem}}
+.story h2{font-size:clamp(1.7rem,3.6vw,2.7rem);letter-spacing:-.03em;margin:14px 0 12px}
+.story h2 .gx{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.story .lede{font-size:1.02rem;color:var(--sp-text2);max-width:640px;line-height:1.75;margin-bottom:26px}
+.story .lede b{color:var(--sp-text)}
+.story .viz{padding:26px;overflow:hidden}
+
+/* step chips inside chapter 1 */
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:14px}
+.steps .stp{padding:20px}
+.steps .stp .ic{width:46px;height:46px;border-radius:13px;display:flex;align-items:center;justify-content:center;
+  font-size:1.15rem;color:#ffffff;background:var(--grad);box-shadow:0 8px 26px rgba(21,168,120,.30);margin-bottom:13px}
+.steps .stp h3{font-size:1.02rem;margin-bottom:7px}
+.steps .stp p{font-size:.85rem;color:var(--sp-text2);line-height:1.6}
+.steps .stp code{font-family:var(--fm);font-size:.78rem;color:var(--tl)}
+
+/* tier-curve staircase (draws itself on reveal) */
+.tier-svg{width:100%;height:auto;display:block}
+.tier-svg .stair{fill:none;stroke:url(#tiergrad);stroke-width:3;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:1;stroke-dashoffset:1}
+[data-reveal].visible .tier-svg .stair{stroke-dashoffset:0;transition:stroke-dashoffset 2.1s cubic-bezier(.4,0,.2,1) .25s}
+.tier-svg .tnode{fill:#ffffff;stroke:#15a878;stroke-width:2;opacity:0}
+.tier-svg .tlab,.tier-svg .tsub{font-family:'JetBrains Mono',monospace;opacity:0}
+.tier-svg .tlab{fill:#1c2733;font-size:13px;font-weight:700}
+.tier-svg .tsub{fill:#5a6b7a;font-size:10.5px}
+.tier-svg .axis{stroke:rgba(20,40,60,.12);stroke-width:1}
+.tier-svg .axlab{font-family:'JetBrains Mono',monospace;fill:#8b9aa7;font-size:10px;letter-spacing:.12em}
+[data-reveal].visible .tier-svg .tnode,[data-reveal].visible .tier-svg .tlab,[data-reveal].visible .tier-svg .tsub{opacity:1;transition:opacity .5s ease}
+[data-reveal].visible .tier-svg .t1{transition-delay:.7s}
+[data-reveal].visible .tier-svg .t2{transition-delay:1.1s}
+[data-reveal].visible .tier-svg .t3{transition-delay:1.5s}
+[data-reveal].visible .tier-svg .t4{transition-delay:1.9s}
+.viz-note{font-family:var(--fm);font-size:.64rem;color:var(--sp-text3);letter-spacing:.08em;margin-top:10px;text-transform:uppercase}
+
+/* delegator-flow diagram (dots flow into the pool ring) */
+.flow-svg{width:100%;height:auto;display:block}
+.flow-svg .fpath{fill:none;stroke:rgba(14,125,90,.30);stroke-width:1.6;stroke-dasharray:5 7}
+.flow-svg .fdot{fill:#15a878}
+.flow-svg .fdot.c{fill:#0c8f68}
+.flow-svg .pring-bg{fill:none;stroke:rgba(20,40,60,.08);stroke-width:9}
+.flow-svg .pring{fill:none;stroke:url(#poolgrad);stroke-width:9;stroke-linecap:round;
+  stroke-dasharray:0 100;transform:rotate(-90deg);transform-origin:500px 110px}
+[data-reveal].visible .flow-svg .pring{stroke-dasharray:76 100;transition:stroke-dasharray 1.9s cubic-bezier(.4,0,.2,1) .4s}
+.flow-svg .ptxt{font-family:'Space Grotesk',sans-serif;font-weight:800;fill:#1c2733;font-size:17px;letter-spacing:.04em}
+.flow-svg .ptxt2{font-family:'JetBrains Mono',monospace;fill:#8b9aa7;font-size:10px;letter-spacing:.14em}
+.flow-svg .src{fill:rgba(21,168,120,.12);stroke:rgba(21,168,120,.40);stroke-width:1.4}
+.flow-svg .srctxt{font-family:'JetBrains Mono',monospace;fill:#5a6b7a;font-size:10.5px;letter-spacing:.08em}
+@media(prefers-reduced-motion:reduce){.flow-svg .fdot{display:none}.live-widget{animation:none}.blk-chip{animation:none}}
+
+/* ───────────────────── VALIDATOR SHOWCASE ───────────────────── */
+.product{position:relative;padding:56px 0 26px;border:0;max-width:none;margin:0}
+.product h2{font-size:clamp(1.8rem,4vw,2.9rem);letter-spacing:-.03em;margin:14px 0 12px;max-width:760px}
+.product h2 .gx{background:var(--grad-text);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.product .lede{font-size:1.02rem;color:var(--sp-text2);max-width:660px;line-height:1.75;margin-bottom:30px}
+.val-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px;perspective:1100px}
+.val-card{padding:22px;cursor:default}
+.val-grid>[data-reveal]{transform:translateY(40px) rotateX(9deg) scale(.96)}
+.val-grid>[data-reveal].visible{transform:none}
+.val-card .topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px}
+.val-card .fx-badge-code{font-size:1rem}
+.val-card .status-pill{font-family:var(--fm);font-size:.58rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:var(--tl);
+  background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.35);border-radius:50px;padding:4px 11px;white-space:nowrap}
+.val-card .addr{font-family:var(--fm);font-size:.66rem;color:var(--sp-text3);word-break:break-all;margin-bottom:14px}
+.val-card .offer{font-style:italic;font-size:.79rem;color:var(--sp-text2);line-height:1.6;margin-bottom:14px;
+  background:rgba(21,168,120,.07);border:1px solid rgba(21,168,120,.20);border-radius:12px;padding:10px 13px;word-break:break-word}
+.pool-row{display:flex;align-items:center;gap:16px;margin-bottom:6px}
+.pool-row .vd{width:74px;height:74px;flex:0 0 auto}
+.vd circle{fill:none;stroke-width:9;transform:rotate(-90deg);transform-origin:center}
+.vd .bgc{stroke:rgba(20,40,60,.08)}
+.vd .seg{stroke-dasharray:var(--p) 100}
+.vd .self{stroke:#15a878}
+.vd .deleg{stroke:rgba(21,168,120,.35)}
+.val-card.visible .vd .seg{animation:vdIn 1.3s cubic-bezier(.4,0,.2,1) .35s both}
+@keyframes vdIn{from{stroke-dasharray:0 100}}
+.pool-row .pool{font-family:var(--fh);font-weight:800;font-size:1.5rem;color:var(--sp-text);line-height:1.1}
+.pool-row .pool small{font-size:.7rem;font-weight:700;color:var(--tl);letter-spacing:.08em}
+.pool-row .pool-lbl{font-family:var(--fm);font-size:.58rem;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--sp-text3);margin-bottom:5px}
+.vd-legend{display:flex;gap:14px;font-family:var(--fm);font-size:.6rem;color:var(--sp-text3);margin-bottom:14px}
+.vd-legend i{display:inline-block;width:8px;height:8px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.vd-legend .a i{background:#15a878}.vd-legend .b i{background:rgba(21,168,120,.35)}
+.val-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.val-stats .vs{background:#f4f8f6;border:1px solid var(--sp-line);border-radius:12px;padding:9px 6px;text-align:center;transition:border-color .3s}
+.val-card:hover .val-stats .vs{border-color:rgba(21,168,120,.30)}
+.val-stats .vs b{display:block;font-family:var(--fh);font-weight:800;font-size:.98rem;color:#0e7d5a}
+.val-stats .vs span{font-size:.56rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--sp-text3)}
+.val-card .fx-btn-neo{width:100%;padding:12px 20px}
+.val-empty{grid-column:1/-1;border:1px dashed rgba(21,168,120,.35);border-radius:20px;background:#ffffff;
+  padding:34px;color:var(--sp-text2);text-align:center}
+
+/* run-your-node (admin) */
+pre.code{background:#ffffff;color:#0e7d5a;padding:18px 20px;border-radius:14px;font-family:var(--fm);font-size:.8rem;
+  overflow:auto;line-height:1.6;margin-top:12px;border:1px solid rgba(21,168,120,.20);box-shadow:0 8px 32px rgba(20,40,60,.08)}
+.node-steps{display:grid;gap:18px;max-width:920px}
+.node-steps .fx-card-neo{padding:22px}
+.node-steps h3{font-size:1.05rem;margin-bottom:4px}
+.node-steps p{font-size:.9rem;color:var(--sp-text2);line-height:1.65}
+.node-steps code{font-family:var(--fm);color:var(--tl);font-size:.82rem}
+
+/* network connect */
+.net-card{padding:26px;max-width:760px}
+.net-card dl{display:grid;grid-template-columns:170px 1fr;gap:14px 18px;margin:0}
+@media(max-width:560px){.net-card dl{grid-template-columns:1fr}}
+.net-card dt{font-weight:600;color:var(--sp-text2)}
+.net-card dd{font-family:var(--fm);font-size:.88rem;color:var(--sp-text);margin:0;word-break:break-all}
+
+/* faucet */
+.faucet{max-width:560px;padding:26px}
+.faucet label{display:block;font-weight:600;margin-bottom:8px;font-size:.9rem;color:var(--sp-text)}
+.faucet input{width:100%;padding:14px 16px;border:1px solid var(--sp-line);border-radius:12px;font-family:var(--fm);
+  font-size:.9rem;background:#ffffff;color:var(--sp-text);transition:border-color .2s,box-shadow .2s;box-sizing:border-box}
+.faucet input:focus{outline:none;border-color:var(--em);box-shadow:0 0 0 4px rgba(21,168,120,.14)}
+.faucet .fx-btn-neo{margin-top:14px;width:100%}
+.faucet .out{margin-top:14px;font-size:.9rem;min-height:20px;color:var(--sp-text2)}
+.faucet .out span{color:#b45309!important}
+
+/* footer — minimal light, gradient top border */
+footer{margin-top:60px;padding:34px 10px 8px;text-align:center;color:var(--sp-text3);font-size:.85rem;
+  border-top:1px solid transparent;position:relative}
+footer::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,#15a878 30%,#0e7d5a 70%,transparent)}
+footer img{height:22px;vertical-align:middle;margin-right:10px;opacity:.9}
+footer a{color:var(--tl);font-weight:600;text-decoration:none}
+footer a:hover{color:#0a5c43}
+</style>
+</head>
+<body class="elx-shelled">
+<aside class="elx-sidebar" id="elx-sidebar">
+  <a class="elx-sb-brand" href="/"><img src="/site-assets/logo.png" alt="Elyon Chain"></a>
+  <nav class="elx-sb-nav">
+    <a href="/" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg><span>Home</span></a>
+    <a href="/owner.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v6c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7z"/><path d="M9 12l2 2 4-4"/></svg><span>Delegate</span></a>
+    <a href="/docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span>Docs</span></a>
+    <a href="/faucet.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg><span>Faucet</span></a>
+    <a href="/leaderboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 1-3 3"/></svg><span>Leaderboard</span></a>
+  </nav>
+  <div class="elx-sb-foot">Elyon Chain · APOS L1</div>
+</aside>
+<div class="elx-app">
+  <header class="elx-topbar">
+    <button class="elx-burger" onclick="document.getElementById('elx-sidebar').classList.toggle('open')">☰</button>
+    <h1>Elyon Chain</h1>
+    <span class="elx-spacer"></span>
+    <span class="elx-net"><span class="dot"></span>Elyon Chain</span>
+  </header>
+  <div class="elx-work">
+
+
+<div class="net-banner show-when-testnet">Testnet sandbox · transactions are not real money · faucet ELN available below</div>
+
+<!-- ════ HERO — full viewport over the living constellation ════ -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <span class="fx-badge" data-reveal><span class="dot"></span> Self-hosted EVM Layer 1 · APOS consensus</span>
+      <h1 class="fx-display" data-reveal>The validator<br>economy.</h1>
+      <p class="sub" data-reveal data-delay="100"><b>Run a node.</b> Build a pool. Share every fee.</p>
+      <p class="lead" data-reveal data-delay="200">
+        Validators stake into the APOS registry, earn admin approval and a public APOS code,
+        and climb the tier curve: the bigger your pool — your own stake plus delegator
+        deposits — the larger your cut of the network's transaction fees. Package APR
+        accrues daily; delegators earn your published rate, locked in at deposit.
+      </p>
+      <div class="cta-row" data-reveal data-delay="300">
+        <a href="docs.html#validator" class="fx-btn-neo solid"><i class="fa-solid fa-shield-halved"></i> Become a validator</a>
+        <a href="owner.html" class="fx-btn-neo"><i class="fa-solid fa-hand-holding-dollar"></i> Delegate to a pool</a>
+      </div>
+    </div>
+    <div data-reveal data-delay="200">
+      <div class="live-widget fx-card-neo" data-tilt>
+        <div class="lw-head"><span class="dot"></span><span>Live network</span></div>
+        <div class="lw-grid">
+          <div class="lw-stat"><div class="lbl">Chain</div><div class="val" id="stat-name">—</div></div>
+          <div class="lw-stat"><div class="lbl">Chain ID</div><div class="val accent" id="stat-chain-id">—</div></div>
+          <div class="lw-stat"><div class="lbl">Block height</div><div class="val" id="stat-block">—</div></div>
+          <div class="lw-stat"><div class="lbl">Validators</div><div class="val" id="stat-validators">—</div></div>
+          <div class="lw-stat" style="grid-column:1/-1"><div class="lbl">Validator holdings (stake + pool)</div><div class="val accent"><span id="stat-pool">—</span> <small style="font-size:.72rem;letter-spacing:.06em">ELN</small></div></div>
+        </div>
+        <div class="lw-ticker">
+          <div class="tl"><i class="fa-solid fa-cube"></i> Latest blocks</div>
+          <div id="blk-ticker"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fx-divider"></div>
+
+<!-- ════ SCROLL STORY · 01 — STAKE & GET APPROVED ════ -->
+<section class="story" id="what">
+  <div class="ghost"><span class="num" data-l="01">01</span></div>
+  <div>
+    <span class="fx-badge" data-reveal><span class="dot"></span> Chapter one</span>
+    <h2 data-reveal>Stake &amp; <span class="gx">get approved.</span></h2>
+    <p class="lede" data-reveal data-delay="100">Run your own node, stake at least the network minimum into the
+      APOS registry and apply. On admin approval you receive a unique public <b>APOS code</b> — your identity
+      on the network — and start sealing blocks.</p>
+    <div class="steps">
+      <div class="stp fx-card-neo" data-reveal>
+        <div class="ic"><i class="fa-solid fa-server"></i></div>
+        <h3>Run a node</h3>
+        <p>One Docker container, ports open, key created — the operator image syncs itself to this chain.</p>
+      </div>
+      <div class="stp fx-card-neo" data-reveal data-delay="100">
+        <div class="ic"><i class="fa-solid fa-layer-group"></i></div>
+        <h3>Stake into APOS</h3>
+        <p>Lock the minimum self-stake into the registry straight from your node panel and apply.</p>
+      </div>
+      <div class="stp fx-card-neo" data-reveal data-delay="200">
+        <div class="ic"><i class="fa-solid fa-circle-check"></i></div>
+        <h3>Get your code</h3>
+        <p>Admin approval mints your public <code>APOS code</code> — delegators fund your pool with it.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<div class="fx-divider"></div>
+
+<!-- ════ SCROLL STORY · 02 — YOUR POOL IS YOUR POWER ════ -->
+<section class="story" id="tiers">
+  <div class="ghost"><span class="num" data-l="02">02</span></div>
+  <div>
+    <span class="fx-badge" data-reveal><span class="dot"></span> Chapter two</span>
+    <h2 data-reveal>Your pool is <span class="gx">your power.</span></h2>
+    <p class="lede" data-reveal data-delay="100">Your <b>pool</b> — your own package-locked stake <b>plus</b>
+      delegator deposits — is scored against the admin-set tier curve. Each tier you climb lifts your
+      share of the transaction fees collected by the whole network. APR comes only from the staking
+      packages and accrues daily, claimable any time.</p>
+    <div class="viz fx-card-neo" data-reveal data-delay="100">
+      <svg class="tier-svg" viewBox="0 0 640 320" role="img" aria-label="Tier curve: a bigger pool unlocks a higher transaction-fee share">
+        <defs>
+          <linearGradient id="tiergrad" x1="0" y1="1" x2="1" y2="0">
+            <stop offset="0" stop-color="#15a878"/><stop offset=".55" stop-color="#0c8f68"/><stop offset="1" stop-color="#0e7d5a"/>
+          </linearGradient>
+        </defs>
+        <line class="axis" x1="40" y1="280" x2="610" y2="280"/>
+        <line class="axis" x1="40" y1="280" x2="40" y2="30"/>
+        <text class="axlab" x="500" y="302">STAKE SIZE →</text>
+        <text class="axlab" x="14" y="120" transform="rotate(-90 22 120)">FEE SHARE % →</text>
+        <path class="stair" pathLength="1" d="M40,262 L150,262 L150,212 L260,212 L260,156 L380,156 L380,96 L500,96 L500,52 L606,52"/>
+        <g class="t1"><circle class="tnode" cx="150" cy="262" r="5"/><text class="tlab" x="62" y="240">TIER 1</text><text class="tsub" x="62" y="255">fees 5%</text></g>
+        <g class="t2"><circle class="tnode" cx="260" cy="212" r="5"/><text class="tlab" x="172" y="190">TIER 2</text><text class="tsub" x="172" y="205">fees 10%</text></g>
+        <g class="t3"><circle class="tnode" cx="380" cy="156" r="5"/><text class="tlab" x="284" y="134">TIER 3</text><text class="tsub" x="284" y="149">fees 20%</text></g>
+        <g class="t4"><circle class="tnode" cx="500" cy="96" r="5"/><text class="tlab" x="404" y="74">TIER 4</text><text class="tsub" x="404" y="89">fees 35%</text></g>
+      </svg>
+      <div class="viz-note">Illustrative staircase — the live tier curve is set by the chain admin</div>
+    </div>
+  </div>
+</section>
+
+<div class="fx-divider"></div>
+
+<!-- ════ SCROLL STORY · 03 — DELEGATORS FUEL YOU ════ -->
+<section class="story" id="delegators">
+  <div class="ghost"><span class="num" data-l="03">03</span></div>
+  <div>
+    <span class="fx-badge" data-reveal><span class="dot"></span> Chapter three</span>
+    <h2 data-reveal>Delegators <span class="gx">fuel you.</span></h2>
+    <p class="lede" data-reveal data-delay="100">No hardware needed. Each validator markets its own
+      <b>packages</b> — a monthly rate, a lock term, a minimum deposit and an early-exit penalty — on its public
+      <b>validator page</b>. Delegators pick a package, send a join request, chat it out — and once accepted,
+      deposit into that package. <b>Every deposit counts toward the validator's tier directly</b> and locks in
+      the package's terms forever (grandfathered). Profit accrues daily and <b>delegators withdraw themselves,
+      any time</b> — principal + profit (the package's penalty applies only before its lock ends).</p>
+    <div class="viz fx-card-neo" data-reveal data-delay="100">
+      <svg class="flow-svg" viewBox="0 0 640 220" role="img" aria-label="Delegators flow ELN along a path into the validator pool ring">
+        <defs>
+          <linearGradient id="poolgrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0" stop-color="#15a878"/><stop offset=".55" stop-color="#0c8f68"/><stop offset="1" stop-color="#0e7d5a"/>
+          </linearGradient>
+        </defs>
+        <!-- delegator sources -->
+        <g><circle class="src" cx="46" cy="50" r="17"/><text class="srctxt" x="30" y="22">0xA1…</text></g>
+        <g><circle class="src" cx="40" cy="120" r="17"/><text class="srctxt" x="24" y="158">0xB7…</text></g>
+        <g><circle class="src" cx="58" cy="186" r="17"/><text class="srctxt" x="42" y="216">0xC4…</text></g>
+        <!-- flow paths into the pool -->
+        <path id="flow1" class="fpath" d="M62,50 C190,28 300,96 444,106"/>
+        <path id="flow2" class="fpath" d="M58,120 C200,118 320,112 444,110"/>
+        <path id="flow3" class="fpath" d="M74,184 C220,196 330,128 444,116"/>
+        <!-- delegation dots travelling the paths -->
+        <circle class="fdot" r="5"><animateMotion dur="3.4s" repeatCount="indefinite"><mpath href="#flow1"/></animateMotion></circle>
+        <circle class="fdot c" r="4"><animateMotion dur="4.1s" begin="1.1s" repeatCount="indefinite"><mpath href="#flow2"/></animateMotion></circle>
+        <circle class="fdot" r="4.5"><animateMotion dur="3.8s" begin="2s" repeatCount="indefinite"><mpath href="#flow3"/></animateMotion></circle>
+        <circle class="fdot c" r="3.5"><animateMotion dur="4.6s" begin="2.7s" repeatCount="indefinite"><mpath href="#flow1"/></animateMotion></circle>
+        <!-- pool ring that fills -->
+        <circle class="pring-bg" cx="500" cy="110" r="48"/>
+        <circle class="pring" cx="500" cy="110" r="48" pathLength="100"/>
+        <text class="ptxt" x="500" y="108" text-anchor="middle">POOL</text>
+        <text class="ptxt2" x="500" y="126" text-anchor="middle">FILLS · TIER ↑</text>
+      </svg>
+      <div class="viz-note">Delegations flow in by APOS code — the fuller the ring, the higher the tier</div>
+    </div>
+  </div>
+</section>
+
+<!-- ════ RUN YOUR OWN NODE (admin image only) ════ -->
+<section class="product show-when-admin" id="run-node" style="display:none">
+  <span class="fx-badge" data-reveal><span class="dot"></span> Operators</span>
+  <h2 data-reveal>Run an Elyon Chain node <span class="gx">in 5 minutes.</span></h2>
+  <p class="lede" data-reveal data-delay="100">The operator image — <code>elyonchain/node</code> — is pre-wired to this admin chain. Pull it, run one container, open port 3000, create or import a key. The node syncs itself, you apply as a validator with a stake, the admin approves, and your pool starts earning APR plus a share of transaction fees.</p>
+  <div class="node-steps">
+    <div class="fx-card-neo" data-reveal>
+      <h3><i class="fa-solid fa-1"></i> &nbsp;Pull and run the operator image</h3>
+      <p style="margin-top:8px">Any host with Docker. Open TCP <code>3000</code> + <code>8545</code> + <code>30303</code> and UDP <code>30303</code> first.</p>
+      <pre class="code">docker pull elyonchain/node:latest
+
+docker run -d --name elyonchain --restart unless-stopped \
+  -p 3000:3000 -p 8545:8545 \
+  -p 30303:30303 -p 30303:30303/udp \
+  -v elyon-data:/data \
+  elyonchain/node:latest</pre>
+    </div>
+    <div class="fx-card-neo" data-reveal data-delay="100">
+      <h3><i class="fa-solid fa-2"></i> &nbsp;Open port 3000 — create or import your key</h3>
+      <p style="margin-top:8px">Browse to <code>http://YOUR_VM_IP:3000/</code> — the operator image lands you on the manager page, pre-wired to <code id="snippet-admin-url">https://admintestnet.elyon.network</code>. Create a new validator key (download the <code>.txt</code> and back it up) or import an existing one. The node starts, syncs, and the panel takes you to your dashboard.</p>
+    </div>
+    <div class="fx-card-neo" data-reveal data-delay="200">
+      <h3><i class="fa-solid fa-3"></i> &nbsp;Apply as a validator, wait for admin approval</h3>
+      <p style="margin-top:8px">From the node panel, pick a <b>staking package</b> and apply as a validator — this stakes at least the larger of the network minimum and the package minimum into the APOS registry, locked for the package term. The admin approves with one click and you receive your public <b>APOS code</b>. From then on your tier (transaction-fee share) follows your pool volume, live in the validator panel — APR comes from your staking package. Keep your pool above the network minimum: if it drops below, earnings pause until it's refilled (then your validator is restored automatically).</p>
+    </div>
+    <div class="fx-card-neo" id="card-nginx" data-reveal data-delay="300">
+      <h3><i class="fa-solid fa-lock"></i> &nbsp;Attach your own domain with free HTTPS (optional)</h3>
+      <p style="margin-top:8px">Point an A-record at your VM, then run nginx-proxy + acme-companion once for an auto-renewing Let's Encrypt cert in front of port 3000.</p>
+    </div>
+  </div>
+</section>
+
+<div class="fx-divider"></div>
+
+<!-- ════ APPROVED VALIDATORS ════ -->
+<section class="product" id="validators">
+  <span class="fx-badge" data-reveal><span class="dot"></span> Approved validators</span>
+  <h2 data-reveal>Pick a pool. <span class="gx">Delegate by code.</span></h2>
+  <p class="lede" data-reveal data-delay="100">Every validator below runs their own node and has been admin-approved into the APOS registry. Their tier — share of transaction fees — grows with their pool, and <b>your deposits count toward it directly</b>. Each deposit earns the validator's published rate, locked in the moment you deposit, and you can withdraw it yourself any time. Fund one with their public code.</p>
+  <div class="val-grid" id="validators-grid" data-reveal data-delay="100"></div>
+</section>
+
+<div class="fx-divider"></div>
+
+<!-- ════ NETWORK ════ -->
+<section class="product" id="network">
+  <span class="fx-badge" data-reveal><span class="dot"></span> Connect</span>
+  <h2 data-reveal>Add Elyon Chain <span class="gx">to your wallet.</span></h2>
+  <p class="lede" data-reveal data-delay="100">Point MetaMask or any EVM wallet at the network below.</p>
+  <div class="net-card fx-card-neo" data-reveal data-delay="100">
+    <dl>
+      <dt>Network name</dt><dd id="net-name">—</dd>
+      <dt>Chain ID</dt><dd id="net-id">—</dd>
+      <dt>RPC URL</dt><dd id="net-rpc">—</dd>
+      <dt>Currency symbol</dt><dd>ELN</dd>
+    </dl>
+  </div>
+</section>
+
+<!-- ════ FAUCET (testnet only) ════ -->
+<section class="product show-when-testnet" id="faucet">
+  <span class="fx-badge" data-reveal><span class="dot"></span> Testnet faucet</span>
+  <h2 data-reveal>Get <span class="gx"><span id="fct-amt">20</span> ELN</span>.</h2>
+  <p class="lede" data-reveal data-delay="100">One drip per address every 24 hours. Use it to pay gas on the testnet — delegate to a validator pool or stake your own node.</p>
+  <div class="faucet fx-card-neo" data-reveal data-delay="100">
+    <label for="fct-addr">Your wallet address</label>
+    <input id="fct-addr" placeholder="0x…">
+    <button class="fx-btn-neo solid" id="fct-btn" onclick="requestFaucet()"><i class="fa-solid fa-faucet-drip"></i> Send me ELN</button>
+    <div class="out" id="fct-out"></div>
+  </div>
+</section>
+
+<footer>
+  <div><img src="site-assets/logo.png" alt="Elyon Chain"> Self-hosted Layer 1 · <a href="owner.html">Delegate</a> · <a href="leaderboard.html">Leaderboard</a> · <a href="docs.html">Docs</a></div>
+</footer>
+
+<script>
+// ── scroll reveal ──
+const io = new IntersectionObserver(entries => {
+  entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+}, { threshold: 0.12 });
+document.querySelectorAll('[data-reveal]').forEach(el => io.observe(el));
+
+// ── count-up for numeric stats ──
+function countUp(el, target){
+  if(!el || !isFinite(target)) return;
+  const dur=900, t0=performance.now();
+  const step=(t)=>{const p=Math.min(1,(t-t0)/dur);el.textContent=Math.floor(target*(0.2+0.8*p)).toLocaleString();if(p<1)requestAnimationFrame(step);else el.textContent=target.toLocaleString();};
+  requestAnimationFrame(step);
+}
+
+async function bootSite(){
+  try{
+    const r = await fetch('/api/role-info').then(x=>x.json());
+    document.body.classList.toggle('is-testnet', r.networkType==='testnet');
+    document.body.classList.toggle('is-mainnet', r.networkType==='mainnet');
+    document.querySelectorAll('.show-when-testnet').forEach(el=>{ el.style.display = (r.networkType==='testnet')?'':'none'; });
+    const setT=(id,v)=>{const el=document.getElementById(id);if(el)el.textContent=v??'—';};
+    setT('stat-name', r.chainName||'Elyon Chain');
+    setT('stat-chain-id', r.chainId||'—');
+    if(r.blockHeight && !LIVE.block){countUp(document.getElementById('stat-block'), Number(r.blockHeight));LIVE.block=Number(r.blockHeight);}
+    setT('net-name', r.chainName||'Elyon Chain');
+    setT('net-id', r.chainId||'—');
+    setT('net-rpc', r.rpcUrl||(location.protocol+'//'+location.hostname+':8545'));
+    if(r.faucet?.amountUnp) setT('fct-amt', r.faucet.amountUnp);
+  }catch{}
+  await loadValidators();
+}
+// wei → ELN string: /1e18, ≤4 decimals, thousands separators
+function fmtEln(wei){
+  try{
+    const n = Number(BigInt(wei||'0')/10n**14n)/1e4;
+    return n.toLocaleString(undefined,{maximumFractionDigits:4});
+  }catch{return '—';}
+}
+// animated decimal count-up (pools / percentages)
+function countUpDec(el, target, decimals, suffix){
+  if(!el||!isFinite(target)) return;
+  const dur=1000, t0=performance.now();
+  const fmt=v=>v.toLocaleString(undefined,{maximumFractionDigits:decimals})+(suffix||'');
+  const step=t=>{const p=Math.min(1,(t-t0)/dur);const e=1-Math.pow(1-p,3);el.textContent=fmt(target*e);if(p<1)requestAnimationFrame(step);else el.textContent=fmt(target);};
+  requestAnimationFrame(step);
+}
+
+// ── live block height via /api/rpc eth_blockNumber, polled every 5s,
+//    feeding the hero counter + the latest-blocks ticker strip ──
+const LIVE = { block: 0 };
+async function pollBlock(){
+  try{
+    const r = await fetch('/api/rpc',{method:'POST',headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({jsonrpc:'2.0',id:Date.now(),method:'eth_blockNumber',params:[]})}).then(x=>x.json());
+    const n = parseInt(r&&r.result,16);
+    if(!isFinite(n)||n<=0) return;
+    const el = document.getElementById('stat-block');
+    if(n!==LIVE.block){
+      if(!LIVE.block){ countUp(el, n); } else if(el){ el.textContent = n.toLocaleString(); }
+      addBlockChip(n, LIVE.block>0);
+      LIVE.block = n;
+    }
+  }catch{}
+}
+function addBlockChip(n, isNew){
+  const t = document.getElementById('blk-ticker');
+  if(!t) return;
+  const c = document.createElement('span');
+  c.className = 'blk-chip'+(isNew?' new':'');
+  c.textContent = '#'+n.toLocaleString();
+  t.insertBefore(c, t.firstChild);
+  if(isNew) setTimeout(()=>c.classList.remove('new'), 2600);
+  while(t.children.length>5) t.removeChild(t.lastChild);
+}
+pollBlock();
+setInterval(pollBlock, 5000);
+
+/* v9 — the binding number is the on-chain delegator rate
+   (v.delegatorRateBps); the offer string is a plain display note. */
+async function loadValidators(){
+  const grid = document.getElementById('validators-grid');
+  try{
+    const r = await fetch('/api/apos/validators?approved=1').then(r=>r.json()).catch(()=>({validators:[]}));
+    const vals = (r&&r.validators)||[];
+    // Registry admin (the admin validator takes no delegators) + the package
+    // APR map (APR comes only from packages — tier APR is retired).
+    let adminAddr=null; const pkgMap={};
+    try{
+      const i = await fetch('/api/apos/info').then(r=>r.json());
+      if(i&&i.admin) adminAddr=String(i.admin).toLowerCase();
+    }catch{}
+    try{
+      const pr = await fetch('/api/apos/packages').then(r=>r.json());
+      const pkgs = Array.isArray(pr)?pr:((pr&&pr.packages)||[]);
+      pkgs.forEach(p=>{ pkgMap[Number(p.id)]=Number(p.aprBps)||0; });
+    }catch{}
+    countUp(document.getElementById('stat-validators'), vals.length);
+    // total ELN held by validators (one pool: own stake + delegations) → hero live widget
+    try{
+      let tot=0n; vals.forEach(v=>{
+        tot += BigInt(v.stakeWei!=null?v.stakeWei:(v.selfStakeWei||'0'));
+        tot += BigInt(v.delegatedTotalWei||'0');
+      });
+      countUpDec(document.getElementById('stat-pool'), Number(tot/10n**14n)/1e4, 2);
+    }catch{}
+    if(!vals.length){
+      grid.innerHTML='<div class="val-empty"><div style="font-weight:700;color:var(--sp-text);margin-bottom:6px">No approved validators yet</div>Run a node, stake into the APOS registry, and be the first pool on the board. <a href="docs.html#validator">Become a validator →</a></div>';
+      return;
+    }
+    const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    grid.innerHTML = vals.slice(0,12).map((v,i)=>{
+      // Donut ring: ONE POOL — own stake + delegator deposits (both drive
+      // the tier).
+      let stakePct=0, poolPct=0, stakeWei='0', poolWei='0', totalWei='0';
+      try{
+        const stake=BigInt(v.stakeWei!=null?v.stakeWei:(v.selfStakeWei||'0'));
+        const pool=BigInt(v.delegatedTotalWei||'0');
+        const total=stake+pool;
+        stakeWei=stake.toString(); poolWei=pool.toString(); totalWei=total.toString();
+        if(total>0n){ stakePct=Number(stake*1000n/total)/10; poolPct=Math.max(0,100-stakePct); }
+      }catch{}
+      const isAdminVal = !!(adminAddr && String(v.address||'').toLowerCase()===adminAddr);
+      const rateBps = Number(v.delegatorRateBps)||0;
+      const offerHtml =
+        '<div class="offer" style="font-style:normal">💎 <b>'+(rateBps>0
+          ? 'Pays '+(rateBps/100).toFixed(2).replace(/\.00$/,'')+'% per year</b> — rate locked at deposit'
+          : 'No delegator rate published yet</b>')+
+        (v.offer?'<br>'+esc(String(v.offer).length>120?String(v.offer).slice(0,120)+'…':v.offer):'')+'</div>';
+      const pkgId = Number(v.selectedPackageId)||0;
+      const pkgBps = pkgId && pkgMap[pkgId]!=null ? pkgMap[pkgId] : null;
+      const aprCell = '<div class="vs"><b class="apr-n" data-bps="'+rateBps+'">0%</b><span>Delegator rate</span></div>';
+      const vpkgCount = Number(v.vpackageCount)||0;
+      const ctaHtml = isAdminVal
+        ? '<div style="text-align:center;padding:10px 12px;border:1px dashed rgba(21,168,120,.45);border-radius:12px;color:var(--sp-text2);font-size:.82rem">🛡️ Network admin — does not accept delegations</div>'
+        : '<a href="validator.html?code='+encodeURIComponent(v.code||'')+'" class="fx-btn-neo solid">'+
+            (vpkgCount>0 ? 'Visit page — '+vpkgCount+' package'+(vpkgCount>1?'s':'')+' →' : 'Visit page →')+'</a>'+
+          '<a href="owner.html?code='+encodeURIComponent(v.code||'')+'" style="display:block;text-align:center;margin-top:8px;font-size:.82rem;color:var(--sp-text2)">or use the delegator portal →</a>';
+      return '<div class="val-card fx-card-neo" data-reveal data-tilt style="transition-delay:'+Math.min(i*90,450)+'ms">'+
+        '<div class="topline"><span class="fx-badge-code" title="Public APOS code">'+esc(v.code||'—')+'</span><span class="status-pill">Active</span></div>'+
+        '<div class="addr">'+esc(v.address)+'</div>'+
+        offerHtml+
+        '<div class="pool-row">'+
+          '<svg class="vd" viewBox="0 0 80 80" aria-hidden="true">'+
+            '<circle class="bgc" cx="40" cy="40" r="32"/>'+
+            '<circle class="seg self" cx="40" cy="40" r="32" pathLength="100" style="--p:'+stakePct.toFixed(1)+'"/>'+
+            '<circle class="seg deleg" cx="40" cy="40" r="32" pathLength="100" style="--p:'+poolPct.toFixed(1)+';stroke-dashoffset:-'+stakePct.toFixed(1)+'"/>'+
+          '</svg>'+
+          '<div><div class="pool-lbl">Pool (drives tier) — own '+fmtEln(stakeWei)+' · delegated '+fmtEln(poolWei)+'</div>'+
+          '<div class="pool"><span class="pool-n" data-pool="'+esc(totalWei)+'">0</span> <small>ELN</small></div></div>'+
+        '</div>'+
+        '<div class="vd-legend"><span class="a"><i></i>'+stakePct.toFixed(1)+'% own stake</span><span class="b"><i></i>'+poolPct.toFixed(1)+'% delegated — one pool</span></div>'+
+        '<div class="val-stats">'+
+          aprCell+
+          '<div class="vs"><b class="fee-n" data-bps="'+(Number(v.gasShareBps)||0)+'">0%</b><span>Fee share</span></div>'+
+          '<div class="vs"><b class="del-n" data-count="'+(Number(v.delegatorCount)||0)+'">0</b><span>Positions</span></div>'+
+        '</div>'+
+        ctaHtml+
+      '</div>';}).join('');
+    // reveal + count-up when each card scrolls into view
+    grid.querySelectorAll('.val-card').forEach(card=>{
+      const vio = new IntersectionObserver(es=>{es.forEach(e=>{
+        if(!e.isIntersecting) return;
+        e.target.classList.add('visible');
+        const pn=e.target.querySelector('.pool-n');
+        if(pn) countUpDec(pn, Number(BigInt(pn.dataset.pool)/10n**14n)/1e4, 4);
+        e.target.querySelectorAll('[data-bps]').forEach(el=>countUpDec(el, Number(el.dataset.bps)/100, 2, '%'));
+        const dn=e.target.querySelector('[data-count]');
+        if(dn) countUpDec(dn, Number(dn.dataset.count), 0);
+        vio.unobserve(e.target);
+      });},{threshold:.15});
+      vio.observe(card);
+    });
+  }catch(e){
+    grid.innerHTML='<div class="val-empty">Failed to load validators — '+((e&&e.message)||e)+'</div>';
+  }
+}
+async function requestFaucet(){
+  const addr=(document.getElementById('fct-addr').value||'').trim();
+  const out=document.getElementById('fct-out');
+  if(!/^0x[0-9a-fA-F]{40}$/.test(addr)){out.innerHTML='<span style="color:#fbbf24">⚠️ Enter a valid 0x… address.</span>';return;}
+  const btn=document.getElementById('fct-btn');btn.disabled=true;btn.innerHTML='Sending…';out.textContent='';
+  try{
+    const r=await fetch('/api/faucet/request',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({address:addr})}).then(r=>r.json());
+    if(r.error)throw new Error(r.error);
+    out.innerHTML='✅ <b style="color:var(--sp-text)">Sent.</b> Tx <code>'+(r.txHash||'').slice(0,16)+'…</code> — refresh your wallet shortly.';
+  }catch(e){out.innerHTML='<span style="color:#fbbf24">⚠️ '+(e.message||e)+'</span>';}
+  finally{btn.disabled=false;btn.innerHTML='<i class="fa-solid fa-faucet-drip"></i> Send me ELN';}
+}
+async function gateAdminOnlySections(){
+  try{
+    const r=await fetch('/api/role-info').then(r=>r.json());
+    const isAdmin=(r.role||'').toLowerCase()==='admin';
+    document.querySelectorAll('.show-when-admin').forEach(el=>{el.style.display=isAdmin?'':'none';});
+    const urlEl=document.getElementById('snippet-admin-url');
+    if(urlEl&&isAdmin){urlEl.textContent=(r.domain?'https://'+r.domain:window.location.origin).replace(/\/$/,'');}
+  }catch{}
+}
+gateAdminOnlySections();
+bootSite();
+</script>
+
+  </div>
+</div>
+</body>
+</html>

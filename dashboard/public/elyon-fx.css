@@ -1,0 +1,222 @@
+/* ============================================================
+   Elyon FX v4 — shared animation + graphical-object layer.
+   Loaded by every page (public + /admin + /manager + /node).
+   LIGHT PREMIUM IDENTITY: #f6f8fa base, #ffffff surfaces, soft
+   shadows (0 8px 32px rgba(20,40,60,.08)), emerald #15a878→#0e7d5a
+   gradients, dark ink #1c2733 typography.
+   v4 PERF PASS (Windows-friendly):
+     · no backdrop-filter anywhere (solid rgba surfaces)
+     · reveals are opacity+translateY only (no filter:blur)
+     · single-layer box-shadows
+     · aurora blobs are STATIC gradients (no infinite animation,
+       no filter:blur on viewport-sized elements)
+   Pure-additive: never changes layout of existing elements.
+   ============================================================ */
+
+/* ---- fixed page backdrop (injected by elyon-fx.js) ---- */
+#elyon-fx-bg{position:fixed;inset:0;z-index:-1;overflow:hidden;pointer-events:none}
+/* two huge soft aurora washes — STATIC gradients (perf: no blur, no animation) */
+#elyon-fx-bg .fx-aur{position:absolute;border-radius:50%;opacity:.5}
+#elyon-fx-bg .fx-aur.a{width:min(62vw,900px);height:min(62vw,900px);top:-22%;left:-14%;
+  background:radial-gradient(circle,rgba(21,168,120,.10),rgba(21,168,120,.04) 45%,transparent 70%)}
+#elyon-fx-bg .fx-aur.b{width:min(54vw,760px);height:min(54vw,760px);bottom:-26%;right:-12%;
+  background:radial-gradient(circle,rgba(14,125,90,.08),rgba(14,125,90,.03) 48%,transparent 72%)}
+#elyon-fx-bg .fx-grid{position:absolute;inset:0;
+  background-image:linear-gradient(rgba(21,168,120,.045) 1px,transparent 1px),linear-gradient(90deg,rgba(21,168,120,.045) 1px,transparent 1px);
+  background-size:46px 46px;mask-image:radial-gradient(ellipse 75% 65% at 50% 35%,#000,transparent);-webkit-mask-image:radial-gradient(ellipse 75% 65% at 50% 35%,#000,transparent);opacity:.45}
+
+/* ---- scroll progress bar (injected by elyon-fx.js) ---- */
+#fx-scrollpro{position:fixed;top:0;left:0;right:0;height:3px;z-index:99990;pointer-events:none;background:transparent}
+#fx-scrollpro>span{display:block;height:100%;transform:scaleX(0);transform-origin:0 50%;
+  background:linear-gradient(90deg,#15a878,#0e7d5a);
+  box-shadow:0 0 10px rgba(21,168,120,.45)}
+
+/* ---- reveal on scroll — opacity + translate only (perf: no filter:blur) ---- */
+.fx-reveal,[data-reveal]{opacity:0;transform:translateY(26px);
+  transition:opacity .8s cubic-bezier(.16,1,.3,1),transform .8s cubic-bezier(.16,1,.3,1)}
+.fx-reveal.fx-in,.fx-reveal.visible,[data-reveal].fx-in,[data-reveal].visible{opacity:1;transform:none}
+.fx-reveal.d1{transition-delay:.08s}.fx-reveal.d2{transition-delay:.16s}.fx-reveal.d3{transition-delay:.24s}.fx-reveal.d4{transition-delay:.32s}
+[data-delay="100"]{transition-delay:.1s}[data-delay="200"]{transition-delay:.2s}[data-delay="300"]{transition-delay:.3s}[data-delay="400"]{transition-delay:.4s}
+
+/* ---- generic motion utilities ---- */
+.fx-float{animation:fxBob 5s ease-in-out infinite}
+@keyframes fxBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.fx-pulse{animation:fxPulse 2.6s ease-in-out infinite}
+@keyframes fxPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.06);opacity:.85}}
+.fx-spin-slow{animation:fxSpin 14s linear infinite}
+@keyframes fxSpin{to{transform:rotate(360deg)}}
+.fx-shimmer{position:relative;overflow:hidden}
+.fx-shimmer::after{content:'';position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transform:translateX(-120%);animation:fxShim 3.5s ease-in-out infinite}
+@keyframes fxShim{0%{transform:translateX(-120%)}60%,100%{transform:translateX(120%)}}
+
+/* card hover-lift you can add anywhere */
+.fx-lift{transition:transform .35s cubic-bezier(.16,1,.3,1),box-shadow .35s cubic-bezier(.16,1,.3,1),border-color .35s}
+.fx-lift:hover{transform:translateY(-5px);box-shadow:0 16px 48px rgba(21,168,120,.14);border-color:rgba(45,212,160,.35)}
+
+/* animated count-up number styling helper */
+.fx-count{font-variant-numeric:tabular-nums}
+
+/* gradient text accent — dark-emerald, readable on light */
+.fx-grad-text{background:linear-gradient(135deg,#1c2733 0%,#0e7d5a 45%,#15a878 60%,#1c2733 100%);background-size:200% auto;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:fxTextShine 6s linear infinite}
+@keyframes fxTextShine{to{background-position:200% center}}
+
+/* ============================================================
+   v3 IDENTITY COMPONENTS
+   ============================================================ */
+
+/* ---- .fx-display — huge hero display type, dark-emerald gradient (static: perf) ---- */
+.fx-display{font-family:'Space Grotesk','Inter',sans-serif;font-weight:800;
+  letter-spacing:-.045em;line-height:1.02;
+  background:linear-gradient(110deg,#1c2733 14%,#0e7d5a 44%,#15a878 56%,#1c2733 88%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent}
+
+/* ---- .fx-card-neo — white premium card w/ 1px emerald gradient border + soft lift */
+.fx-card-neo{position:relative;border-radius:22px;border:1px solid transparent;
+  background:
+    linear-gradient(165deg,#ffffff,#fcfdfd) padding-box,
+    linear-gradient(135deg,rgba(21,168,120,.40),rgba(20,40,60,.08) 45%,rgba(20,40,60,.06) 62%,rgba(14,125,90,.30)) border-box;
+  box-shadow:0 8px 32px rgba(20,40,60,.08);
+  transition:transform .45s cubic-bezier(.16,1,.3,1),box-shadow .45s cubic-bezier(.16,1,.3,1)}
+.fx-card-neo:hover{transform:translateY(-5px);
+  box-shadow:0 16px 48px rgba(21,168,120,.14)}
+
+/* ---- .fx-btn-neo — emerald button (outline + .solid gradient CTA) ---- */
+.fx-btn-neo{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:9px;
+  padding:13px 26px;border-radius:999px;border:1px solid transparent;cursor:pointer;text-decoration:none;
+  font-family:'Space Grotesk','Inter',sans-serif;font-weight:700;font-size:.92rem;letter-spacing:.01em;
+  color:#0e7d5a;
+  background:
+    linear-gradient(160deg,#ffffff,#fcfdfd) padding-box,
+    linear-gradient(120deg,#15a878,#0e7d5a) border-box;
+  transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .3s,color .3s}
+.fx-btn-neo:hover{transform:translateY(-2px);color:#0a5c43;
+  box-shadow:0 10px 32px rgba(21,168,120,.22)}
+.fx-btn-neo::after{content:'';position:absolute;top:0;bottom:0;width:55%;left:-80%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.45),transparent);
+  transform:skewX(-18deg);animation:fxBtnSheen 4.2s ease-in-out infinite}
+@keyframes fxBtnSheen{0%,58%{left:-80%}88%,100%{left:135%}}
+.fx-btn-neo.solid{color:#ffffff;
+  background:
+    linear-gradient(120deg,#15a878,#0e7d5a) padding-box,
+    linear-gradient(120deg,#15a878,#0e7d5a) border-box;
+  box-shadow:0 10px 30px rgba(21,168,120,.30)}
+.fx-btn-neo.solid:hover{box-shadow:0 14px 40px rgba(21,168,120,.40)}
+.fx-btn-neo:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+
+/* ---- .fx-badge-code — monospace code badge, emerald-on-light ---- */
+.fx-badge-code{position:relative;display:inline-flex;align-items:center;gap:8px;overflow:hidden;
+  font-family:'JetBrains Mono','Fira Code',Consolas,monospace;font-weight:700;letter-spacing:.09em;
+  color:#0e7d5a;border-radius:12px;padding:8px 16px;border:1px solid rgba(21,168,120,.35);
+  background:rgba(21,168,120,.10);
+  box-shadow:0 4px 14px rgba(21,168,120,.12)}
+.fx-badge-code::after{content:'';position:absolute;top:0;bottom:0;width:60%;left:-85%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.55),transparent);
+  animation:fxCodeShine 3.6s ease-in-out infinite}
+@keyframes fxCodeShine{0%,52%{left:-85%}86%,100%{left:135%}}
+
+/* ---- .fx-divider — animated SVG line-draw divider (SVG by elyon-fx.js) */
+.fx-divider{display:block;width:100%;height:60px;margin:8px 0;pointer-events:none}
+.fx-divider svg{width:100%;height:100%;display:block}
+.fx-divider svg path{stroke-dasharray:1;stroke-dashoffset:1;opacity:.85;
+  transition:stroke-dashoffset 1.6s cubic-bezier(.4,0,.2,1)}
+.fx-divider svg circle{fill:#15a878;opacity:0;transition:opacity .6s ease 1.2s}
+.fx-divider.in svg path{stroke-dashoffset:0}
+.fx-divider.in svg circle{opacity:1}
+
+/* ---- .fx-orbit — slow rotating conic-gradient ring for avatars/icons */
+.fx-orbit{position:relative;border-radius:50%}
+.fx-orbit::before{content:'';position:absolute;inset:-4px;border-radius:50%;pointer-events:none;
+  background:conic-gradient(from 0deg,#15a878,#0e7d5a 30%,#15a878 55%,transparent 75%,#15a878);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));
+  mask:radial-gradient(farthest-side,transparent calc(100% - 3px),#000 calc(100% - 2px));
+  animation:fxSpin 9s linear infinite}
+
+/* progress ring (gamification) — usage:
+   <div class="fx-ring" style="--pct:72"><span>72%</span></div> */
+.fx-ring{--pct:0;--sz:96px;--ring-bg:#ffffff;width:var(--sz);height:var(--sz);border-radius:50%;display:flex;align-items:center;justify-content:center;
+  background:conic-gradient(#15a878 calc(var(--pct)*1%),rgba(21,168,120,.14) 0);position:relative;transition:background .8s ease}
+.fx-ring::before{content:'';position:absolute;inset:9px;border-radius:50%;background:var(--ring-bg);box-shadow:inset 0 2px 8px rgba(20,40,60,.08)}
+.fx-ring>span{position:relative;z-index:1;font-family:'Space Grotesk','Inter',sans-serif;font-weight:700;color:#0e7d5a;font-size:1.1rem}
+
+/* animated stat tile accent bar */
+.fx-bar{position:relative;overflow:hidden}
+.fx-bar::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:linear-gradient(180deg,#15a878,#0e7d5a);transform:scaleY(0);transform-origin:top;transition:transform .5s ease}
+.fx-bar:hover::before{transform:scaleY(1)}
+
+/* tab-content fade-in when switched */
+.fx-tabfade{animation:fxTabFade .4s cubic-bezier(.16,1,.3,1)}
+@keyframes fxTabFade{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* section badge with pulsing dot — emerald-on-light */
+.fx-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 16px;background:rgba(21,168,120,.1);
+  border:1px solid rgba(21,168,120,.25);border-radius:50px;font-size:.72rem;font-weight:700;color:#0e7d5a;
+  letter-spacing:1.4px;text-transform:uppercase}
+.fx-badge .dot{width:7px;height:7px;border-radius:50%;background:#15a878;animation:fxPulse 1.8s ease-in-out infinite}
+
+/* floating decorative coin/blocks for headers */
+.fx-deco{position:absolute;pointer-events:none;opacity:.16;color:#15a878;font-size:2rem}
+
+/* ---- gradient text shimmer for hero headings ----
+   Scoped to headings (+.fx-shimmer-text) so the original .fx-shimmer
+   white-sweep keeps working on buttons (used by /manager). Built on
+   currentColor so it adapts to light & dark headings automatically. */
+h1.fx-shimmer,h2.fx-shimmer,h3.fx-shimmer,.fx-shimmer-text{
+  background:linear-gradient(110deg,currentColor 28%,#15a878 46%,#0e7d5a 50%,#15a878 54%,currentColor 72%);
+  background-size:240% auto;-webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;animation:fxTextShine 5.5s linear infinite}
+h1.fx-shimmer::after,h2.fx-shimmer::after,h3.fx-shimmer::after,.fx-shimmer-text::after{display:none}
+
+/* ---- table row entrance (one-shot animation; never holds rows hidden) */
+.fx-rowin{animation:fxRowIn .55s cubic-bezier(.16,1,.3,1) both;animation-delay:var(--fxd,0s)}
+@keyframes fxRowIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+
+/* ---- 3D tilt specular highlight (span injected by elyon-fx.js) ---- */
+.fx-spec{position:absolute;inset:0;border-radius:inherit;pointer-events:none;opacity:0;
+  transition:opacity .4s ease;z-index:1;
+  background:radial-gradient(230px circle at var(--fx-x,50%) var(--fx-y,50%),rgba(21,168,120,.10),rgba(21,168,120,.04) 45%,transparent 68%)}
+[data-fxt]{will-change:transform;transform-style:preserve-3d}
+
+/* ---- button ripple ---- */
+.fx-riphost{overflow:hidden}
+.fx-ripple{position:absolute;border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,rgba(255,255,255,.38) 0%,rgba(21,168,120,.18) 45%,transparent 70%);
+  transform:scale(0);opacity:1;animation:fxRipple .65s ease-out forwards}
+@keyframes fxRipple{to{transform:scale(1);opacity:0}}
+
+/* ---- pill pulse halo (fired by MutationObserver on content change) */
+.fx-pillpulse{animation:fxPillPulse .9s cubic-bezier(.16,1,.3,1)}
+@keyframes fxPillPulse{
+  0%{box-shadow:0 0 0 0 rgba(45,212,160,.5)}
+  70%{box-shadow:0 0 0 11px rgba(45,212,160,0)}
+  100%{box-shadow:0 0 0 0 rgba(45,212,160,0)}}
+
+/* ---- page-enter transition (skipped on .elx-work pages) ---- */
+.fx-enter{animation:fxEnter .55s cubic-bezier(.16,1,.3,1) both}
+@keyframes fxEnter{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ---- solid surface + glow utilities (perf: no backdrop-filter) ---- */
+.fx-glass{background:rgba(255,255,255,.94);border:1px solid rgba(20,40,60,.08);
+  box-shadow:0 8px 32px rgba(20,40,60,.08)}
+.fx-glow{box-shadow:0 0 22px rgba(21,168,120,.20)}
+.fx-glow-pulse{animation:fxGlowPulse 2.8s ease-in-out infinite}
+@keyframes fxGlowPulse{
+  0%,100%{box-shadow:0 0 18px rgba(21,168,120,.12)}
+  50%{box-shadow:0 0 30px rgba(21,168,120,.24)}}
+
+/* ---- classy focus-visible ring, zero-specificity so pages can override */
+:where(a,button,input,select,textarea,summary,[role="button"],[tabindex]:not([tabindex="-1"])):focus-visible{
+  outline:2px solid rgba(21,168,120,.7);outline-offset:2px;border-radius:6px;
+  box-shadow:0 0 0 5px rgba(21,168,120,.16)}
+
+/* ---- reduced motion: switch the whole motion layer off ---- */
+@media (prefers-reduced-motion: reduce){
+  #elyon-fx-bg .fx-grid,.fx-float,.fx-pulse,.fx-spin-slow,.fx-shimmer::after,
+  h1.fx-shimmer,h2.fx-shimmer,h3.fx-shimmer,.fx-shimmer-text,.fx-grad-text,
+  .fx-rowin,.fx-enter,.fx-pillpulse,.fx-ripple,.fx-glow-pulse,.fx-tabfade,
+  .fx-badge .dot,.fx-display,.fx-btn-neo::after,.fx-badge-code::after,
+  .fx-orbit::before{animation:none!important}
+  .fx-reveal,[data-reveal]{opacity:1!important;transform:none!important;transition:none!important}
+  .fx-divider svg path{stroke-dashoffset:0!important;transition:none!important}
+  .fx-divider svg circle{opacity:1!important;transition:none!important}
+  .fx-spec{display:none}}

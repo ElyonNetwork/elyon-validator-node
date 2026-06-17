@@ -1,0 +1,306 @@
+{
+  "abi": [
+    {
+      "inputs": [],
+      "stateMutability": "nonpayable",
+      "type": "constructor"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "admin",
+          "type": "address"
+        }
+      ],
+      "name": "AdminAssigned",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "previous",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "current",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "version",
+          "type": "uint256"
+        }
+      ],
+      "name": "RegistryChanged",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "pending",
+          "type": "address"
+        }
+      ],
+      "name": "RegistryProposalCancelled",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "pending",
+          "type": "address"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "activatesAt",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "expiresAt",
+          "type": "uint256"
+        }
+      ],
+      "name": "RegistryProposed",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "newDelay",
+          "type": "uint256"
+        }
+      ],
+      "name": "TimelockDelayChanged",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "GRACE_WINDOW",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MAX_DELAY",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "MIN_DELAY",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "admin",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "applyPendingRegistry",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "cancelPendingRegistry",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "getRegistry",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "current",
+          "type": "address"
+        },
+        {
+          "internalType": "uint256",
+          "name": "v",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "changedAt",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "lastChangedAt",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pendingActivatesAt",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pendingExpiresAt",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "pendingRegistry",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "address",
+          "name": "newRegistry",
+          "type": "address"
+        }
+      ],
+      "name": "proposeRegistry",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "registry",
+      "outputs": [
+        {
+          "internalType": "address",
+          "name": "",
+          "type": "address"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "newDelay",
+          "type": "uint256"
+        }
+      ],
+      "name": "setTimelockDelay",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "timelockDelay",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "version",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ],
+  "bytecode": "0x608060405262015180600755348015601657600080fd5b50600080546001600160a01b03191633908117825560405190917fdb33970bd9bc1a413c7dac3b21e061709de094761c9396ef6d49b9ebdb79393391a261088a806100626000396000f3fe608060405234801561001057600080fd5b50600436106101005760003560e01c80639da8183611610097578063b8476a0911610066578063b8476a09146101ea578063eef09bad146101f3578063f16e4f151461010f578063f851a440146101fc57600080fd5b80639da81836146101bd5780639f81aed7146101c5578063a26a6136146101ce578063af267f8f146101d757600080fd5b806354fd4d50116100d357806354fd4d501461016a5780635ab1bd53146101735780637b103999146101a15780638046c52f146101b457600080fd5b80632a53e5ef146101055780634125ff901461010f57806341da29801461012c5780634eb6a61514610157575b600080fd5b61010d61020f565b005b61011962093a8081565b6040519081526020015b60405180910390f35b60045461013f906001600160a01b031681565b6040516001600160a01b039091168152602001610123565b61010d6101653660046107b8565b6103f3565b61011960035481565b600154600354600254604080516001600160a01b039094168452602084019290925290820152606001610123565b60015461013f906001600160a01b031681565b61011960025481565b61010d61062e565b610119610e1081565b61011960055481565b61010d6101e53660046107e8565b6106fa565b61011960065481565b61011960075481565b60005461013f906001600160a01b031681565b6004546001600160a01b03166102625760405162461bcd60e51b8152602060048201526013602482015272504f494e5445523a206e6f2070656e64696e6760681b60448201526064015b60405180910390fd5b6005544210156102a95760405162461bcd60e51b8152602060048201526012602482015271504f494e5445523a20746f6f206561726c7960701b6044820152606401610259565b6006544211156102ee5760405162461bcd60e51b815260206004820152601060248201526f1413d2539511548e88195e1c1a5c995960821b6044820152606401610259565b6004546001600160a01b0316803b806103495760405162461bcd60e51b815260206004820152601b60248201527f504f494e5445523a2074617267657420686173206e6f20636f646500000000006044820152606401610259565b600180546004546001600160a01b031982166001600160a01b03918216178355426002556003805491909216929190600090610386908490610801565b9091555050600480546001600160a01b0319169055600060058190556006556001546003546040519081526001600160a01b03918216918316907fc5b706e8a2c0479dc8df5097cf1c1c4a4e585645c12f0cbcf95dce745dc09cdc906020015b60405180910390a3505050565b6000546001600160a01b0316331461041d5760405162461bcd60e51b815260040161025990610828565b6001600160a01b0381166104685760405162461bcd60e51b81526020600482015260126024820152712827a4a72a22a91d103d32b9379030b2323960711b6044820152606401610259565b6001546001600160a01b03908116908216036104bb5760405162461bcd60e51b81526020600482015260126024820152712827a4a72a22a91d1039b0b6b29030b2323960711b6044820152606401610259565b803b8061050a5760405162461bcd60e51b815260206004820152601b60248201527f504f494e5445523a2074617267657420686173206e6f20636f646500000000006044820152606401610259565b6001546001600160a01b03166105a257600180546001600160a01b038481166001600160a01b03198316178355426002556003805491909216929190600090610554908490610801565b92505081905550826001600160a01b0316816001600160a01b03167fc5b706e8a2c0479dc8df5097cf1c1c4a4e585645c12f0cbcf95dce745dc09cdc6003546040516103e691815260200190565b600480546001600160a01b0319166001600160a01b0384161790556007546105ca9042610801565b60058190556105dd9062093a8090610801565b60068190556005546040805191825260208201929092526001600160a01b038416917f9326b40a7a63bb69a597d380aff368c16f696f41101ba9c31754d927e5858324910160405180910390a25050565b6000546001600160a01b031633146106585760405162461bcd60e51b815260040161025990610828565b6004546001600160a01b03166106a65760405162461bcd60e51b8152602060048201526013602482015272504f494e5445523a206e6f2070656e64696e6760681b6044820152606401610259565b6004546040516001600160a01b03909116907f25959fc13e8122df259f1d0d1dedfeba218625f405ccd770b5bdf7d2f7f0b34b90600090a2600480546001600160a01b031916905560006005819055600655565b6000546001600160a01b031633146107245760405162461bcd60e51b815260040161025990610828565b610e108110158015610739575062093a808111155b61077d5760405162461bcd60e51b8152602060048201526015602482015274504f494e5445523a206f7574206f662072616e676560581b6044820152606401610259565b60078190556040518181527faa95467591ae5a630d7060d0ddc2a11ad4d3da705b3597cb7e024bc8bbe1d8f99060200160405180910390a150565b6000602082840312156107ca57600080fd5b81356001600160a01b03811681146107e157600080fd5b9392505050565b6000602082840312156107fa57600080fd5b5035919050565b8082018082111561082257634e487b7160e01b600052601160045260246000fd5b92915050565b6020808252601290820152712827a4a72a22a91d103737ba1030b236b4b760711b60408201526060019056fea2646970667358221220a90d1cd0017e957bd15861533c186cf4d85cdc1b79774192e3d54cd4cde101e964736f6c634300081c0033",
+  "compiledAt": "2026-06-12T19:45:33.899Z"
+}

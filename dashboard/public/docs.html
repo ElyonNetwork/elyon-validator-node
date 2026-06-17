@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Documentation · Elyon Chain</title>
+<link rel="icon" href="site-assets/icon.png" type="image/png">
+<link rel="stylesheet" href="/elyon-theme.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#f6f8fa;--bg2:#ffffff;--border:rgba(20,40,60,.08);--text:#1c2733;--text2:#5a6b7a;--text3:#8b9aa7;--accent:#15a878;--accent2:#0e7d5a;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);line-height:1.65}
+  .layout{max-width:1080px;margin:0 auto;padding:0 20px;display:grid;grid-template-columns:230px 1fr;gap:36px}
+  @media(max-width:820px){.layout{grid-template-columns:1fr}.toc{position:static!important;height:auto!important}}
+  .toc{position:sticky;top:90px;align-self:start;height:calc(100vh - 110px);overflow:auto;padding:18px 0;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(21,168,120,.35) transparent}
+  .toc::-webkit-scrollbar{width:5px}
+  .toc::-webkit-scrollbar-thumb{background:transparent;border-radius:3px}
+  .toc:hover::-webkit-scrollbar-thumb{background:rgba(21,168,120,.3)}
+  .toc a{display:block;padding:7px 12px;border-radius:8px;color:var(--text2);text-decoration:none;font-size:.9rem;font-weight:500}
+  .toc a:hover{background:rgba(21,168,120,.08);color:var(--accent2)}
+  .toc .grp{font-size:.74rem;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);margin:16px 12px 6px;font-weight:700}
+  article{padding:36px 0 90px;min-width:0}
+  article h1{font-family:'Space Grotesk';font-size:2rem;font-weight:800;letter-spacing:-.02em;margin:0 0 6px}
+  article h2{font-family:'Space Grotesk';font-size:1.4rem;font-weight:700;margin:40px 0 12px;padding-top:14px;border-top:1px solid var(--border)}
+  article h3{font-size:1.05rem;font-weight:700;margin:22px 0 8px}
+  article p,article li,article dd,.lede{color:#3d4d5c;font-size:1.02rem;line-height:1.72}
+  article code{font-family:'JetBrains Mono',monospace;background:rgba(21,168,120,.08);border:1px solid rgba(21,168,120,.20);color:#0e7d5a;padding:2px 6px;border-radius:6px;font-size:.86em}
+  article pre{background:#ffffff;color:#1c2733;padding:16px 18px;border-radius:12px;overflow:auto;font-family:'JetBrains Mono',monospace;font-size:.84rem;line-height:1.6;border:1px solid rgba(20,40,60,.08);box-shadow:0 8px 32px rgba(20,40,60,.08);scrollbar-width:thin;scrollbar-color:rgba(21,168,120,.35) transparent}
+  article pre::-webkit-scrollbar{height:5px}
+  article pre::-webkit-scrollbar-thumb{background:rgba(21,168,120,.3);border-radius:3px}
+  article pre code{background:none;border:0;padding:0;color:#0e7d5a}
+  .lede{font-size:1.05rem;color:var(--text2);margin-bottom:6px}
+  .note{background:rgba(21,168,120,.07);border:1px solid rgba(21,168,120,.25);border-radius:12px;padding:14px 16px;margin:16px 0}
+  .warn{background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:12px;padding:14px 16px;margin:16px 0}
+  .toolbar{display:flex;gap:10px;justify-content:flex-end;padding:14px 0}
+  .btn{padding:9px 16px;border:1px solid rgba(21,168,120,.30);border-radius:10px;background:#ffffff;color:var(--text);font-weight:600;cursor:pointer;text-decoration:none;font-size:.88rem;box-shadow:0 2px 10px rgba(20,40,60,.06)}
+  .btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  @media print{
+    .site-header,.toc,.toolbar,.no-print{display:none!important}
+    .layout{display:block;max-width:none;padding:0}
+    article{padding:0}
+    article h2{break-before:auto}
+  }
+
+  /* ===== v10.0 — light premium polish ===== */
+  :root{ --grad-primary:linear-gradient(135deg,#15a878,#0e7d5a); }
+  body{ background-image:radial-gradient(ellipse 800px 460px at 50% -8%,rgba(21,168,120,.07),transparent 60%),radial-gradient(ellipse 700px 460px at 90% 100%,rgba(14,125,90,.05),transparent 60%); }
+  .toc a{ transition:.15s; }
+  .toc a.active,.toc a:hover{ background:rgba(21,168,120,.08) !important;color:var(--accent2) !important;font-weight:600; }
+  .toc .grp{ font-family:'Space Grotesk',sans-serif; }
+  .doc-eyebrow{ display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);background:rgba(21,168,120,.1);border:1px solid rgba(21,168,120,.2);padding:6px 14px;border-radius:999px;margin-bottom:14px; }
+  .doc-eyebrow .pulse{ width:7px;height:7px;border-radius:50%;background:#15a878;display:inline-block;animation:docPulse 1.8s infinite; }
+  @keyframes docPulse{0%{box-shadow:0 0 0 0 rgba(21,168,120,.5)}70%,100%{box-shadow:0 0 0 7px rgba(21,168,120,0)}}
+  article h1{ font-size:2.6rem !important;line-height:1.05;letter-spacing:-.03em; }
+  article h1 .grad{ background:linear-gradient(120deg,#0e7d5a,#15a878 55%,#0c8f68);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent; }
+  article h1,article h2,article h3,article h4{ font-family:'Space Grotesk','Inter',sans-serif !important; }
+  article h2{ font-weight:800 !important; }
+  .btn{ border-radius:999px !important;font-family:'Space Grotesk',sans-serif;transition:all .2s cubic-bezier(.34,1.56,.64,1); }
+  .btn.primary{ background:var(--grad-primary) !important;border:0 !important;box-shadow:0 6px 22px rgba(21,168,120,.28); }
+  .btn.primary:hover{ transform:translateY(-2px);box-shadow:0 12px 40px rgba(21,168,120,.36); }
+  .note,.warn{ border-radius:14px; }
+  article{ animation:docRise .5s cubic-bezier(.34,1.56,.64,1) both; }
+  @keyframes docRise{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+  /* ===== validator-model docs polish: reveal-on-scroll + glow cards + code badge ===== */
+  .d-reveal{opacity:0;transform:translateY(18px);transition:opacity .6s cubic-bezier(.16,1,.3,1),transform .6s cubic-bezier(.16,1,.3,1)}
+  .d-reveal.visible{opacity:1;transform:none}
+  .note,.warn{transition:transform .25s cubic-bezier(.34,1.56,.64,1),box-shadow .25s}
+  .note:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(21,168,120,.14)}
+  .warn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(245,158,11,.14)}
+  article pre{transition:transform .25s,box-shadow .25s}
+  article pre:hover{transform:translateY(-2px);box-shadow:0 14px 40px rgba(20,40,60,.12),0 0 26px rgba(21,168,120,.10)}
+  .apos-badge{position:relative;display:inline-flex;align-items:center;font-family:'JetBrains Mono',monospace;font-weight:600;
+    font-size:.86em;letter-spacing:.05em;color:#ffffff;background:linear-gradient(135deg,#15a878,#0e7d5a);
+    padding:2px 10px;border-radius:8px;overflow:hidden;box-shadow:0 4px 14px rgba(14,125,90,.25);vertical-align:baseline}
+  .apos-badge::before{content:'';position:absolute;top:0;bottom:0;width:60%;left:-80%;
+    background:linear-gradient(105deg,transparent,rgba(255,255,255,.35),transparent);animation:aposShimmer 3.2s ease-in-out infinite}
+  @keyframes aposShimmer{0%,55%{left:-80%}85%,100%{left:130%}}
+  @media print{.d-reveal{opacity:1!important;transform:none!important}}
+  @media(prefers-reduced-motion:reduce){.d-reveal{opacity:1;transform:none;transition:none}.apos-badge::before{animation:none}.doc-eyebrow .pulse{animation:none}article{animation:none}.note:hover,.warn:hover,article pre:hover{transform:none}}
+</style>
+
+<link rel="stylesheet" href="/elyon-app.css">
+</head>
+<body class="elx-shelled">
+<aside class="elx-sidebar" id="elx-sidebar">
+  <a class="elx-sb-brand" href="/"><img src="/site-assets/logo.png" alt="Elyon Chain"></a>
+  <nav class="elx-sb-nav">
+    <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg><span>Home</span></a>
+    <a href="/owner.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v6c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7z"/><path d="M9 12l2 2 4-4"/></svg><span>Delegate</span></a>
+    <a href="/docs.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span>Docs</span></a>
+    <a href="/faucet.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg><span>Faucet</span></a>
+    <a href="/leaderboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 1-3 3"/></svg><span>Leaderboard</span></a>
+  </nav>
+  <div class="elx-sb-foot">Elyon Chain · APOS L1</div>
+</aside>
+<div class="elx-app">
+  <header class="elx-topbar">
+    <button class="elx-burger" onclick="document.getElementById('elx-sidebar').classList.toggle('open')">☰</button>
+    <h1>Documentation</h1>
+    <span class="elx-spacer"></span>
+    <span class="elx-net"><span class="dot"></span>Elyon Chain</span>
+  </header>
+  <div class="elx-work">
+
+
+
+<div class="layout">
+  <nav class="toc">
+    <div class="grp">Get started</div>
+    <a href="#intro">Overview</a>
+    <a href="#network">Add Elyon to your wallet</a>
+    <div class="grp">Validators</div>
+    <a href="#validator">Become a validator</a>
+    <a href="#grow-pool">The pool — one number</a>
+    <a href="#two-tier">Two-tier packages</a>
+    <a href="#validator-panel">Validator panel</a>
+    <div class="grp">Delegators</div>
+    <a href="#delegator">Delegate to a validator</a>
+    <div class="grp">Network</div>
+    <a href="#gas">Gas &amp; fees (EIP-1559)</a>
+    <a href="#elyonid">ElyonID for integrations</a>
+  </nav>
+
+  <article>
+    <div class="toolbar no-print">
+      <button class="btn primary" onclick="window.print()">⬇️ Save as PDF</button>
+    </div>
+
+    <span class="doc-eyebrow"><span class="pulse"></span> Validator &amp; Delegator Docs</span>
+    <h1 id="intro">Elyon Chain <span class="grad">Documentation</span></h1>
+    <p class="lede">Everything validators and delegators need to work with Elyon Chain — an EVM Layer-1 running patched Nethermind with APOS (Authorized Proof of Stake) consensus. <b>Run a validator. Build a pool. Share the fees.</b></p>
+    <div class="note"><b>Tip:</b> click <b>“Save as PDF”</b> (top right) to download any section as a PDF for offline reading or sharing with your team.</div>
+
+    <h2 id="network">Add Elyon Chain to your wallet</h2>
+    <p>Elyon is EVM-compatible, so MetaMask, Trust Wallet, Rabby, etc. all work. Add the network once:</p>
+    <ul>
+      <li><b>Network name:</b> Elyon Chain</li>
+      <li><b>RPC URL:</b> <code>https://admintestnet.elyon.network/rpc</code></li>
+      <li><b>Chain ID:</b> <code>89178316</code></li>
+      <li><b>Currency symbol:</b> <code>ELN</code></li>
+      <li><b>Block explorer:</b> <code>https://explorer.elyon.network</code></li>
+    </ul>
+    <div class="warn">Wallets reject plain <code>http://</code> RPC URLs — always use the <code>https://…/rpc</code> endpoint above. If a network was added earlier with a bad URL, remove it and re-add it.</div>
+
+    <h2 id="validator">Become a Validator</h2>
+    <p>Validators are the backbone of Elyon Chain: each one runs their own node, stakes into the <b>APOS registry</b>, and — once admin-approved — seals blocks and earns a share of the network’s transaction fees.</p>
+    <h3>1. Run your own node</h3>
+    <pre><code>docker run -d --name elyonchain --restart unless-stopped \
+  -p 3000:3000 -p 30303:30303 -p 8545:8545 \
+  -v aposunp-data:/data \
+  -e NODE_ROLE=operator \
+  -e ADMIN_URL=https://admintestnet.elyon.network \
+  elyonchain/node:latest</code></pre>
+    <p>The node auto-syncs from the admin bootstrap URL. Open <code>http://&lt;your-server&gt;:3000/manager</code> — the node panel — to manage it.</p>
+    <h3>2. Apply as a validator — through a staking package</h3>
+    <p>From the node panel, <b>pick one of the admin's staking packages</b> and click <b>Apply as Validator</b>. Applying stakes <b>at least the larger of the network minimum and the package minimum</b> into the APOS registry from your validator wallet, selects that package for you and <b>locks the stake for the package term</b>. Your status shows as <b>PENDING</b>.</p>
+    <div class="note"><b>One package at a time.</b> You can <b>top up</b> your selected package any time (your whole stake re-locks for the same term), but <b>switching to a different package is only possible once the current term has ended</b>. There is no early exit from a package term.</div>
+    <h3>3. Wait for admin approval</h3>
+    <p>The admin reviews and approves your application. On approval your status flips to <b>ACTIVE</b> and you receive a unique public <span class="apos-badge">APOS code</span> — the handle delegators use to fund your pool. Share it anywhere.</p>
+    <h3>4. Climb the tier curve — with your POOL</h3>
+    <p>Your <b>tier</b> — your share of the network’s transaction fees — is set by the admin’s tier curve and is read from <b>one number: your POOL</b> = your own package-locked stake <b>plus</b> every delegator deposit. <b>Delegations count toward your tier directly</b> — attracting delegators is tier progress in itself. Bigger pool, higher tier, bigger fee cut. The tier curve governs the fee share only; <b>APR comes exclusively from the staking package</b> you stake into.</p>
+    <h3>5. Earn daily profit — claim any time</h3>
+    <p>Your package APR <b>accrues continuously (daily)</b> on your own staked balance. You don't wait for the term to end: hit <b>Claim daily profit</b> in the panel whenever you like and the accrued amount is paid out from the network reward pool. Your principal stays locked until the package term ends.</p>
+    <h3>6. Stay above the minimum — auto-removal &amp; auto-recovery</h3>
+    <p>Your <b>pool</b> (own stake + delegations) must stay at or above the network's <b>minimum validator stake</b>. If it ever drops below — for example after withdrawing your stake when the lock elapses — the registry <b>automatically moves you to <code>BELOW_MIN</code></b>: your gas-fee share is pulled and you earn nothing while below the minimum. Nothing is lost, though: the moment the pool is back at the minimum — by <b>topping up your package</b> or by <b>receiving new delegations</b> (delegating to a below-minimum validator is allowed exactly so its pool can be refilled) — you are <b>automatically restored to ACTIVE</b> and your tier is re-applied. No admin action needed in either direction.</p>
+    <div class="note">Validator status values: <code>NONE → PENDING → ACTIVE</code> (or <code>REJECTED</code> / <code>SUSPENDED</code>, set by the admin, and <code>BELOW_MIN</code>, set automatically when the pool drops under the minimum). Only <b>ACTIVE</b> validators appear on the public site and the <a href="/leaderboard.html">Validator Leaderboard</a>.</div>
+
+    <h2 id="grow-pool">The pool — one number drives everything</h2>
+    <p>Every validator has <b>one pool</b> in the registry, made of two parts:</p>
+    <ul>
+      <li><b>Your own stake</b> — ELN locked through the admin’s <b>staking packages</b> (your apply stake plus top-ups). It earns the <b>package APR, accrued daily</b> and claimable any time; the principal unlocks when the package term elapses. One package at a time — switching requires the term to end.</li>
+      <li><b>Delegator deposits</b> — made through <b>your published packages</b> (see <a href="#two-tier">two-tier packages</a> below) from your public validator page. Each deposit is its own <b>position</b> that earns the package's rate and <b>counts toward your tier immediately</b>. Delegator money is never yours to move: delegators withdraw their positions themselves, or you can release a position back to them.</li>
+    </ul>
+    <div class="note">In short: <b>one pool — your stake + delegations — drives the tier.</b> Your daily profit comes from your package APR; your delegators' daily profit comes from the package terms you market to them (≤ your package APR); your fee share comes from the tier curve.</div>
+
+    <h2 id="two-tier">Two-tier packages — the marketing model</h2>
+    <p>Elyon's staking economics work on <b>two tiers</b>:</p>
+    <ul>
+      <li><b>Tier 1 — admin → validator.</b> The chain admin publishes the <b>staking packages</b> (lock term, minimum, APR) and approves validators who stake through one. The package APR is the validator's wholesale rate — the most it can earn on its own stake.</li>
+      <li><b>Tier 2 — validator → delegators.</b> Each approved validator becomes a marketer of its own pool: it publishes <b>its own delegation packages</b> on its public page (<code>/validator.html?code=…</code>) — each with a <b>name</b>, a <b>monthly rate</b>, a <b>lock term</b>, a <b>minimum deposit per position</b> (no maximum), and an <b>early-exit penalty</b> (max 20%).</li>
+    </ul>
+    <h3>The rules that keep it honest</h3>
+    <ul>
+      <li><b>The cap:</b> a tier-2 package's rate can <b>never exceed the validator's tier-1 package APR</b> — a validator can't promise delegators more than its own package earns. (Monthly rate cap = package APR ÷ 12.)</li>
+      <li><b>One package per delegator:</b> a delegator can hold open positions in <b>only one package of one validator</b> at a time — top-ups of that same package are always allowed, but joining a different package (or another validator) requires withdrawing the current package fully first.</li>
+      <li><b>Snapshotted forever:</b> when a delegator joins a package, its rate, lock term and penalty are <b>written into the position</b> — grandfathered. Editing or disabling the package later never touches existing positions.</li>
+      <li><b>Per-package penalty:</b> withdrawing a position <b>before its lock term ends</b> deducts the package's penalty (e.g. 5%) from the withdrawn principal and credits it to the validator. After the lock ends, withdrawals are penalty-free. A validator-initiated <b>release</b> is always penalty-free.</li>
+      <li><b>Validator approval:</b> joining goes through the validator's <b>desk</b> — the delegator picks a package, sends a request, and the deposit form unlocks once the validator accepts.</li>
+      <li><b>Profile:</b> each validator publishes a public profile (company, contact, address, website, about) rendered on its page — so delegators know who they are dealing with.</li>
+    </ul>
+    <div class="note">Think of it like telecoms: the network operator (admin) sets wholesale terms; resellers (validators) package them into retail plans. The chain enforces that no retail plan ever pays more than the wholesale rate.</div>
+
+    <h2 id="delegator">Delegators</h2>
+    <p>No hardware, no node — just back a validator you trust:</p>
+    <ol>
+      <li>Get ELN (testnet: use the <a href="/faucet.html">Faucet</a>).</li>
+      <li>Open a validator's <b>public page</b> (every validator card on the <a href="/">home page</a> and the <a href="/owner.html">delegator portal</a> links to it) and compare its <b>packages</b>: monthly rate, lock term, minimum deposit and early-exit penalty — each package has a minimum deposit you must meet to join.</li>
+      <li><b>Join a package:</b> connect your wallet, send the validator a join request and chat it out. Once the validator <b>accepts</b>, the deposit form unlocks for that package.</li>
+      <li>Deposit any amount at or above the package minimum (there is no maximum) — each deposit creates a new <b>position</b> with the package's <b>rate, lock and penalty locked in at deposit, forever</b> (later package changes never touch it). You can hold <b>multiple positions</b>, but <b>only within one package of one validator at a time</b> — to join a different validator or package, withdraw your current package fully first. Deposits count toward the validator's tier directly.</li>
+      <li><b>Profit accrues daily</b> on every position at its grandfathered rate — watch it tick live under “My positions”.</li>
+      <li><b>Withdraw yourself, any time</b> — principal (full or partial) plus accrued profit goes straight back to your wallet. <b>⚠ Early withdrawal:</b> exiting <b>before the package's lock term ends</b> pays that package's <b>early-exit penalty</b> on the withdrawn principal (kept by the validator). The validator can also release a position back to you — releases carry <b>no penalty</b>.</li>
+      <li>Validators may additionally send manual gifts at their discretion — shown as “total received” in the portal.</li>
+    </ol>
+    <div class="warn">Your terms are fixed the moment you deposit. Compare validators by their package terms (rate, lock, penalty — all capped by their package APR), profile, pool size, position count and leaderboard rank — all public signals.</div>
+
+    <h2 id="validator-panel">Validator panel</h2>
+    <p>Your node’s <code>/manager</code> page is mission control for your validator business:</p>
+    <ul>
+      <li><b>Pool overview</b> — your pool (one number, drives the tier) broken into your own stake and delegator deposits, current tier (fee share %) and your selected package’s APR.</li>
+      <li><b>Daily profit</b> — the package APR accrued so far on your stake, with <b>Claim daily profit</b> to cash it out any time.</li>
+      <li><b>My Packages</b> — create and manage the tier-2 packages you market to delegators: name, lock days, monthly rate (capped at package APR ÷ 12), minimum deposit and early-exit penalty. Enable/disable any time — existing positions keep their snapshotted terms.</li>
+      <li><b>My Page</b> — your public profile (company, contact, address, website, about) plus a link to your validator page (<code>/validator.html?code=YOURCODE</code>) — share it everywhere.</li>
+      <li><b>Delegation requests</b> — delegators ask to join one of your packages (the chosen package is shown on the request); chat, then accept or decline.</li>
+      <li><b>Positions table</b> — every delegation position (delegator, label, package, amount, rate, accrued profit); <b>name</b> delegators, <b>release</b> principal back (no penalty, profit paid too) or send manual <b>gifts</b>.</li>
+      <li><b>Package</b> — top up your selected tier-1 package (re-locks the same term) or switch packages after the term ends.</li>
+      <li><b>Fee earnings</b> — your accumulated share of the transaction fees collected by the network, plus any early-exit penalties from your delegators.</li>
+    </ul>
+
+    <h2 id="gas">Gas &amp; fees — standard EIP-1559</h2>
+    <p>Elyon Chain uses standard Ethereum <b>EIP-1559</b> gas pricing — no custom fee market:</p>
+    <ul>
+      <li><b>Base fee</b> — set per block by protocol and <b>burned</b>.</li>
+      <li><b>Priority fee (tip)</b> — <b>collected</b> with each transaction.</li>
+      <li><b>Validator fee share</b> — your tier’s fee-share % applies to the <b>collected</b> fees, credited to approved validators.</li>
+    </ul>
+    <p>Any EVM wallet or tooling that speaks EIP-1559 (MetaMask, ethers.js, viem, Foundry…) works unchanged.</p>
+
+
+    <h2 id="elyonid">ElyonID for product integrations</h2>
+    <p>ElyonID is your wallet address on Elyon Chain — the identifier other products use to credit, pay, or attribute you. To integrate:</p>
+    <ul>
+      <li><b>Fetch the user's ElyonID</b> by requesting their connected address via EIP-1193 (<code>eth_requestAccounts</code>) on chain ID <code>89178316</code>.</li>
+      <li><b>Verify ownership</b> by asking the user to sign a nonce (<code>personal_sign</code>) and recovering the address.</li>
+      <li><b>Resolve on-chain roles</b> (node / contract owner / token owner) via the APOS registry read endpoints exposed by the dashboard (<code>/api/apos/*</code>).</li>
+    </ul>
+    <div class="note">Need deeper integration help (registry ABIs, fee-share webhooks)? Use <a href="/report.html">Report Issue</a> with category “Other” and describe your use case — the team will follow up.</div>
+  </article>
+</div>
+<script src="/elyon-fx.js" defer></script>
+<script>
+// ── docs polish: reveal-on-scroll + TOC scroll-spy (inline, no libraries) ──
+(function(){
+  var art = document.querySelector('article');
+  if (!art) return;
+  var blocks = art.querySelectorAll('h2, h3, p, ul, ol, pre, .note, .warn');
+  if ('IntersectionObserver' in window && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    var io = new IntersectionObserver(function(es){
+      es.forEach(function(e){ if (e.isIntersecting) { e.target.classList.add('visible'); io.unobserve(e.target); } });
+    }, { threshold: 0.08, rootMargin: '0px 0px -8% 0px' });
+    blocks.forEach(function(el){ el.classList.add('d-reveal'); io.observe(el); });
+  }
+  // scroll-spy: highlight the TOC entry of the section in view
+  var heads = art.querySelectorAll('h1[id], h2[id]');
+  var links = document.querySelectorAll('.toc a[href^="#"]');
+  function spy(){
+    var cur = null, y = window.scrollY + 130;
+    heads.forEach(function(h){ if (h.offsetTop <= y) cur = h.id; });
+    links.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href') === '#' + cur); });
+  }
+  window.addEventListener('scroll', spy, { passive: true });
+  spy();
+})();
+</script>
+
+  </div>
+</div>
+</body>
+</html>

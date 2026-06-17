@@ -1,0 +1,12 @@
+# Dependencies (installed in the Docker image from the base)
+node_modules/
+
+# Runtime data / logs
+data/
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

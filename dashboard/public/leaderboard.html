@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Validator Leaderboard · Elyon Chain</title>
+<link rel="icon" href="site-assets/icon.png" type="image/png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/elyon-theme.css">
+<link rel="stylesheet" href="/elyon-fx.css">
+<script defer src="/elyon-fx.js"></script>
+<style>
+  /* ===== Leaderboard redesign — scoped, premium ===== */
+  /* v10.0 light premium identity: re-map the shared elyon-theme tokens for
+     THIS page only (this style block loads after elyon-theme.css). */
+  :root{
+    --clr-bg-deep:#f6f8fa; --clr-bg:#f6f8fa;
+    --clr-bg-elevated:#ffffff;
+    --clr-bg-card:#f4f8f6; --clr-bg-card-hover:#eef5f1;
+    --clr-bg-glass:rgba(255,255,255,.85);
+    --clr-primary:#15a878; --clr-primary-light:#15a878; --clr-primary-dark:#0e7d5a;
+    --clr-primary-glow:rgba(21,168,120,.22);
+    --clr-success:#15a878; --clr-danger:#dc2626; --clr-warning:#b45309;
+    --grad-primary:linear-gradient(135deg,#15a878,#0e7d5a);
+    --grad-glow:radial-gradient(circle,rgba(21,168,120,.10) 0%,transparent 70%);
+    --clr-text:#1c2733; --clr-text-muted:#5a6b7a; --clr-text-dim:#8b9aa7; --clr-heading:#1c2733;
+    --shadow-sm:0 2px 10px rgba(20,40,60,.06); --shadow-md:0 8px 32px rgba(20,40,60,.08);
+    --shadow-lg:0 20px 60px rgba(20,40,60,.12);
+  }
+  body{background:#f6f8fa;background-image:radial-gradient(ellipse 800px 500px at 50% -5%,rgba(21,168,120,.07),transparent 60%),radial-gradient(ellipse 700px 460px at 90% 100%,rgba(14,125,90,.05),transparent 60%);background-repeat:no-repeat;background-attachment:fixed;color:var(--clr-text)}
+  .lb-wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  .lb-hero{position:relative;text-align:center;padding:56px 0 24px}
+  .lb-hero .eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--clr-primary-dark);background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.25);padding:6px 14px;border-radius:999px;margin-bottom:18px}
+  .lb-hero .eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:var(--clr-primary);box-shadow:0 0 0 0 rgba(21,168,120,.5);animation:lbPulse 1.8s infinite}
+  @keyframes lbPulse{0%{box-shadow:0 0 0 0 rgba(21,168,120,.5)}70%,100%{box-shadow:0 0 0 7px rgba(21,168,120,0)}}
+  .lb-hero h1{font-family:var(--font-heading);font-size:clamp(2.1rem,5vw,3.1rem);font-weight:800;letter-spacing:-.03em;line-height:1.05;margin:0 0 14px;color:var(--clr-heading)}
+  .lb-hero h1 .grad{background:linear-gradient(120deg,#0e7d5a,#15a878 55%,#0c8f68);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+  .lb-hero p{max-width:620px;margin:0 auto;color:var(--clr-text-muted);font-size:1.02rem;line-height:1.6}
+
+  /* Reward countdown band */
+  .lb-timer{margin:30px auto 8px;max-width:560px;background:linear-gradient(135deg,rgba(21,168,120,.08),rgba(14,125,90,.04)),#ffffff;border:1px solid rgba(21,168,120,.22);border-radius:20px;padding:20px 24px;text-align:center;position:relative;overflow:hidden;box-shadow:0 8px 32px rgba(20,40,60,.08)}
+  .lb-timer::before{content:"";position:absolute;inset:0;background:var(--grad-glow);opacity:.5;pointer-events:none}
+  .lb-timer .lbl{font-family:var(--font-mono);font-size:11px;font-weight:600;letter-spacing:.16em;text-transform:uppercase;color:var(--clr-text-muted)}
+  .lb-timer .val{font-family:var(--font-heading);font-size:1.5rem;font-weight:800;color:var(--clr-primary-dark);margin-top:6px;letter-spacing:-.01em}
+
+  /* Validator badge on rows/podium */
+  .vbadge{display:inline-flex;align-items:center;gap:5px;font-family:var(--font-mono);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:#0e7d5a;background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.28);padding:3px 8px;border-radius:999px}
+
+  /* Podium (top 3) */
+  .lb-podium{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;align-items:end;margin:34px 0 26px}
+  .podium-card{position:relative;background:var(--clr-bg-elevated);border:1px solid rgba(20,40,60,.08);border-radius:20px;padding:22px 16px 20px;text-align:center;box-shadow:var(--shadow-md);transition:transform .35s var(--transition-spring),box-shadow .35s;animation:lbRise .55s var(--transition-spring) both}
+  .podium-card:hover{transform:translateY(-6px);box-shadow:var(--shadow-lg),0 0 30px rgba(21,168,120,.12)}
+  .podium-card .medal{position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-family:var(--font-heading);font-weight:800;font-size:1rem;color:#fff;box-shadow:var(--shadow-sm)}
+  .podium-card.p1{order:2;transform:scale(1.06);border-color:rgba(245,158,11,.40);background:linear-gradient(180deg,rgba(247,183,51,.10),#ffffff);box-shadow:var(--shadow-md),0 8px 34px rgba(247,183,51,.16)}
+  .podium-card.p1:hover{transform:scale(1.06) translateY(-6px);box-shadow:var(--shadow-lg),0 10px 44px rgba(247,183,51,.22)}
+  .podium-card.p2{order:1;border-color:rgba(148,163,184,.35);box-shadow:var(--shadow-md),0 6px 26px rgba(148,163,184,.14)}
+  .podium-card.p3{order:3;border-color:rgba(161,98,7,.30);box-shadow:var(--shadow-md),0 6px 26px rgba(214,163,106,.16)}
+  .p1 .medal{background:linear-gradient(135deg,#f7b733,#f59e0b);box-shadow:0 4px 16px rgba(245,158,11,.40)}
+  .p2 .medal{background:linear-gradient(135deg,#94a3b8,#64748b);box-shadow:0 4px 14px rgba(100,116,139,.35)}
+  .p3 .medal{background:linear-gradient(135deg,#d6a36a,#a16207);box-shadow:0 4px 14px rgba(161,98,7,.35)}
+  .podium-card .ava{width:56px;height:56px;border-radius:50%;margin:10px auto 12px;display:grid;place-items:center;color:#fff;font-family:var(--font-mono);font-weight:600;font-size:.9rem;box-shadow:var(--shadow-sm)}
+  .podium-card .addr{font-family:var(--font-mono);font-size:12.5px;color:var(--clr-text);font-weight:600}
+  .podium-card .score{font-family:var(--font-heading);font-size:1.7rem;font-weight:800;color:var(--clr-primary-dark);margin-top:6px;line-height:1}
+  .podium-card .score small{font-size:.7rem;color:var(--clr-text-dim);font-weight:600;letter-spacing:.06em}
+  .podium-card .chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:12px}
+  .chip{font-family:var(--font-mono);font-size:10.5px;color:var(--clr-text-muted);background:var(--clr-bg-card);border:1px solid rgba(21,168,120,.14);padding:4px 9px;border-radius:8px}
+  .chip b{color:var(--clr-text);font-weight:600}
+
+  /* Ranked list (rest) */
+  .lb-list{display:flex;flex-direction:column;gap:10px;margin-bottom:48px}
+  .lb-row{display:flex;align-items:center;gap:16px;background:var(--clr-bg-elevated);border:1px solid rgba(20,40,60,.08);border-radius:16px;padding:14px 18px;transition:transform .25s var(--transition-spring),box-shadow .25s,border-color .25s;animation:lbRise .5s var(--transition-spring) both}
+  .lb-row:hover{transform:translateX(4px);box-shadow:var(--shadow-md),0 0 22px rgba(21,168,120,.10);border-color:rgba(21,168,120,.28)}
+  .lb-row .rk{font-family:var(--font-heading);font-weight:800;font-size:1.05rem;color:var(--clr-text-dim);width:40px;flex:0 0 auto;text-align:center}
+  .lb-row .ava{width:40px;height:40px;border-radius:50%;flex:0 0 auto;display:grid;place-items:center;color:#fff;font-family:var(--font-mono);font-weight:600;font-size:.72rem}
+  .lb-row .who{flex:1;min-width:0}
+  .lb-row .who .addr{font-family:var(--font-mono);font-size:13px;color:var(--clr-text);font-weight:600}
+  .lb-row .who .meta{display:flex;flex-wrap:wrap;gap:6px;margin-top:5px}
+  .lb-row .sc{flex:0 0 auto;text-align:right}
+  .lb-row .sc .n{font-family:var(--font-heading);font-weight:800;font-size:1.15rem;color:var(--clr-primary-dark);line-height:1}
+  .lb-row .sc .u{font-size:.62rem;color:var(--clr-text-dim);font-weight:600;letter-spacing:.08em;text-transform:uppercase}
+
+  @keyframes lbRise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+  .lb-empty{text-align:center;padding:56px 24px;color:var(--clr-text-dim)}
+  .lb-empty svg{width:64px;height:64px;opacity:.4;margin-bottom:14px}
+  .lb-skel{height:70px;border-radius:16px;background:linear-gradient(90deg,#eef2f5 25%,#e3eae6 37%,#eef2f5 63%);background-size:800px 100%;animation:lbShimmer 1.4s infinite;margin-bottom:10px}
+  @keyframes lbShimmer{0%{background-position:-400px 0}100%{background-position:400px 0}}
+  .lb-undeployed{text-align:center;padding:60px 24px;color:var(--clr-text-muted);background:var(--clr-bg-elevated);border:1px dashed rgba(21,168,120,.30);border-radius:20px;margin-top:40px}
+
+  @media(max-width:640px){
+    .lb-podium{grid-template-columns:1fr;gap:14px}
+    .podium-card.p1,.podium-card.p2,.podium-card.p3{order:0;transform:none}
+    .podium-card.p1:hover,.podium-card:hover{transform:translateY(-4px)}
+    .lb-row .who .meta .chip:nth-child(n+3){display:none}
+  }
+
+  /* v9.0 — respect reduced motion: freeze decorative pulses/shimmers/lifts */
+  @media(prefers-reduced-motion:reduce){
+    .lb-hero .eyebrow .pulse,.lb-skel,.podium-card,.lb-row{animation:none}
+    .podium-card:hover,.podium-card.p1:hover,.lb-row:hover{transform:none}
+  }
+</style>
+
+<link rel="stylesheet" href="/elyon-app.css">
+</head>
+<body class="elx-shelled">
+<aside class="elx-sidebar" id="elx-sidebar">
+  <a class="elx-sb-brand" href="/"><img src="/site-assets/logo.png" alt="Elyon Chain"></a>
+  <nav class="elx-sb-nav">
+    <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg><span>Home</span></a>
+    <a href="/owner.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v6c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7z"/><path d="M9 12l2 2 4-4"/></svg><span>Delegate</span></a>
+    <a href="/docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span>Docs</span></a>
+    <a href="/faucet.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg><span>Faucet</span></a>
+    <a href="/leaderboard.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 1-3 3"/></svg><span>Leaderboard</span></a>
+  </nav>
+  <div class="elx-sb-foot">Elyon Chain · APOS L1</div>
+</aside>
+<div class="elx-app">
+  <header class="elx-topbar">
+    <button class="elx-burger" onclick="document.getElementById('elx-sidebar').classList.toggle('open')">☰</button>
+    <h1>Leaderboard</h1>
+    <span class="elx-spacer"></span>
+    <span class="elx-net"><span class="dot"></span>Elyon Chain</span>
+  </header>
+  <div class="elx-work">
+
+
+
+
+<main class="lb-wrap">
+  <section class="lb-hero">
+    <span class="eyebrow"><span class="pulse"></span> Live on-chain ranking</span>
+    <h1>Validator <span class="grad">Leaderboard</span></h1>
+    <p>Live ranking of <b>admin-approved APOS validators</b> — only validators accepted into the APOS registry are scored, against the admin-tunable coefficients in the Leaderboard contract. Top validators earn from the on-chain reward pool at the end of each month.</p>
+
+    <div class="lb-timer">
+      <div class="lbl">Next reward release in</div>
+      <div class="val" id="reward-countdown">—</div>
+    </div>
+  </section>
+
+  <div id="state-undeployed" class="lb-undeployed" style="display:none">Leaderboard contract not deployed yet — admin needs to deploy it from <code>/admin</code>.</div>
+
+  <div id="lb-podium" class="lb-podium" style="display:none"></div>
+  <div id="lb-body" class="lb-list">
+    <div class="lb-skel"></div><div class="lb-skel"></div><div class="lb-skel"></div>
+  </div>
+</main>
+
+<script>
+(async () => {
+  const $  = (s) => document.querySelector(s);
+  let state = null, currentMonth = null;
+
+  async function loadState() {
+    try {
+      state = await fetch('/api/lb/state').then(r => r.json());
+      if (!state.deployed) { $('#state-undeployed').style.display = ''; $('#lb-body').innerHTML=''; return false; }
+      $('#state-undeployed').style.display = 'none';
+      currentMonth = state.currentMonth;
+      startCountdown();
+      return true;
+    } catch (e) {
+      $('#state-undeployed').textContent = 'Failed to load: ' + e.message;
+      $('#state-undeployed').style.display = '';
+      $('#lb-body').innerHTML = '';
+      return false;
+    }
+  }
+
+  // A "month" is block.timestamp / 2592000 (30-day epoch); rewards for month M
+  // become claimable once currentMonth > M, i.e. at (M+1)*2592000.
+  let countdownIv = null;
+  function startCountdown() {
+    const el = $('#reward-countdown');
+    if (!el || currentMonth == null) return;
+    const periodEndMs = (Number(currentMonth) + 1) * 2592000 * 1000;
+    function tick() {
+      let rem = Math.floor((periodEndMs - Date.now()) / 1000);
+      if (rem <= 0) { el.textContent = 'releasing now…'; return; }
+      const d = Math.floor(rem / 86400);
+      const h = Math.floor((rem % 86400) / 3600);
+      const m = Math.floor((rem % 3600) / 60);
+      el.textContent = d + 'd ' + h + 'h ' + m + 'm remaining';
+    }
+    tick();
+    if (countdownIv) clearInterval(countdownIv);
+    countdownIv = setInterval(tick, 30000);
+  }
+
+  function shortAddr(a) { return a.slice(0, 6) + '…' + a.slice(-4); }
+  // wei → ELN: /1e18, ≤4 decimals, thousands separators.
+  function fmtEln(wei) {
+    try { return (Number(BigInt(wei) / 10n**14n) / 1e4).toLocaleString(undefined, { maximumFractionDigits: 4 }); }
+    catch { return '—'; }
+  }
+  // Deterministic color from address for the avatar.
+  function avaColor(a){ let h=0; for(let i=2;i<a.length;i++) h=(h*31+a.charCodeAt(i))>>>0; const hue=h%360; return 'linear-gradient(135deg,hsl('+hue+' 62% 52%),hsl('+((hue+38)%360)+' 64% 42%))'; }
+  function avaText(a){ return a.slice(2,4).toUpperCase(); }
+
+  function metaChips(m) {
+    m = m || {};
+    return '<span class="chip"><b>' + (m.txCount ?? '—') + '</b> txs</span>' +
+           '<span class="chip"><b>' + fmtEln(m.txVolumeWei) + '</b> ELN vol</span>' +
+           '<span class="chip"><b>' + (m.ownersStakedThrough ?? '—') + '</b> backers</span>' +
+           '<span class="chip"><b>' + (m.uptimePct ?? '—') + '%</b> uptime</span>';
+  }
+
+  function podiumCard(it, rank) {
+    const cls = 'p' + rank;
+    return '<div class="podium-card ' + cls + '" style="animation-delay:' + (rank*70) + 'ms">' +
+      '<div class="medal">' + rank + '</div>' +
+      '<div class="ava" style="background:' + avaColor(it.address) + '">' + avaText(it.address) + '</div>' +
+      '<div class="addr">' + shortAddr(it.address) + '</div>' +
+      '<div style="margin-top:6px"><span class="vbadge">APOS validator</span></div>' +
+      '<div class="score"><span class="score-n" data-score="' + Number(it.score) + '">0</span> <small>PTS</small></div>' +
+      '<div class="chips">' + metaChips(it.metrics) + '</div>' +
+    '</div>';
+  }
+
+  function listRow(it, rank, i) {
+    return '<div class="lb-row" style="animation-delay:' + Math.min(i*45,500) + 'ms">' +
+      '<div class="rk">#' + rank + '</div>' +
+      '<div class="ava" style="background:' + avaColor(it.address) + '">' + avaText(it.address) + '</div>' +
+      '<div class="who"><div class="addr">' + shortAddr(it.address) + '</div><div class="meta">' + metaChips(it.metrics) + '</div></div>' +
+      '<div class="sc"><div class="n"><span class="score-n" data-score="' + Number(it.score) + '">0</span></div><div class="u">points</div></div>' +
+    '</div>';
+  }
+
+  // Animated count-up for the score numbers.
+  function animateScores(root) {
+    root.querySelectorAll('.score-n').forEach(el => {
+      const target = Number(el.dataset.score) || 0;
+      const dur = 900, t0 = performance.now();
+      const step = (t) => {
+        const p = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - p, 3);
+        el.textContent = Math.round(target * e).toLocaleString();
+        if (p < 1) requestAnimationFrame(step); else el.textContent = target.toLocaleString();
+      };
+      requestAnimationFrame(step);
+    });
+  }
+
+  async function loadTable() {
+    const podium = $('#lb-podium'), body = $('#lb-body');
+    body.innerHTML = '<div class="lb-skel"></div><div class="lb-skel"></div><div class="lb-skel"></div>';
+    podium.style.display = 'none';
+    try {
+      const r = await fetch('/api/lb/nodes/current').then(r => r.json());
+      if (r.error) throw new Error(r.error);
+      if (!r.items.length) {
+        podium.style.display = 'none';
+        body.innerHTML = '<div class="lb-empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 1-3 3"/></svg><div>No validators ranked for this month yet.</div></div>';
+        return;
+      }
+      const items = r.items;
+      const top3 = items.slice(0, 3);
+      podium.innerHTML = top3.map((it, i) => podiumCard(it, i + 1)).join('');
+      podium.style.display = top3.length ? 'grid' : 'none';
+      const rest = items.slice(3);
+      body.innerHTML = rest.length
+        ? rest.map((it, i) => listRow(it, i + 4, i)).join('')
+        : '<div class="lb-empty" style="padding:24px;font-size:.9rem">That’s every validator ranked this month.</div>';
+      animateScores(podium);
+      animateScores(body);
+    } catch (e) {
+      podium.style.display = 'none';
+      body.innerHTML = '<div class="lb-empty" style="color:var(--clr-danger)">' + e.message + '</div>';
+    }
+  }
+
+  if (await loadState()) { loadTable(); setInterval(loadTable, 30000); }
+})();
+</script>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,2648 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Elyon Chain — Manager</title>
+<!-- ticket #5: build stamp so the customer can confirm in DevTools which
+     copy of the HTML their browser actually loaded. The string below
+     identifies the bulletproof build (no inline onclick="trackBtn"). -->
+<meta name="elyon-build" content="manager-2026-06-06-tkt5-operator-stake-v4">
+<script>window.ELYON_BUILD = 'manager-2026-06-06-tkt5-operator-stake-v4'; console.log('[elyon] build:', window.ELYON_BUILD);</script>
+<link rel="icon" href="/site-assets/icon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  /* v10.0 — light premium identity. Drives the whole panel. */
+  :root {
+    --bg: #f6f8fa; --surface: #ffffff; --surface-alt: #f1f5f3;
+    --text: #1c2733; --text-2: #5a6b7a; --text-3: #8b9aa7;
+    --accent: #15a878; --accent-2: #0e7d5a;
+    --success: #15a878; --warn: #b45309; --danger: #dc2626;
+    --border: rgba(20,40,60,.08); --radius: 14px; --radius-lg: 22px;
+    --shadow: 0 8px 32px rgba(20,40,60,.08);
+    --grad-primary: linear-gradient(135deg,#15a878 0%,#0e7d5a 100%);
+    --grad-mesh: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(21,168,120,0.07), transparent 60%);
+    --font-h: 'Space Grotesk','Inter',sans-serif;
+    --font-b: 'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  html { background: var(--bg); }
+  body {
+    font-family: var(--font-b);
+    background: transparent;
+    background-image: var(--grad-mesh);
+    background-repeat:no-repeat; background-attachment:fixed;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased; line-height: 1.55;
+  }
+  h1,h2,h3,h4 { font-family: var(--font-h); letter-spacing:-.02em; color:var(--text); font-weight:800; }
+  h1 { background:linear-gradient(120deg,#0e7d5a 0%,#15a878 55%,#0c8f68 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  code { font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; font-size: .9em; color:#0e7d5a; background:rgba(21,168,120,.08); border-radius:6px; padding:1px 5px; }
+  ::selection { background: var(--accent); color:#fff; }
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(21,168,120,.3); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(21,168,120,.5); }
+  nav.top {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.82);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  nav.top .brand { font-family:var(--font-h); font-size: 17px; font-weight: 700; letter-spacing: -.02em; display:flex; align-items:center; gap:10px; }
+  nav.top .brand img { height:28px; width:auto; display:block; }
+  nav.top .tabs { display: flex; gap: 4px; margin-left: 16px; flex-wrap:wrap; }
+  nav.top .tab {
+    padding: 8px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
+    color: var(--text-2); cursor: pointer; transition: all .2s cubic-bezier(.16,1,.3,1);
+    position:relative;
+  }
+  nav.top .tab:hover { background: rgba(21,168,120,.08); color: var(--accent-2); transform:translateY(-1px); }
+  nav.top .tab.active { background: var(--grad-primary); color: white; box-shadow:0 4px 16px rgba(21,168,120,.28); }
+  nav.top .right { margin-left: auto; display:flex; gap:12px; align-items:center; }
+  .pill {
+    padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    background: rgba(21,168,120,.10); color: var(--accent-2); border:1px solid rgba(21,168,120,.25);
+  }
+  main { max-width: none; margin: 0; padding: 38px 40px 80px; }
+  section { display: none; }
+  section.active { display: block; }
+  h1 { font-size: 48px; font-weight: 600; letter-spacing: -.02em; margin: 0 0 8px; }
+  h2 { font-size: 28px; font-weight: 600; margin: 36px 0 12px; }
+  h3 { font-size: 20px; font-weight: 600; margin: 24px 0 8px; }
+  p.lead { font-size: 17px; color: var(--text-2); margin: 0 0 28px; max-width: 980px; line-height: 1.65; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 24px;
+    box-shadow: var(--shadow); margin-bottom: 20px;
+    transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s, border-color .3s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: rgba(21,168,120,.25); box-shadow: 0 14px 44px rgba(20,40,60,.12), 0 0 24px rgba(21,168,120,.06); }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; }
+  .stat { background: var(--surface-alt); border-radius: var(--radius); padding: 16px 20px; }
+  .stat-label { font-size: 13px; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
+  .stat-value { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin-top: 4px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-3); font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: .05em; background: var(--surface-alt); }
+  tr:hover td { background: rgba(21,168,120,0.05); }
+  td.mono { font-family: ui-monospace, monospace; font-size: 13px; color: var(--text-2); }
+  input.text, input.num, select.text {
+    height: 44px; padding: 0 14px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--surface);
+    font-size: 15px; color: var(--text); font-family: inherit;
+    width: 100%; outline: none;
+  }
+  input.text:focus, select.text:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(21,168,120,.14); }
+  select.text {
+    -webkit-appearance: none; appearance: none; cursor: pointer;
+    padding-right: 38px;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%235b6b78' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+  }
+  label.field { display: block; margin-bottom: 14px; }
+  label.field span { display:block; font-size:13px; color: var(--text-2); margin-bottom:6px; font-weight:500; }
+  .field-hint { display:block; font-size:12.5px; color: var(--text-3); margin-top:6px; line-height:1.45; }
+  .form-grid2 { display:grid; grid-template-columns:1fr 1fr; gap:14px; align-items:start; }
+  @media (max-width: 640px) { .form-grid2 { grid-template-columns:1fr; } }
+  label.check { display:flex; align-items:center; gap:8px; cursor:pointer; font-size:14px; color:var(--text-2); margin: 8px 0; }
+  label.check input { width:18px; height:18px; accent-color: var(--accent); }
+  .btn-primary, .btn-secondary, .btn-small {
+    display: inline-flex; align-items: center; justify-content: center;
+    border-radius: 999px; font-weight: 500; cursor: pointer; border: 0;
+    transition: all .15s;
+  }
+  .btn-primary, .btn-secondary { height: 44px; padding: 0 22px; font-size: 16px; }
+  .btn-small { height: 32px; padding: 0 14px; font-size: 13px; }
+  .btn-primary { background: var(--grad-primary); color: white; box-shadow: 0 4px 20px rgba(21,168,120,.25); }
+  .btn-primary:hover { box-shadow: 0 8px 32px rgba(21,168,120,.32); transform: translateY(-1px); }
+  .btn-secondary { background: #ffffff; color: var(--accent-2); border: 1px solid rgba(21,168,120,.40); }
+  .btn-secondary:hover { background: rgba(21,168,120,.08); box-shadow: 0 4px 14px rgba(21,168,120,.14); }
+  .btn-small.btn-primary { background: var(--grad-primary); color: white; }
+  .btn-small.btn-secondary { background: #ffffff; color: var(--accent-2); border: 1px solid rgba(21,168,120,.40); }
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-3); }
+
+  /* v7.10.4 — button loading state */
+  .btn-spin {
+    display:inline-block; width:14px; height:14px;
+    border:2px solid rgba(255,255,255,.35);
+    border-top-color:#fff; border-radius:50%;
+    animation:btn-spin .8s linear infinite;
+    vertical-align:-2px; margin-right:8px;
+  }
+  .btn-secondary .btn-spin, .btn-small.btn-secondary .btn-spin {
+    border-color: rgba(21,168,120,.25); border-top-color: var(--accent-2);
+  }
+  @keyframes btn-spin { to { transform: rotate(360deg); } }
+  button[data-loading="1"] { opacity:.85; cursor:wait; }
+
+  /* v7.8.9 — responsive layout. The desktop nav is a single flex row;
+     on narrow viewports we stop wrapping the brand, scroll the tabs
+     horizontally, and pack the wallet meta block to a second line. */
+  nav.top .brand { white-space: nowrap; flex-shrink: 0; }
+  nav.top .tabs  { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  nav.top .tabs::-webkit-scrollbar { display: none; }
+  nav.top .tab   { white-space: nowrap; flex-shrink: 0; }
+  nav.top .right { flex-shrink: 0; }
+
+  @media (max-width: 820px) {
+    nav.top { flex-wrap: wrap; gap: 12px; padding: 12px 16px; }
+    nav.top .tabs { order: 3; width: 100%; margin-left: 0; padding-bottom: 2px; }
+    nav.top .right { margin-left: auto; gap: 8px; }
+    nav.top .right span[id="me-addr"] { display: none; }   /* address chip hides */
+    main { padding: 28px 16px 60px; }
+    h1   { font-size: 36px; }
+    h2   { font-size: 24px; margin-top: 28px; }
+    p.lead { font-size: 16px; margin-bottom: 24px; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .card { padding: 18px; }
+    /* Add-package form: 4-col grid collapses to 2-col, then 1-col. */
+    #tab-packages .card > div[style*="grid-template-columns:repeat(4,1fr)"] {
+      grid-template-columns: 1fr 1fr !important;
+    }
+    /* Tables: allow horizontal scroll instead of squishing columns. */
+    .card { overflow-x: auto; }
+    table { min-width: 560px; }
+  }
+  @media (max-width: 480px) {
+    .stat-row { grid-template-columns: 1fr; }
+    #tab-packages .card > div[style*="grid-template-columns:repeat(4,1fr)"] {
+      grid-template-columns: 1fr !important;
+    }
+    nav.top .brand { font-size: 15px; }
+    h1   { font-size: 28px; }
+    .gate h1 { font-size: 32px; }
+    .gate p  { font-size: 16px; }
+  }
+
+  /* Login gate */
+  .gate {
+    min-height: 100vh;
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 0 28px;
+  }
+  .gate-inner { max-width: 480px; background: rgba(255,255,255,.97);
+    border: 1px solid rgba(20,40,60,.08); border-radius: 26px; padding: 44px 38px;
+    box-shadow: 0 24px 80px rgba(20,40,60,.12), 0 0 60px rgba(21,168,120,.08); }
+  .gate h1 { font-size: 44px; }
+  .gate p { font-size: 18px; color: var(--text-2); margin: 12px 0 32px; }
+  /* v7.8.7: explicit block + flex-column so the label's dashed border
+     actually wraps its children. As a <label> it was inline by default
+     and the icon/text rendered outside the padded box on mobile Safari. */
+  .file-drop {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    border: 2px dashed var(--border); border-radius: var(--radius-lg);
+    padding: 40px 24px; text-align: center; background: var(--surface-alt);
+    cursor: pointer; transition: all .15s; width: 100%;
+  }
+  .file-drop:hover { border-color: var(--accent); background: rgba(21,168,120,.05); box-shadow: 0 0 24px rgba(21,168,120,.10); }
+  .file-drop.drag { border-color: var(--accent); background: rgba(21,168,120,.09); box-shadow: 0 0 32px rgba(21,168,120,.16); }
+  .file-drop input[type=file] { position: absolute; left: -9999px; opacity: 0; }
+  .file-drop .icon { font-size: 48px; margin-bottom: 12px; line-height: 1; }
+  .file-drop .help { font-size: 14px; color: var(--text-3); margin-top: 8px; }
+
+  /* ── delegation desk (validator side): request threads + chat ── */
+  .desk-th { border:1px solid var(--border); border-radius:14px; margin-bottom:10px; overflow:hidden; background:var(--surface); transition:border-color .25s, box-shadow .25s; }
+  .desk-th.unread { border-color:rgba(21,168,120,.45); box-shadow:0 0 0 3px rgba(21,168,120,.08), 0 8px 22px rgba(21,168,120,.10); }
+  .desk-head { display:flex; align-items:center; gap:10px; padding:12px 14px; cursor:pointer; flex-wrap:wrap; }
+  .desk-head:hover { background:rgba(20,40,60,.04); }
+  .desk-badge { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:3px 10px; border-radius:999px; transition:all .3s; }
+  .desk-badge.open { background:rgba(245,158,11,.12); color:#b45309; border:1px solid rgba(245,158,11,.35); animation:deskPendPulse 1.6s ease-in-out infinite; }
+  @keyframes deskPendPulse { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.30)} 50%{box-shadow:0 0 0 5px rgba(245,158,11,0)} }
+  .desk-badge.accepted { background:rgba(21,168,120,.12); color:#0e7d5a; border:1px solid rgba(21,168,120,.35); box-shadow:0 0 14px rgba(21,168,120,.18); }
+  .desk-badge.declined, .desk-badge.closed { background:rgba(239,68,68,.10); color:#dc2626; border:1px solid rgba(220,38,38,.30); }
+  .desk-chat { padding:2px 14px 12px; display:flex; flex-direction:column; gap:6px; }
+  .desk-bub { max-width:78%; padding:8px 12px; border-radius:12px; font-size:13.5px; line-height:1.5; word-break:break-word; animation:deskIn .25s ease; }
+  @keyframes deskIn { from { opacity:0; transform:translateY(5px); } to { opacity:1; transform:none; } }
+  .desk-bub.me { align-self:flex-end; background:rgba(21,168,120,.10); border:1px solid rgba(21,168,120,.25); border-bottom-right-radius:4px; }
+  .desk-bub.them { align-self:flex-start; background:var(--surface-alt); border:1px solid var(--border); border-bottom-left-radius:4px; }
+  .desk-bub.sys { align-self:center; background:transparent; border:0; color:var(--text-3); font-size:11.5px; padding:2px 0; }
+  .desk-bub .at { font-size:10.5px; color:var(--text-3); margin-top:3px; font-family:'JetBrains Mono', monospace; }
+  .desk-reply { display:flex; gap:8px; margin-top:8px; }
+  .desk-reply input { flex:1; height:38px; padding:0 14px; border:1px solid var(--border); border-radius:999px; font-size:13.5px; font-family:inherit; outline:none; background:var(--surface); color:var(--text); }
+  .desk-reply input:focus { border-color: var(--accent); box-shadow:0 0 0 3px rgba(21,168,120,.12); }
+
+  /* ── v10.0 light-identity overrides for inline-styled decorative bits ──
+     (style-attribute values in the markup carried the original light palette;
+     these !important rules keep them premium without touching the markup). */
+  .card.hero { background: linear-gradient(135deg, #ffffff 0%, #f2f8f5 100%) !important; }
+  #val-code { text-shadow: none; color:#0e7d5a !important; }
+  #val-status-pill { box-shadow: 0 0 0 1px rgba(21,168,120,.30), 0 4px 14px rgba(21,168,120,.18); }
+  #val-pending-card { animation: mgrPendCard 2s ease-in-out infinite; }
+  @keyframes mgrPendCard { 0%,100%{box-shadow:0 0 0 0 rgba(245,158,11,.16)} 50%{box-shadow:0 0 24px 2px rgba(245,158,11,.10)} }
+  td.mono, code, .countdown { text-shadow: none; }
+  /* JS-rendered pending pill carries inline color:#b45309 (light-theme amber);
+     give it the amber tint chip + pulse via attribute match — no JS change needed. */
+  .pill[style*="#b45309"] { background:rgba(245,158,11,.12) !important; border:1px solid rgba(245,158,11,.35); animation:deskPendPulse 1.6s ease-in-out infinite; }
+
+  /* respect reduced motion: freeze decorative pulses/lifts */
+  @media (prefers-reduced-motion: reduce) {
+    .desk-badge.open, #val-pending-card, .desk-bub { animation: none !important; }
+    .card, .card:hover, .btn-primary:hover { transform: none !important; transition: none !important; }
+  }
+
+  /* v9.6 — define the form-* / btn-outline / hint classes that several tabs
+     (PoS staking, tier editor, validator actions) reference but were never
+     defined, leaving raw unstyled native controls. */
+  .form-row { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; align-items:end; margin-top:10px; }
+  .form-group { display:flex; flex-direction:column; gap:6px; min-width:0; }
+  .form-label { font-size:12px; font-weight:600; color:#5a6b7a; text-transform:uppercase; letter-spacing:.05em; }
+  .form-input, select.form-input {
+    width:100%; height:44px; padding:0 14px; font:inherit; font-size:14px; color:#1c2733;
+    background:#fff; border:1px solid rgba(20,40,60,.14); border-radius:12px; outline:none;
+    transition:border-color .15s, box-shadow .15s; box-sizing:border-box;
+  }
+  .form-input:focus { border-color:#15a878; box-shadow:0 0 0 3px rgba(21,168,120,.15); }
+  .btn.btn-outline, .btn-outline {
+    display:inline-flex; align-items:center; gap:6px; padding:10px 18px; font:inherit; font-size:14px; font-weight:600;
+    color:#0e7d5a; background:#fff; border:1px solid rgba(21,168,120,.45); border-radius:999px; cursor:pointer;
+    transition:background .15s, box-shadow .15s;
+  }
+  .btn-outline:hover { background:rgba(21,168,120,.07); box-shadow:0 4px 14px rgba(20,40,60,.08); }
+  .btn-outline:disabled { opacity:.45; cursor:not-allowed; }
+  .hint { font-size:13px; color:#5a6b7a; }
+</style>
+<link rel="stylesheet" href="/elyon-fx.css">
+<script defer src="/elyon-fx.js"></script>
+<script>/* ticket #5 fix: define trackBtn inline so the Stake & become producer button always has it, independent of any external/CDN-cached script */
+window.trackBtn = window.trackBtn || async function(b, f, t){ if (typeof f !== 'function') return; if (!b || b.dataset.loading === '1'){ return f(); } var o = b.innerHTML; b.dataset.loading = '1'; b.disabled = true; b.innerHTML = (t || 'Working…'); try { return await f(); } finally { delete b.dataset.loading; b.disabled = false; b.innerHTML = o; } };</script>
+
+<link rel="stylesheet" href="/elyon-app.css">
+</head>
+<body class="elx-shelled" data-no-fx>
+<aside class="elx-sidebar" id="elx-sidebar">
+  <a class="elx-sb-brand" href="/"><img src="/site-assets/logo.png" alt="Elyon Chain"></a>
+  <nav class="elx-sb-nav">
+<div class="tab active" data-tab="explorer" onclick="switchTab('explorer')">Explorer</div>
+<div class="tab" data-tab="validator"  onclick="switchTab('validator')">My Validator</div>
+<div class="tab" data-tab="delegators" onclick="switchTab('delegators')">Delegators</div>
+<div class="tab" data-tab="vpackages"  onclick="switchTab('vpackages')">Staking Packages</div>
+<div class="tab" data-tab="send"     onclick="switchTab('send')">Send ELN</div>
+<div class="tab" data-tab="earnings" onclick="switchTab('earnings')">Fee Earnings</div>
+
+
+<div class="tab" data-tab="pos"        onclick="switchTab('pos')">PoS Staking</div>
+
+
+</nav>
+  <div class="elx-sb-foot">Elyon Chain · APOS L1</div>
+</aside>
+<div class="elx-app">
+  <header class="elx-topbar">
+    <button class="elx-burger" onclick="document.getElementById('elx-sidebar').classList.toggle('open')">☰</button>
+    <h1>Manager</h1>
+    <span class="elx-spacer"></span>
+    <div class="right">
+    <span class="pill" id="net-pill">Signed in</span>
+    <span id="me-addr" style="font-family:ui-monospace,monospace;font-size:13px;color:var(--text-2)"></span>
+    <button class="btn-small btn-secondary" onclick="signOut()">Sign out</button>
+  </div>Elyon Chain</span>
+  </header>
+  <div class="elx-work">
+
+
+<!-- ── Login / Setup gate ── -->
+<div id="gate" class="gate">
+  <div class="gate-inner">
+    <h1 id="gate-title">Admin sign in</h1>
+    <p id="gate-sub">Upload the key file you saved during chain install. The private key is held in this browser tab only — it's sent with each transaction below and never persisted.</p>
+
+    <label class="file-drop fx-lift" id="file-drop">
+      <input type="file" id="key-input" accept=".txt,text/plain" onchange="onKeyFileSelected(event)" />
+      <div class="icon fx-float">🔑</div>
+      <div><b id="filedrop-label">Click to choose key file</b> &nbsp;or drag &amp; drop here</div>
+      <div class="help" id="filedrop-help">Accepts the Elyon Chain key-file format (.txt) or a bare 64-hex private key.</div>
+    </label>
+
+    <!-- shown only when the node is NOT configured yet -->
+    <div id="gate-setup" style="display:none;margin-top:18px">
+      <div style="display:flex;align-items:center;gap:12px;margin:18px 0;color:var(--text-3);font-size:13px">
+        <span style="flex:1;height:1px;background:var(--border)"></span>OR<span style="flex:1;height:1px;background:var(--border)"></span>
+      </div>
+      <button class="btn-primary fx-shimmer" id="create-key-btn" onclick="createKeyAndSetup()" style="width:100%;padding:14px;font-size:15px">
+        ✨ Create a key for me &amp; set up this node
+      </button>
+      <div class="help" style="margin-top:10px;text-align:center;color:var(--text-3);font-size:12.5px">
+        Generates a fresh validator key, downloads the <code>.txt</code> backup, joins this admin chain automatically, then signs you in.
+      </div>
+    </div>
+
+    <div id="gate-status" style="display:none;margin-top:18px;padding:14px 16px;border-radius:12px;background:rgba(21,168,120,.07);border:1px solid rgba(21,168,120,.18);color:var(--accent-2);font-size:14px"></div>
+    <div id="gate-error" style="display:none;color:var(--danger);font-size:14px;margin-top:16px"></div>
+  </div>
+</div>
+
+<!-- ── Dashboard (hidden until login) ── -->
+<div id="app" style="display:none">
+<nav class="top"></nav>
+
+<main>
+
+  <section id="tab-explorer" class="active">
+    <h1>Block Explorer</h1>
+    <p class="lead">The last 100 blocks, updated live.</p>
+    <div class="stat-row" style="margin-bottom:20px">
+      <div class="stat"><div class="stat-label">Latest block</div><div class="stat-value" id="s-tip">—</div></div>
+      <div class="stat"><div class="stat-label">Chain ID</div><div class="stat-value" id="s-cid">—</div></div>
+      <div class="stat"><div class="stat-label">Peers</div><div class="stat-value" id="s-peers">—</div></div>
+      <div class="stat"><div class="stat-label">Gas price</div><div class="stat-value" id="s-gas">—</div></div>
+    </div>
+    <div class="card" style="padding:0">
+      <table>
+        <thead><tr><th>Block</th><th>Hash</th><th>Sealer</th><th>Txs</th><th>Time</th></tr></thead>
+        <tbody id="explorer-rows"><tr><td colspan="5" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══ v8: MY VALIDATOR — the signed-in wallet's validator identity ═══ -->
+  <section id="tab-validator">
+    <h1>My Validator</h1>
+    <p class="lead">Your APOS validator identity: status, public code, pool and tier. Your <b>POOL</b> = your package stake + delegator deposits — it drives your fee-share tier. You earn daily profit on your stake at the package APR, publish sub-packages for delegators (rates capped by your package APR), and delegators can withdraw their own funds (early exits pay your package's penalty).</p>
+
+    <!-- v9.8 — My Wallet: the validator's signed-in wallet at a glance -->
+    <div class="card" id="val-wallet-card" style="margin-bottom:18px">
+      <h3 style="margin-top:0">👛 My Wallet</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-top:12px">
+        <div class="stat"><div class="stat-label">ELN balance</div><div class="stat-value" id="vw-balance" style="color:#0e7d5a">—</div></div>
+        <div class="stat"><div class="stat-label">Unclaimed fee earnings</div><div class="stat-value" id="vw-fees">—</div></div>
+        <div class="stat"><div class="stat-label">Accrued daily profit</div><div class="stat-value" id="vw-accrued">—</div></div>
+        <div class="stat"><div class="stat-label">In pool (stake + delegated)</div><div class="stat-value" id="vw-pool">—</div></div>
+      </div>
+      <div style="margin-top:14px">
+        <div class="form-label" style="margin-bottom:6px">Wallet address</div>
+        <div style="display:flex;gap:8px;align-items:stretch;flex-wrap:wrap">
+          <code id="vw-address" style="flex:1;min-width:280px;padding:12px 14px;background:#f6f8fa;border-radius:12px;font-size:13px;word-break:break-all;border:1px solid rgba(20,40,60,.10)">—</code>
+          <button class="btn-outline" onclick="navigator.clipboard.writeText(document.getElementById('vw-address').textContent).then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button>
+          <button class="btn-outline" onclick="switchTab('send')">↗ Send ELN</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Not applied yet -->
+    <div id="val-apply-card" class="card" style="display:none;max-width:980px">
+      <h3 style="margin-top:0">⛏ Apply to become a validator</h3>
+      <p style="color:var(--text-2);margin-bottom:14px">You run this node — applying stakes <b>through a staking package</b>: pick one, stake at least the larger of the network minimum and the package minimum (the stake locks for the package term), and the admin will review your application. On approval you receive a unique public <b>APOS code</b> that delegators use to fund your pool.</p>
+      <div class="form-grid2">
+        <label class="field" style="margin-bottom:0">
+          <span>Staking package (required)</span>
+          <select id="val-apply-pkg" class="text" onchange="valApplyPkgChanged()"><option value="">Loading packages…</option></select>
+        </label>
+        <label class="field" style="margin-bottom:0">
+          <span>Stake amount (ELN)</span>
+          <input id="val-apply-amount" class="text" type="number" step="0.01" min="0">
+          <small class="field-hint">Minimum <b id="val-min-stake">—</b> ELN — the larger of the network minimum and the package minimum.</small>
+        </label>
+      </div>
+      <button class="btn-primary" id="val-apply-btn" style="margin-top:16px">🚀 Apply as Validator</button>
+      <div id="val-apply-out" class="hint" style="margin-top:8px"></div>
+    </div>
+
+    <!-- Pending -->
+    <div id="val-pending-card" class="card" style="display:none;background:rgba(245,158,11,.06);border-color:rgba(245,158,11,.25)">
+      <h3 style="margin-top:0">⏳ Awaiting admin approval</h3>
+      <p style="color:var(--text-2)">Your validator application is staked and pending. The admin will approve you and issue your public APOS code — this page refreshes automatically.</p>
+    </div>
+
+    <!-- Active (also shown for BELOW_MIN — status 5 — with an amber alert
+         so the validator can refill the pool and auto-recover) -->
+    <div id="val-active-wrap" style="display:none">
+      <div id="val-belowmin-note" class="card" style="display:none;margin-bottom:18px;background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.40);color:#b45309">
+        <b>⚠ Your POOL dropped below the network minimum.</b> Your gas-fee share is paused — you earn nothing while below the minimum. Refill the pool — top up your own stake (Packages tab) or receive new delegations — and once the pool (your stake + delegations) is back above the minimum you are <b>automatically restored to ACTIVE</b> with your tier re-applied.
+      </div>
+      <div class="card" style="margin-bottom:18px;background:linear-gradient(135deg,rgba(21,168,120,.10),rgba(21,168,120,.02));border-color:rgba(21,168,120,.3)">
+        <div style="display:flex;flex-wrap:wrap;gap:18px;align-items:center;justify-content:space-between">
+          <div>
+            <div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px">Your public APOS code — share it with delegators</div>
+            <div style="display:flex;gap:10px;align-items:center">
+              <code id="val-code" class="fx-shimmer" style="font-family:'JetBrains Mono',monospace;font-size:30px;font-weight:700;letter-spacing:.06em;color:#15a878">—</code>
+              <button class="btn-small btn-secondary" onclick="navigator.clipboard.writeText(document.getElementById('val-code').textContent).then(()=>{this.textContent='✓ Copied';setTimeout(()=>this.textContent='Copy',1500)})">Copy</button>
+            </div>
+          </div>
+          <div><span class="pill" id="val-status-pill" style="background:rgba(21,168,120,.15);color:#15a878;font-weight:700">● ACTIVE VALIDATOR</span></div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <h3 style="margin-top:0">Your pool <span style="font-size:.7em;color:var(--text-3);font-weight:400">— ONE number drives your tier: your stake + delegator deposits</span></h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:12px">
+          <div class="stat"><div class="stat-label">Pool (drives tier)</div><div class="stat-value" id="val-total" data-countup style="color:#15a878">—</div></div>
+          <div class="stat"><div class="stat-label">Your stake (package-locked)</div><div class="stat-value" id="val-self">—</div></div>
+          <div class="stat"><div class="stat-label">From delegators</div><div class="stat-value" id="val-pool">—</div></div>
+          <div class="stat"><div class="stat-label">Delegators</div><div class="stat-value" id="val-del-count">—</div></div>
+        </div>
+        <div style="margin-top:16px;height:12px;border-radius:6px;overflow:hidden;background:var(--surface-alt);display:flex" title="Pool composition: your stake vs delegations">
+          <div id="val-bar-self" style="width:0%;background:linear-gradient(90deg,#15a878,#0e7d5a);transition:width .8s cubic-bezier(.22,1,.36,1)"></div>
+          <div id="val-bar-del"  style="width:0%;background:linear-gradient(90deg,#3b82f6,#1d4ed8);transition:width .8s cubic-bezier(.22,1,.36,1)"></div>
+        </div>
+        <div style="display:flex;gap:18px;margin-top:8px;font-size:12px;color:var(--text-3)">
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#15a878;margin-right:5px"></span>Your stake (package-locked)</span>
+          <span><span style="display:inline-block;width:10px;height:10px;border-radius:3px;background:#3b82f6;margin-right:5px"></span>Delegator deposits — both count toward your tier</span>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:18px">
+        <h3 style="margin-top:0">Your tier <span style="font-size:.7em;color:var(--text-3);font-weight:400">— POOL volume → transaction-fee share (admin-defined curve); APR comes from your staking package</span></h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:12px">
+          <div class="stat"><div class="stat-label">Package APR</div><div class="stat-value" id="val-apr" style="color:#15a878">—</div></div>
+          <div class="stat"><div class="stat-label">Tx-fee share</div><div class="stat-value" id="val-gasshare" style="color:#15a878">—</div></div>
+          <div class="stat"><div class="stat-label">Selected package</div><div class="stat-value" id="val-pkg" style="font-size:16px">—</div></div>
+          <div class="stat"><div class="stat-label">Unclaimed fee earnings</div><div class="stat-value" id="val-fees">—</div></div>
+        </div>
+        <div id="val-next-tier" style="margin-top:12px;font-size:13px;color:var(--text-2)"></div>
+      </div>
+
+      <!-- v9.9 — the old global "Delegator rate" card was removed: since the
+           two-tier packages model, every deposit takes ITS PACKAGE's rate
+           (My Packages below), so a global rate did nothing and confused.
+           Only the public display note remains. Hidden legacy inputs keep the
+           old JS harmless without edits. -->
+      <div style="display:none">
+        <div id="val-rate-current"></div><span id="val-rate-cap"></span>
+        <input id="val-rate-input" type="number"><div id="val-rate-preview"></div><div id="val-rate-out"></div>
+      </div>
+      <div class="card" style="margin-bottom:18px" id="val-rate-card">
+        <h3 style="margin-top:0">📝 Public note to delegators</h3>
+        <p style="color:var(--text-2);font-size:13.5px;margin:4px 0 10px">A short message shown on your public page (display only). Your actual delegator offers — rate, lock, min deposit, penalty — are the <b>packages below</b>; each deposit locks in its package's terms forever.</p>
+        <label style="display:block;font-size:12.5px;color:var(--text-2)">Note (optional)
+          <input id="val-offer-note" maxlength="200" placeholder="e.g. solid uptime, EU node, support in chat" oninput="this.dataset.touched='1'" style="width:100%;margin-top:4px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:14px;outline:none;background:var(--surface);color:var(--text)">
+        </label>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:10px;flex-wrap:wrap">
+          <button class="btn btn-outline" id="val-offer-btn" onclick="withLoading(this,'Publishing…',()=>valPublishOffer())">Publish note</button>
+          <span id="val-offer-out" class="hint" style="font-size:13px"></span>
+        </div>
+      </div>
+
+      <!-- ═══ TWO-TIER: MY PACKAGES — the packages YOU market to delegators ═══ -->
+      <div class="card" style="margin-bottom:18px" id="val-mypkg-card">
+        <h3 style="margin-top:0">📦 My Packages <span style="font-size:.7em;color:var(--text-3);font-weight:400">— the offers delegators join on your public page</span></h3>
+        <p style="color:var(--text-2);font-size:13.5px;margin:4px 0 12px">You publish your own delegation packages: a <b>monthly rate</b> (capped by your admin package APR), a <b>lock term</b>, a <b>minimum deposit</b> (no maximum) and an <b>early-exit penalty</b> (max 20%). Delegators join a package on your public page; its terms are <b>locked into their position forever</b>. Disabling a package stops new joins — existing positions keep their terms.</p>
+        <div style="overflow-x:auto">
+        <table style="margin-bottom:12px">
+          <thead><tr><th>#</th><th>Name</th><th>Lock</th><th>Monthly</th><th>Annual</th><th>Min deposit</th><th>Early-exit penalty</th><th>Status</th><th>Action</th></tr></thead>
+          <tbody id="val-mypkg-rows"><tr><td colspan="9" class="empty">Loading…</td></tr></tbody>
+        </table>
+        </div>
+        <div style="background:var(--surface-alt);border-radius:var(--radius);padding:14px">
+          <div style="font-weight:600;margin-bottom:10px">Create a package — 5 simple fields</div>
+          <!-- v9.10 — fixed alignment: short single-line labels (the cap hint
+               lives UNDER the rate input, not in the label, so nothing wraps
+               and all five inputs sit on one straight row), aligned to end. -->
+          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;align-items:end">
+            <label class="field"><span>1 · Name</span><input class="text" id="vp-name" maxlength="64" placeholder="e.g. Silver 90" /></label>
+            <label class="field"><span>2 · Lock (days)</span><input class="text" id="vp-days" type="number" min="0" value="90" /></label>
+            <div class="field" style="display:flex;flex-direction:column;gap:6px">
+              <span>3 · Monthly rate (%)</span>
+              <input class="text" id="vp-rate" type="number" min="0" step="0.01" placeholder="e.g. 0.5" oninput="vpRatePreview()" />
+              <span style="font-size:11.5px;color:var(--text-3);font-weight:400;text-transform:none;letter-spacing:0">max <b id="vp-rate-cap">—</b>/mo (your package APR)</span>
+            </div>
+            <label class="field"><span>4 · Min deposit (ELN)</span><input class="text" id="vp-min" type="number" min="0" step="1" placeholder="e.g. 100" /></label>
+            <label class="field"><span>5 · Early-exit penalty (%)</span><input class="text" id="vp-pen" type="number" min="0" max="20" step="0.1" value="1" /></label>
+          </div>
+          <div id="vp-rate-preview" style="display:none;margin-top:10px;font-size:13px;font-weight:600;color:var(--accent-2);background:rgba(21,168,120,.08);border:1px solid rgba(21,168,120,.25);border-radius:999px;padding:6px 14px;width:fit-content"></div>
+          <button class="btn-primary" style="margin-top:12px" onclick="withLoading(this,'Publishing…',()=>vpAddPackage())">📦 Publish package</button>
+          <div id="vp-out" class="hint" style="font-size:13px;margin-top:8px"></div>
+        </div>
+      </div>
+
+      <!-- ═══ TWO-TIER: MY PAGE — public profile shown on /validator.html ═══ -->
+      <div class="card" style="margin-bottom:18px" id="val-mypage-card">
+        <h3 style="margin-top:0">🌐 My Page <span style="font-size:.7em;color:var(--text-3);font-weight:400">— your public validator site</span></h3>
+        <p style="color:var(--text-2);font-size:13.5px;margin:4px 0 12px">Delegators see this profile on your public page, next to your packages. Fill it in once — it is stored on-chain.</p>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px">
+          <label class="field"><span>Company / display name</span><input class="text" id="pf-company" maxlength="120" placeholder="e.g. Acme Staking Ltd." /></label>
+          <label class="field"><span>Contact (email / telegram)</span><input class="text" id="pf-contact" maxlength="120" placeholder="e.g. support@acme.io" /></label>
+          <label class="field"><span>Address</span><input class="text" id="pf-address" maxlength="200" placeholder="e.g. 1 Main St, Zurich" /></label>
+          <label class="field"><span>Website</span><input class="text" id="pf-website" maxlength="200" placeholder="https://…" /></label>
+        </div>
+        <label class="field" style="display:block;margin-top:12px"><span>About (max 400 chars)</span>
+          <textarea id="pf-about" maxlength="400" rows="3" placeholder="Tell delegators who you are, your uptime, your support hours…" style="width:100%;margin-top:4px;padding:9px 12px;border:1px solid var(--border);border-radius:var(--radius);font-family:inherit;font-size:14px;outline:none;background:var(--surface);color:var(--text);resize:vertical"></textarea>
+        </label>
+        <div style="display:flex;gap:10px;align-items:center;margin-top:12px;flex-wrap:wrap">
+          <button class="btn-primary" onclick="withLoading(this,'Saving…',()=>pfSave())">💾 Save profile</button>
+          <a id="pf-view-link" href="#" target="_blank" rel="noopener" style="display:none;font-size:13.5px;font-weight:600;color:var(--accent-2)">↗ View my public page</a>
+          <span id="pf-out" class="hint" style="font-size:13px"></span>
+        </div>
+      </div>
+
+      <div class="card">
+        <h3 style="margin-top:0">Profit &amp; stake actions</h3>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-bottom:12px">
+          <div style="background:var(--surface-alt);border-radius:var(--radius);padding:12px">
+            <div style="font-weight:600;margin-bottom:4px">☀ Daily profit</div>
+            <div style="font-size:12.5px;color:var(--text-3);margin-bottom:8px">Your package APR accrues every second on your own stake. Claim any time — no need to wait for the term to end.</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+              <div><div class="stat-label" style="font-size:11px">Accrued so far</div><div id="val-accrued" style="font-weight:700;font-size:18px;color:#15a878">—</div></div>
+              <button class="btn btn-primary" onclick="withLoading(this,'Claiming…',()=>valClaimProfit())">☀ Claim daily profit</button>
+            </div>
+          </div>
+          <div style="background:var(--surface-alt);border-radius:var(--radius);padding:12px">
+            <div style="font-weight:600;margin-bottom:4px">📦 Package rules</div>
+            <div style="font-size:12.5px;color:var(--text-3)">One package at a time. Top-ups go into your <b>selected</b> package and re-lock the same term. You can switch packages only after the current term ends. Delegator deposits follow the terms of <b>your</b> packages (My Packages card) — early self-withdraw pays that package's penalty to you.</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-outline" id="val-withdraw-stake-btn">💰 Withdraw stake (after lock)</button>
+          <button class="btn btn-outline" id="val-withdraw-fees-btn">⚡ Withdraw fee earnings</button>
+        </div>
+        <div id="val-actions-out" class="hint" style="margin-top:8px"></div>
+      </div>
+    </div>
+
+    <!-- Rejected / suspended -->
+    <div id="val-rejected-card" class="card" style="display:none;background:rgba(239,68,68,.05);border-color:rgba(239,68,68,.25)">
+      <h3 style="margin-top:0">Application <span id="val-rej-label">rejected</span></h3>
+      <p style="color:var(--text-2)">You can withdraw your self-stake below. Once all delegators have exited, withdrawing fully clears your entry so you can re-apply.</p>
+      <button class="btn btn-outline" id="val-rej-withdraw-btn">💰 Withdraw self-stake</button>
+      <div id="val-rej-out" class="hint" style="margin-top:8px"></div>
+    </div>
+  </section>
+
+  <!-- ═══ v8: DELEGATORS — the validator's people ═══ -->
+  <section id="tab-delegators">
+    <h1>Delegators</h1>
+    <p class="lead">Every deposit is its own <b>position</b> inside one of <b>your packages</b> — the package's rate, lock and early-exit penalty are locked in at deposit time (grandfathered). Profit accrues daily; delegators can self-withdraw any time (exiting before the lock ends pays the package's penalty, kept by you), or you can release principal back yourself penalty-free.</p>
+
+    <div class="card" style="margin-bottom:18px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px">
+        <div class="stat"><div class="stat-label">Positions</div><div class="stat-value" id="del-count" data-countup>—</div></div>
+        <div class="stat"><div class="stat-label">Total delegated</div><div class="stat-value" id="del-total">—</div></div>
+        <div class="stat"><div class="stat-label">Accrued to delegators</div><div class="stat-value" id="del-distributed">—</div></div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px" id="desk-card">
+      <h3 style="margin-top:0">📨 Delegation requests</h3>
+      <p style="color:var(--text-2);font-size:13.5px;margin:4px 0 12px">Delegators knock here asking to join one of <b>your packages</b> (the chosen package is shown on the request). Reply, then <b>Accept</b> (they can deposit into that package) or <b>Decline</b>. Deposits lock in the package's terms; delegators can also self-withdraw from their portal.</p>
+      <div id="desk-threads"><div class="empty" style="padding:24px">Loading…</div></div>
+    </div>
+
+    <div class="card" style="padding:0">
+      <table>
+        <thead><tr><th>Name</th><th>Delegator</th><th>Package</th><th>Amount</th><th>Rate</th><th>Since</th><th>Accrued</th><th style="min-width:220px">Actions</th></tr></thead>
+        <tbody id="del-rows"><tr><td colspan="8" class="empty">Sign in as an approved validator to see your delegation positions.</td></tr></tbody>
+      </table>
+    </div>
+    <div id="del-out" class="hint" style="margin-top:10px"></div>
+  </section>
+
+  <!-- ═══ v8: STAKING PACKAGES — admin creates, approved validators stake ═══ -->
+  <section id="tab-vpackages">
+    <h1>Staking Packages</h1>
+    <p class="lead">Created by the admin. Only admin-approved validators stake into them. <b>One package at a time</b>: top-ups go into your selected package (re-locking the same term); switching to another package is only possible after the current term ends. Your package APR accrues daily and is claimable any time (My Validator tab).</p>
+
+    <div class="card" style="padding:0;margin-bottom:18px">
+      <table>
+        <thead><tr><th>Package</th><th>Lock</th><th>APR</th><th>Min stake</th><th>Early exit</th><th>Status</th><th style="min-width:240px">Validator actions</th></tr></thead>
+        <tbody id="vpkg-rows"><tr><td colspan="7" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div id="vpkg-out" class="hint" style="margin-bottom:18px"></div>
+
+    
+  </section>
+
+  <section id="tab-send">
+    <h1>Send ELN</h1>
+    <p class="lead">Transfer the chain's native token to any address.</p>
+    <div class="card" style="max-width:560px">
+      <label class="field"><span>Recipient address</span><input class="text" id="send-to" placeholder="0x…" /></label>
+      <label class="field"><span>Amount (ELN)</span><input class="text" id="send-amount" type="number" min="0" step="0.01" /></label>
+      <button class="btn-primary" onclick="withLoading(this,'Sending…',()=>sendUnp())">Send</button>
+      <!-- ticket #8 (BUG-004): expose tx lifecycle (submitted → mined → confirmed),
+           show pending-vs-latest nonce gap, and explain AlreadyKnown / ReplacementNotAllowed. -->
+      <div id="send-status" style="margin-top:14px;font-size:14px;color:var(--text-2)"></div>
+      <div id="send-tx-card" style="display:none;margin-top:14px;padding:12px;border:1px solid var(--border);border-radius:10px;font-size:13px">
+        <div style="display:flex;justify-content:space-between;gap:12px;align-items:center;margin-bottom:6px">
+          <b id="send-tx-state">Submitted</b>
+          <span id="send-tx-hash" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3)"></span>
+        </div>
+        <div id="send-tx-detail" style="color:var(--text-2)">Waiting for the network to include the transaction…</div>
+        <div id="send-nonce-warn" style="display:none;margin-top:8px;padding:8px;border-radius:8px;background:rgba(245,158,11,.10);color:var(--warn);font-size:12px"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══ v8: FEE EARNINGS — validator tx-fee share ═══ -->
+  <section id="tab-earnings">
+    <h1>Fee earnings</h1>
+    <p class="lead" id="earn-lead">Your tier-driven share of transaction fees, credited on-chain every block. Withdraw any time.</p>
+
+    <div class="card hero" style="background:linear-gradient(135deg,#f5f5f7 0%,#fff 100%);padding:32px">
+      <div class="stat-row">
+        <div class="stat"><div class="stat-label">Unclaimed earnings</div><div class="stat-value" id="earn-node" data-countup>— ELN</div></div>
+        <div class="stat"><div class="stat-label">Your fee share (tier)</div><div class="stat-value" id="earn-share">—</div></div>
+      </div>
+      <div style="margin-top:18px">
+        <button class="btn btn-primary" id="earn-withdraw-btn">⚡ Withdraw my earnings</button>
+        <span id="earn-out" class="hint" style="margin-left:12px"></span>
+      </div>
+    </div>
+
+    <h2>Per-validator unclaimed earnings <span style="font-size:.7em;color:var(--text-3);font-weight:400">(network-wide)</span></h2>
+    <div class="card" style="padding:0">
+      <table>
+        <thead><tr><th>Validator</th><th>Code</th><th>Fee share</th><th>Unclaimed</th></tr></thead>
+        <tbody id="earn-rows"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ═══ v8: VALIDATORS — admin approval + code issuance ═══ -->
+  
+
+  <!-- ═══ v8: TIER CURVE — admin-set pool→(APR, fee-share) mapping ═══ -->
+  
+
+  <!-- ═══════════════════════════════════════════════════════════════
+       PoS Staking — this is the CONSENSUS validator stake, distinct
+       from the APOS package staking on the Staking Packages tab.
+       This stake makes the signed-in wallet eligible to PRODUCE BLOCKS.
+       The APOS package stake earns APR + gates node/contract/token
+       roles.  Two contracts, two purposes — both shown here for
+       operator clarity.
+       ═══════════════════════════════════════════════════════════════ -->
+  <section id="tab-pos">
+    <h1>PoS Staking</h1>
+    <p class="lead">Lock ELN into the on-chain <code>StakingContract</code> to become a <b>block producer</b>. This is the PoS consensus stake — completely separate from APOS package staking (which gates node / contract / token registrations and pays APR).</p>
+
+    <div class="card" style="margin-bottom:20px;background:rgba(21,168,120,0.05);border-left:4px solid #15a878">
+      <h3 style="margin-bottom:8px">⚠ Two different staking systems — don't confuse them</h3>
+      <table style="margin-top:6px;font-size:13px;background:transparent">
+        <thead><tr><th>System</th><th>Contract</th><th>Earns</th><th>Unlocks</th></tr></thead>
+        <tbody>
+          <tr>
+            <td><b>PoS Staking</b> (this tab)</td>
+            <td><code>StakingContract.sol</code></td>
+            <td>Block-producer slot · 10 % fee share on every block you seal</td>
+            <td><b>block producer eligibility</b></td>
+          </tr>
+          <tr>
+            <td>APOS Package Stake (Staking Packages tab)</td>
+            <td><code>UNPRegistry.sol</code></td>
+            <td>Fixed APR · admin-set</td>
+            <td>node / contract owner / token issuer registrations</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card" id="pos-status-card">
+      <h3>Your stake on the consensus contract</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-top:14px">
+        <div><div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em">StakingContract</div><div id="pos-contract" style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--text);word-break:break-all">—</div></div>
+        <div><div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em">Min stake</div><div id="pos-min" style="font-size:20px;font-weight:700">—</div></div>
+        <div><div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em">Your stake</div><div id="pos-mine" style="font-size:20px;font-weight:700;color:#15a878">—</div></div>
+        <div><div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em">Status</div><div id="pos-mine-status" style="font-size:14px;font-weight:600">—</div></div>
+        <div><div style="font-size:11px;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em">Active validators</div><div id="pos-active-count" style="font-size:20px;font-weight:700">—</div></div>
+      </div>
+      <div id="pos-mine-who" style="margin-top:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-3)"></div>
+    </div>
+
+    <div class="card" id="pos-stake-card">
+      <h3>Stake into PoS</h3>
+      <p class="step-sub" style="margin-bottom:12px">Stakes are taken from your signed-in validator wallet. The amount must be ≥ the contract's <code>MIN_STAKE</code>. Once staked, Nethermind's PoS sealer will start including you in the proposer round-robin within ~1 block.</p>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Amount (ELN)</label><input id="pos-amount" class="form-input" type="number" step="0.01" min="0" placeholder="10"></div>
+        <div class="form-group"><label class="form-label" style="visibility:hidden">.</label>
+          <button class="btn btn-primary" id="pos-stake-btn">⛏ Stake & become producer</button>
+        </div>
+      </div>
+      <div id="pos-stake-out" class="hint" style="margin-top:8px"></div>
+    </div>
+
+    <div class="card" id="pos-unstake-card">
+      <h3>Request unstake</h3>
+      <p class="step-sub" style="margin-bottom:12px">Initiates the unstake countdown (100 blocks · ~10 min on testnet). Once the delay has passed the <b>Withdraw</b> button below activates and you get your ELN back. While the request is pending, you stop producing blocks immediately.</p>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+        <button class="btn btn-outline" id="pos-unstake-btn">⏸ Request unstake</button>
+        <button class="btn btn-outline" id="pos-withdraw-btn" disabled>💰 Withdraw (after delay)</button>
+        <span id="pos-unstake-status" style="font-size:13px;color:var(--text2)"></span>
+      </div>
+    </div>
+
+    <div class="card" id="pos-validators-card">
+      <h3>Active block producers (consensus set)</h3>
+      <table>
+        <thead><tr><th>#</th><th>Validator</th><th>Stake</th><th>Status</th></tr></thead>
+        <tbody id="pos-validators-rows"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+  </section>
+
+  
+
+  
+
+</main>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const S = { token: null, privateKey: null, address: null, pollHandle: null };
+// UX guard — true while the user is typing in a field or has text selected.
+// Poll-driven re-renders (innerHTML / input.value rewrites) MUST skip their
+// DOM writes while this is true, otherwise focus is stolen and selections
+// are wiped every tick. User-initiated refreshes still render immediately.
+function uiBusy(container) {
+  const ae = document.activeElement;
+  if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')
+      && (!container || container.contains(ae))) return true;
+  const sel = window.getSelection && window.getSelection();
+  if (sel && !sel.isCollapsed && String(sel).length) return true;
+  return false;
+}
+// XSS guard for user-generated text (offers, chat messages, labels).
+function escHtml(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+// ── Login gate ──────────────────────────────────────────────────────
+const fileDrop = document.getElementById('file-drop');
+['dragenter','dragover'].forEach(ev => fileDrop.addEventListener(ev, e => {
+  e.preventDefault(); e.stopPropagation(); fileDrop.classList.add('drag');
+}));
+['dragleave','drop'].forEach(ev => fileDrop.addEventListener(ev, e => {
+  e.preventDefault(); e.stopPropagation(); fileDrop.classList.remove('drag');
+}));
+fileDrop.addEventListener('drop', e => {
+  const f = e.dataTransfer.files[0];
+  if (f) handleKeyFile(f);
+});
+
+function onKeyFileSelected(e) {
+  const f = e.target.files[0];
+  if (f) handleKeyFile(f);
+}
+
+function handleKeyFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const parsed = parseKeyFileText(reader.result);
+    if (!parsed?.privateKey) {
+      gateError('Could not parse a private key from that file. Drop the Elyon Chain key file (.txt) you saved during install.');
+      return;
+    }
+    // Configured node → straight login. Fresh node → set it up with this key.
+    if (window.__nodeConfigured) keyFileLogin(parsed.privateKey);
+    else setupWithKey(parsed.privateKey, false);
+  };
+  reader.onerror = () => gateError('Failed to read file.');
+  reader.readAsText(file);
+}
+
+// ── Detect whether this node is already configured, and adapt the gate. ──
+async function detectGateMode() {
+  let configured = false, role = 'admin';
+  try {
+    const st = await fetch('/api/proxy/api/wizard/status').then(r => r.json()).catch(() => ({}));
+    configured = !!(st && (st.configured || (st.config && st.config.validatorAddress)));
+    role = (st && st.role) || role;
+  } catch {}
+  window.__nodeConfigured = configured;
+  const title = $('gate-title'), sub = $('gate-sub'), setup = $('gate-setup'),
+        fl = $('filedrop-label'), fh = $('filedrop-help');
+  if (configured) {
+    title.textContent = 'Admin sign in';
+    sub.textContent = "Upload the key file you saved during install. The private key stays in this browser tab — it's sent with each transaction and never persisted.";
+    if (setup) setup.style.display = 'none';
+    if (fl) fl.textContent = 'Click to choose key file';
+  } else {
+    title.textContent = 'Set up this node';
+    sub.textContent = "This node isn't configured yet. Create a fresh validator key (we'll download a backup for you) or import one you already have — either way it joins this admin chain automatically and signs you in.";
+    if (setup) setup.style.display = '';
+    if (fl) fl.textContent = 'Import an existing key file';
+    if (fh) fh.textContent = 'Have a key already? Drop the .txt (or a 64-hex key) and we will join + sign in.';
+  }
+}
+
+function gateStatus(msg) {
+  const el = $('gate-status'); el.style.display = ''; el.innerHTML = msg;
+  $('gate-error').style.display = 'none';
+}
+
+function downloadKeyFile(addr, pk) {
+  const body = [
+    '# Elyon Chain — validator / operator key file',
+    '# KEEP THIS SAFE. Anyone with this key controls this node.',
+    '# Generated ' + new Date().toISOString(),
+    '',
+    'address: ' + addr,
+    'privatekey: ' + pk,
+    ''
+  ].join('\n');
+  const blob = new Blob([body], { type: 'text/plain' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'elyon-node-key-' + addr.slice(2, 10) + '.txt';
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+
+// ── Create a fresh key + bootstrap this node onto the admin chain. ──
+async function createKeyAndSetup() {
+  const btn = $('create-key-btn'); if (btn) btn.disabled = true;
+  gateError('');
+  try {
+    gateStatus('🔑 Generating a fresh validator key…');
+    const k = await fetch('/api/proxy/api/wizard/generate-key', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+    }).then(r => r.json());
+    if (k.error || !k.privateKey) throw new Error(k.error || 'key generation failed');
+    downloadKeyFile(k.address, k.privateKey);
+    gateStatus('💾 Key downloaded — <b>back it up now</b>. Joining the chain…');
+    await setupWithKey(k.privateKey, true);
+  } catch (e) {
+    if (btn) btn.disabled = false;
+    gateError(e.message || String(e));
+  }
+}
+
+// ── Join the admin chain with the given key, then sign in. ──
+async function setupWithKey(privateKey, freshKey) {
+  gateError('');
+  try {
+    gateStatus('🌐 Fetching chain bootstrap from the admin node…');
+    // Admin URL this operator image is pre-wired to.
+    let adminUrl = '';
+    try { adminUrl = (await fetch('/api/operator/config').then(r => r.json())).adminUrl || ''; } catch {}
+    // Pull the admin's enode + chainspec (server-proxied to the admin node).
+    const boot = await fetch('/api/admin-proxy/api/wizard/bootstrap').then(r => r.json()).catch(() => null);
+    if (!boot || (!boot.adminEnode && !boot.chainspec)) {
+      throw new Error('could not reach the admin node for bootstrap data' + (adminUrl ? ' (' + adminUrl + ')' : '') + '. Check the admin is online.');
+    }
+    gateStatus('⛓️ Joining chain <b>' + (boot.chainName || boot.chainId || '') + '</b> and starting the node…');
+    const body = {
+      enodeUrl: boot.adminEnode,
+      chainspecJson: typeof boot.chainspec === 'string' ? boot.chainspec : JSON.stringify(boot.chainspec),
+      privateKey: privateKey,
+      adminBootstrapUrl: adminUrl || undefined,
+      stakingContract: boot.stakingContract || undefined,
+      aposRegistry: boot.aposRegistry || undefined,
+      minGasPriceWei: boot.minGasPriceWei || undefined,
+      startNode: true,
+    };
+    const r = await fetch('/api/proxy/api/wizard/connect', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    // Wait for the node config to settle, then sign in with the same key.
+    gateStatus('⏳ Node is starting & syncing — signing you in…');
+    for (let i = 0; i < 15; i++) {
+      await new Promise(res => setTimeout(res, 2000));
+      const st = await fetch('/api/proxy/api/wizard/status').then(r => r.json()).catch(() => ({}));
+      if (st && (st.configured || (st.config && st.config.validatorAddress))) break;
+    }
+    window.__nodeConfigured = true;
+    await keyFileLogin(privateKey);
+    if ($('app').style.display !== 'none') {
+      gateStatus('✅ Node configured. Welcome — it will keep syncing in the background.');
+    }
+  } catch (e) {
+    gateError('Setup failed: ' + (e.message || e));
+    const btn = $('create-key-btn'); if (btn) btn.disabled = false;
+  }
+}
+
+function parseKeyFileText(text) {
+  if (!text) return null;
+  const trimmed = text.trim();
+  if (/^(?:0x)?[0-9a-fA-F]{64}$/.test(trimmed)) {
+    return { privateKey: trimmed.startsWith('0x') ? trimmed : '0x' + trimmed };
+  }
+  const out = {};
+  for (const line of text.split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Za-z]+)\s*:\s*(.+?)\s*$/);
+    if (!m) continue;
+    const k = m[1].toLowerCase(), v = m[2].trim();
+    if (k === 'privatekey') out.privateKey = v.startsWith('0x') ? v : '0x' + v;
+    else if (k === 'address') out.address = v;
+  }
+  return out.privateKey ? out : null;
+}
+
+function gateError(msg) {
+  const el = $('gate-error');
+  el.style.display = '';
+  el.textContent = msg;
+}
+
+async function keyFileLogin(privateKey) {
+  gateError('');
+  try {
+    const r = await fetch('/api/proxy/api/auth/key-login', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    S.token      = r.token;
+    S.address    = r.address;
+    S.privateKey = privateKey;
+    $('gate').style.display = 'none';
+    $('app').style.display  = '';
+    $('me-addr').textContent = r.address.slice(0,6) + '…' + r.address.slice(-4);
+    boot();
+  } catch (e) {
+    gateError(e.message);
+  }
+}
+
+function signOut() {
+  S.token = null; S.privateKey = null; S.address = null;
+  if (S.pollHandle) clearInterval(S.pollHandle);
+  $('app').style.display = 'none';
+  $('gate').style.display = '';
+}
+
+function authedHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Authorization': 'Bearer ' + S.token,
+  };
+}
+
+// ── Graceful re-auth ────────────────────────────────────────────────
+// Server sessions live in memory, so a node restart (or a token that simply
+// timed out) invalidates the session and privileged calls return 401
+// "Auth required". Rather than dumping that error on the user, transparently
+// restore the session: silently if we still hold the key in this tab,
+// otherwise by prompting a one-click key-file upload — then retry the action.
+async function ensureSession() {
+  if (S.privateKey) {
+    try {
+      const r = await fetch('/api/proxy/api/auth/key-login', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ privateKey: S.privateKey }),
+      }).then(r => r.json());
+      if (r && r.token) { S.token = r.token; S.address = r.address; return true; }
+    } catch (e) { /* fall through to prompt */ }
+  }
+  return await promptForKey();
+}
+
+function promptForKey() {
+  return new Promise(resolve => {
+    const ov = document.createElement('div');
+    ov.style.cssText = 'position:fixed;inset:0;z-index:99999;background:rgba(7,16,28,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;padding:20px';
+    ov.innerHTML =
+      '<div style="background:#fff;max-width:440px;width:100%;border-radius:18px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.35);font-family:inherit">'
+      + '<h3 style="margin:0 0 8px;font-size:22px;color:#0a0a14">Sign in to continue</h3>'
+      + '<p style="margin:0 0 18px;color:#5a6172;font-size:14px;line-height:1.5">Your session needs to be refreshed. Upload your key file to authorize this action — your key stays in this browser tab only.</p>'
+      + '<label style="display:block;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;cursor:pointer;color:#5a6172;font-size:14px">'
+      + '<input type="file" accept=".txt,text/plain" style="display:none" id="__reauth_file"/>🔑 <b>Click to choose your key file</b><br><span style="font-size:12px">or a bare 64-hex private key (.txt)</span></label>'
+      + '<div id="__reauth_err" style="color:#ef4444;font-size:13px;margin-top:10px;display:none"></div>'
+      + '<div style="margin-top:16px;text-align:right"><button id="__reauth_cancel" style="padding:9px 16px;border:1px solid #e2e8f0;border-radius:10px;background:#fff;cursor:pointer;font-size:14px">Cancel</button></div>'
+      + '</div>';
+    document.body.appendChild(ov);
+    const close = (val) => { ov.remove(); resolve(val); };
+    ov.querySelector('#__reauth_cancel').onclick = () => close(false);
+    ov.querySelector('#__reauth_file').onchange = (ev) => {
+      const f = ev.target.files && ev.target.files[0]; if (!f) return;
+      const errEl = ov.querySelector('#__reauth_err');
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const parsed = parseKeyFileText(String(reader.result || ''));
+        if (!parsed || !parsed.privateKey) { errEl.textContent = 'Could not read a key from that file.'; errEl.style.display = ''; return; }
+        try {
+          const r = await fetch('/api/proxy/api/auth/key-login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ privateKey: parsed.privateKey }) }).then(r => r.json());
+          if (r.error || !r.token) throw new Error(r.error || 'Sign in failed');
+          S.token = r.token; S.address = r.address; S.privateKey = parsed.privateKey;
+          const me = document.getElementById('me-addr'); if (me) me.textContent = r.address.slice(0, 6) + '…' + r.address.slice(-4);
+          close(true);
+        } catch (e) { errEl.textContent = e.message; errEl.style.display = ''; }
+      };
+      reader.readAsText(f);
+    };
+  });
+}
+
+// One-time fetch wrapper: when any authenticated /api call returns 401, restore
+// the session (silent or via key upload) and retry the SAME request once.
+(function installAuthRetry() {
+  const _f = window.fetch.bind(window);
+  window.fetch = async function (input, init) {
+    const res = await _f(input, init);
+    try {
+      const url = typeof input === 'string' ? input : (input && input.url) || '';
+      const hdrs = (init && init.headers) || {};
+      const hasAuth = hdrs.Authorization || hdrs.authorization;
+      if (res.status === 401 && hasAuth && url.indexOf('/api/') !== -1 && url.indexOf('/auth/key-login') === -1) {
+        const ok = await ensureSession();
+        if (ok) {
+          const h = Object.assign({}, hdrs, { Authorization: 'Bearer ' + S.token });
+          return await _f(input, Object.assign({}, init, { headers: h }));
+        }
+      }
+    } catch (e) { /* return original response below */ }
+    return res;
+  };
+})();
+
+// ── Tabs + polling ──────────────────────────────────────────────────
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
+  document.querySelectorAll('section').forEach(el => el.classList.toggle('active', el.id === 'tab-' + t));
+  if (t === 'validator')  refreshValidatorTab();
+  if (t === 'delegators') { loadDelegators(); loadDesk(); }
+  if (t === 'vpackages')  loadPackages();
+  if (t === 'earnings')   loadEarnings();
+  if (t === 'validators') loadValidatorsAdmin();
+  if (t === 'tiers')      loadTiers();
+}
+
+async function boot() {
+  // Role-gate tabs/sections: operators never see admin management, admins
+  // never see the operator-only Join Network tab.
+  let role = 'admin';
+  try {
+    const ri = await fetch('/api/role-info').then(r => r.json()).catch(() => ({}));
+    role = (ri.role || 'admin').toLowerCase();
+  } catch {}
+  window.__role = role;
+  const hideSel = role === 'admin' ? '[data-role="operator"]' : '[data-role="admin"]';
+  document.querySelectorAll(hideSel).forEach(el => { el.style.display = 'none'; });
+  // Relabel the brand for operators and land them on a visible tab.
+  if (role !== 'admin') {
+    const lbl = document.querySelector('nav.top .brand span');
+    if (lbl) lbl.textContent = 'Validator';
+    // If the current active tab is an admin-only one, jump to Explorer.
+    const active = document.querySelector('.tab.active');
+    if (active && active.getAttribute('data-role') === 'admin') switchTab('explorer');
+  }
+  // Warm + poll the My Validator tab for everyone (admin is a validator too).
+  refreshValidatorTab();
+  if (!window.__valPoll) window.__valPoll = setInterval(() => {
+    if (uiBusy()) return; // don't steal focus / wipe selection mid-edit
+    const s = document.getElementById('tab-validator');
+    if (s && s.classList.contains('active')) refreshValidatorTab();
+    const d = document.getElementById('tab-delegators');
+    if (d && d.classList.contains('active')) { loadDelegators(); loadDesk(); }
+  }, 8000);
+  await refreshAll();
+  S.pollHandle = setInterval(() => { if (!uiBusy()) refreshAll(); }, 5000);
+}
+
+// ═══ v8: My Validator tab ═══════════════════════════════════════════
+let _myVal = null, _tiersCache = null, _pkgsCache = null, _aposInfoCache = null;
+function weiToEly(w) { try { return Number(BigInt(w) / 10n ** 12n) / 1e6; } catch { return 0; } }
+function fmtEln(w) { return weiToEly(w).toLocaleString(undefined, { maximumFractionDigits: 4 }) + ' ELN'; }
+
+// Cached /api/apos/info (admin address etc.) — fetched once per page load.
+async function getAposInfo() {
+  if (!_aposInfoCache) {
+    try { _aposInfoCache = await fetch('/api/proxy/api/apos/info').then(r => r.json()); } catch {}
+  }
+  return _aposInfoCache || {};
+}
+
+// v9 — the binding number is the on-chain delegator rate (bps, capped at the
+// package APR). The offer string is a plain display note now.
+// Package-APR cap (%) for the signed-in validator — from the selected package.
+function valRateCapPct() {
+  if (!_myVal || !_myVal.selectedPackageId || !_pkgsCache) return null;
+  const pk = _pkgsCache.find(p => Number(p.id) === Number(_myVal.selectedPackageId));
+  return pk ? (Number(pk.aprBps) || 0) / 100 : null;
+}
+
+// Live preview chip under the rate editor (shows the cap check).
+function valRatePreview() {
+  const el = document.getElementById('val-rate-preview');
+  if (!el) return;
+  const r = parseFloat((document.getElementById('val-rate-input') || {}).value);
+  const cap = valRateCapPct();
+  if (isFinite(r) && r >= 0) {
+    el.style.display = '';
+    if (cap !== null && r > cap) {
+      el.textContent = '✗ ' + r + '% is above your package APR cap (' + cap.toFixed(2) + '%)';
+      el.style.color = '#ff3b30';
+    } else {
+      el.textContent = '💎 New deposits will earn ' + r + '% per year (locked in at deposit)';
+      el.style.color = 'var(--accent-2)';
+    }
+  } else {
+    el.style.display = 'none';
+  }
+}
+
+async function refreshValidatorTab() {
+  if (!S.address) return;
+  try {
+    const v = await fetch('/api/proxy/api/apos/validator/' + S.address).then(r => r.json());
+    _myVal = v && v.deployed !== false ? v : null;
+    // v9.8 — My Wallet card: address, live balance, money overview.
+    try {
+      const aEl = document.getElementById('vw-address');
+      if (aEl && aEl.textContent !== S.address) aEl.textContent = S.address;
+      rpc('eth_getBalance', [S.address, 'latest']).then(b => {
+        const el = document.getElementById('vw-balance');
+        if (el) el.textContent = fmtEln(BigInt(b).toString());
+      }).catch(() => {});
+      const f = document.getElementById('vw-fees'), ac = document.getElementById('vw-accrued'), pl = document.getElementById('vw-pool');
+      if (f)  f.textContent  = _myVal ? fmtEln(_myVal.accumulatedFeesWei || '0') : '0 ELN';
+      if (ac) ac.textContent = _myVal ? fmtEln(_myVal.accruedProfitWei || '0') : '0 ELN';
+      if (pl) pl.textContent = _myVal ? fmtEln(_myVal.poolWei || '0') : '0 ELN';
+    } catch {}
+    const show = id => { const el = document.getElementById(id); if (el) el.style.display = ''; };
+    const hide = id => { const el = document.getElementById(id); if (el) el.style.display = 'none'; };
+    ['val-apply-card','val-pending-card','val-active-wrap','val-rejected-card'].forEach(hide);
+    const st = _myVal ? Number(_myVal.status) : 0;
+    if (!_myVal || st === 0) {
+      show('val-apply-card');
+      // v8.1 — apply goes through a staking package: fill the picker and
+      // make the min = max(network minimum, package minimum).
+      try {
+        if (!_pkgsCache) {
+          const pr = await fetch('/api/proxy/api/apos/packages').then(r => r.json());
+          _pkgsCache = Array.isArray(pr) ? pr : ((pr && pr.packages) || []);
+        }
+        const sel = document.getElementById('val-apply-pkg');
+        if (sel) {
+          const live = (_pkgsCache || []).filter(p => p.active !== false);
+          const sig = JSON.stringify(live.map(p => [p.id, p.name, p.minAmountWei, p.lockSeconds, p.aprBps]));
+          if (sel._sig !== sig) {
+            sel._sig = sig;
+            const prev = sel.value;
+            sel.innerHTML = live.length
+              ? live.map(p => `<option value="${Number(p.id)}">${escHtml(p.name || ('Package ' + p.id))} — min ${fmtEln(p.minAmountWei)} · ${Math.round((p.lockSeconds||0)/86400)}d · ${((p.aprBps||0)/100).toFixed(2)}% APR</option>`).join('')
+              : '<option value="">No active packages yet — the admin must publish one first</option>';
+            if (prev && live.some(p => String(p.id) === String(prev))) sel.value = prev;
+          }
+        }
+      } catch {}
+      valApplyPkgChanged();
+    } else if (st === 1) {
+      show('val-pending-card');
+    } else if (st === 2 || st === 5) {
+      // ACTIVE — or BELOW_MIN (5): the STAKE fell under the network minimum.
+      // The wrap stays visible so the validator can re-stake (wallet or pool).
+      show('val-active-wrap');
+      const bmNote = document.getElementById('val-belowmin-note');
+      if (bmNote) bmNote.style.display = st === 5 ? '' : 'none';
+      const pillEl = document.getElementById('val-status-pill');
+      if (pillEl) {
+        if (st === 5) {
+          pillEl.textContent = '⚠ BELOW MIN — stake more';
+          pillEl.style.background = 'rgba(245,158,11,.15)';
+          pillEl.style.color = '#b45309';
+        } else {
+          pillEl.textContent = '● ACTIVE VALIDATOR';
+          pillEl.style.background = 'rgba(21,168,120,.15)';
+          pillEl.style.color = '#15a878';
+        }
+      }
+      document.getElementById('val-code').textContent = _myVal.code || '—';
+      // v9 ONE POOL: poolWei = selfStake + delegatedTotal (drives the tier).
+      const stakeWei = BigInt(_myVal.stakeWei || _myVal.selfStakeWei || '0');
+      const delegWei = BigInt(_myVal.delegatedTotalWei || '0');
+      const poolWei  = stakeWei + delegWei;
+      document.getElementById('val-self').textContent = fmtEln(stakeWei.toString());
+      document.getElementById('val-pool').textContent = fmtEln(delegWei.toString());
+      document.getElementById('val-total').textContent = fmtEln(poolWei.toString());
+      document.getElementById('val-del-count').textContent = _myVal.delegatorCount;
+      // Daily-profit accrual display.
+      const accEl = document.getElementById('val-accrued');
+      if (accEl) accEl.textContent = fmtEln(_myVal.accruedProfitWei || '0');
+      // APR comes only from the selected staking PACKAGE (tier APR is retired).
+      try {
+        let pkgApr = '—';
+        if (_myVal.selectedPackageId) {
+          if (!_pkgsCache) {
+            const pr = await fetch('/api/proxy/api/apos/packages').then(r => r.json());
+            _pkgsCache = Array.isArray(pr) ? pr : ((pr && pr.packages) || []);
+          }
+          const pk = _pkgsCache.find(p => Number(p.id) === Number(_myVal.selectedPackageId));
+          if (pk) pkgApr = ((Number(pk.aprBps) || 0) / 100).toFixed(2) + '%';
+        }
+        document.getElementById('val-apr').textContent = pkgApr;
+      } catch { document.getElementById('val-apr').textContent = '—'; }
+      document.getElementById('val-gasshare').textContent = (_myVal.gasShareBps / 100).toFixed(2) + '%';
+      document.getElementById('val-fees').textContent = fmtEln(_myVal.accumulatedFeesWei);
+      document.getElementById('val-pkg').textContent = _myVal.selectedPackageId ? ('#' + _myVal.selectedPackageId) : 'none yet';
+      // Delegator rate (binding, on-chain) + the cap from the package APR.
+      const rateCur = document.getElementById('val-rate-current');
+      const rateBps = Number(_myVal.delegatorRateBps || 0);
+      if (rateCur) rateCur.innerHTML = rateBps > 0
+        ? '<b style="color:var(--accent-2)">Live:</b> 💎 New deposits earn <b>' + (rateBps / 100).toFixed(2) + '% per year</b> (existing positions keep their own locked rate).'
+        : '<span style="color:var(--text-3)">No rate published yet — delegators deposit at 0% until you set one.</span>';
+      const capPct = valRateCapPct();
+      const capEl = document.getElementById('val-rate-cap');
+      if (capEl) capEl.textContent = capPct !== null ? capPct.toFixed(2) + '%' : '—';
+      const rateInp = document.getElementById('val-rate-input');
+      if (rateInp && !rateInp.value && rateBps > 0) rateInp.value = rateBps / 100;
+      valRatePreview();
+      // TWO-TIER: my tier-2 packages + public-page profile.
+      loadMyVPackages();
+      pfPopulate(_myVal);
+      vpRatePreview();
+      // Public note (display-only offer text).
+      const noteInp = document.getElementById('val-offer-note');
+      if (noteInp && !noteInp.dataset.touched && !noteInp.value) noteInp.value = String(_myVal.offer || '').slice(0, 200);
+      // Composition bar: your stake (green) vs delegations (blue) — both in the pool.
+      const pStake = poolWei > 0n ? Number(stakeWei * 1000n / poolWei) / 10 : 0;
+      document.getElementById('val-bar-self').style.width = pStake + '%';
+      document.getElementById('val-bar-del').style.width = (poolWei > 0n ? (100 - pStake) : 0) + '%';
+      // Next-tier hint from the admin curve — computed from the ONE POOL
+      // (your stake + delegator deposits).
+      try {
+        if (!_tiersCache) _tiersCache = (await fetch('/api/proxy/api/apos/tiers').then(r => r.json())).tiers || [];
+        const next = _tiersCache.find(t => BigInt(t.minPoolWei) > poolWei);
+        const el = document.getElementById('val-next-tier');
+        if (el) el.innerHTML = next
+          ? '📈 Next tier at <b>' + fmtEln(next.minPoolWei) + '</b> pool → fee share <b>' + (next.gasShareBps/100).toFixed(2) + '%</b>. Grow the pool — top up your own stake or attract delegators (their deposits count too).'
+          : (_tiersCache.length ? '🏆 You are at the top tier.' : 'Admin has not published the tier curve yet.');
+      } catch {}
+    } else {
+      show('val-rejected-card');
+      document.getElementById('val-rej-label').textContent = st === 3 ? 'rejected' : 'suspended';
+    }
+  } catch (e) { console.warn('[validator]', e.message); }
+}
+
+// v8.1 — applying stakes through a package: the stake floor is
+// max(network minimum, selected package minimum).
+function valApplyFloorEly() {
+  let floor = _myVal && _myVal.minValidatorStakeWei ? weiToEly(_myVal.minValidatorStakeWei) : 0;
+  const sel = document.getElementById('val-apply-pkg');
+  const p = (_pkgsCache || []).find(x => String(x.id) === String(sel && sel.value));
+  if (p && weiToEly(p.minAmountWei) > floor) floor = weiToEly(p.minAmountWei);
+  return floor;
+}
+function valApplyPkgChanged() {
+  const floor = valApplyFloorEly();
+  const minEl = document.getElementById('val-min-stake');
+  if (minEl) minEl.textContent = floor ? floor.toLocaleString() : '—';
+  const amt = document.getElementById('val-apply-amount');
+  if (amt && (!amt.value || parseFloat(amt.value) < floor)) amt.value = floor || '';
+}
+
+async function valApply() {
+  const out = document.getElementById('val-apply-out');
+  const sel = document.getElementById('val-apply-pkg');
+  const pkgId = parseInt((sel && sel.value) || '0');
+  if (!pkgId) { out.textContent = 'Pick a staking package first — applying stakes through a package.'; out.style.color = '#ff3b30'; return; }
+  const amt = parseFloat(document.getElementById('val-apply-amount').value || '0');
+  if (!(amt > 0)) { out.textContent = 'Enter a stake amount.'; out.style.color = '#ff3b30'; return; }
+  const floor = valApplyFloorEly();
+  if (floor && amt < floor) { out.textContent = 'Minimum stake for this package is ' + floor.toLocaleString() + ' ELN (max of network minimum and package minimum).'; out.style.color = '#ff3b30'; return; }
+  if (!S.privateKey) { out.textContent = 'Sign in with your key file first.'; out.style.color = '#ff3b30'; return; }
+  out.textContent = 'Submitting application…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/apply', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, stakeEther: amt, packageId: pkgId }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Applied — tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>. Awaiting admin approval.';
+    out.style.color = '#15a878';
+    setTimeout(refreshValidatorTab, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+async function valWithdrawStake(outId) {
+  const out = document.getElementById(outId);
+  if (!confirm('Withdraw your validator self-stake? Available after rejection/suspension or once the package lock has elapsed.')) return;
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/withdraw-stake', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Withdrawn — tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>'; out.style.color = '#15a878';
+    setTimeout(refreshValidatorTab, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+async function valWithdrawFees(outId) {
+  const out = document.getElementById(outId);
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/withdraw-fees', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Fees withdrawn — tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>'; out.style.color = '#15a878';
+    setTimeout(refreshValidatorTab, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// 💎 Set the binding on-chain delegator rate (% / year → bps). Capped at the
+//    selected package's APR; existing positions are grandfathered.
+async function valSetRate() {
+  const out = document.getElementById('val-rate-out');
+  const pct = parseFloat(document.getElementById('val-rate-input').value);
+  if (!isFinite(pct) || pct < 0) { out.textContent = '✗ Enter the yearly rate you pay delegators.'; out.style.color = '#ff3b30'; return; }
+  const cap = valRateCapPct();
+  if (cap !== null && pct > cap) { out.textContent = '✗ Rate exceeds your package APR cap (max ' + cap.toFixed(2) + '%).'; out.style.color = '#ff3b30'; return; }
+  if (!S.privateKey) { out.textContent = '✗ Sign in with your key file first.'; out.style.color = '#ff3b30'; return; }
+  out.textContent = 'Publishing on-chain…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/set-rate', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, ratePct: pct }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Rate set to ' + pct + '% — tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>. New deposits lock this in.';
+    out.style.color = '#15a878';
+    setTimeout(refreshValidatorTab, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// ☀ Claim the daily-accrued package-APR profit (any time).
+async function valClaimProfit() {
+  const out = document.getElementById('val-actions-out');
+  if (!S.privateKey) { out.textContent = '✗ Sign in with your key file first.'; out.style.color = '#ff3b30'; return; }
+  out.textContent = 'Claiming accrued profit…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/claim-profit', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Claimed ' + (r.claimedWei ? fmtEln(r.claimedWei) : 'profit') + ' — tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>'; out.style.color = '#15a878';
+    setTimeout(refreshValidatorTab, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// ── Publish the public note (display-only offer text; the binding number is
+//    the on-chain delegator rate above).
+async function valPublishOffer() {
+  const out = document.getElementById('val-offer-out');
+  const note = (document.getElementById('val-offer-note').value || '').trim().slice(0, 200);
+  if (!S.privateKey) { out.textContent = '✗ Sign in with your key file first.'; out.style.color = '#ff3b30'; return; }
+  out.textContent = 'Publishing on-chain…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/set-offer', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, offer: note }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Note published — tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>';
+    out.style.color = '#15a878';
+    setTimeout(refreshValidatorTab, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// ═══ TWO-TIER: My Packages (tier-2 — the offers delegators join) ═════
+// Monthly cap = (package APR bps / 1200) %. The chain stores ANNUAL bps.
+function vpMonthlyCapPct() {
+  const cap = valRateCapPct();           // annual % from the tier-1 package
+  return cap === null ? null : Math.round(cap / 12 * 10000) / 10000;
+}
+function vpRatePreview() {
+  const el = document.getElementById('vp-rate-preview');
+  if (!el) return;
+  const r = parseFloat((document.getElementById('vp-rate') || {}).value);
+  const cap = vpMonthlyCapPct();
+  if (isFinite(r) && r >= 0) {
+    el.style.display = '';
+    if (cap !== null && r > cap) {
+      el.textContent = '✗ ' + r + '%/month is above your cap (' + cap + '%/month = package APR ÷ 12)';
+      el.style.color = '#ff3b30';
+    } else {
+      el.textContent = '💎 Delegators in this package earn ' + r + '% per month (' + (Math.round(r * 12 * 100) / 100) + '% per year), locked in at deposit';
+      el.style.color = 'var(--accent-2)';
+    }
+  } else el.style.display = 'none';
+}
+
+async function loadMyVPackages() {
+  const tb = document.getElementById('val-mypkg-rows');
+  if (!tb || !S.address) return;
+  // live cap hint on the create form
+  const capEl = document.getElementById('vp-rate-cap');
+  const cap = vpMonthlyCapPct();
+  if (capEl) capEl.textContent = cap !== null ? cap + '%' : '—';
+  try {
+    const r = await fetch('/api/proxy/api/apos/vpackages/' + S.address).then(r => r.json());
+    const list = (r && r.vpackages) || [];
+    if (!list.length) {
+      tb.innerHTML = '<tr><td colspan="9" class="empty">No packages yet — create your first one below. Delegators can only join you through a package.</td></tr>';
+      return;
+    }
+    tb.innerHTML = list.map(p => `<tr>
+      <td>${p.idx + 1}</td>
+      <td><b>${escHtml(p.name)}</b></td>
+      <td>${p.lockDays} days</td>
+      <td style="font-weight:600;color:#15a878">${p.monthlyPct}%/mo</td>
+      <td>${(p.rateBpsAnnual / 100).toFixed(2)}%/yr</td>
+      <td>${fmtEln(p.minAmountWei)}</td>
+      <td>${p.penaltyPct}%</td>
+      <td>${p.active ? '<span style="color:#15a878;font-weight:600">live</span>' : '<span style="color:var(--text-3)">disabled</span>'}</td>
+      <td><button class="btn-small ${p.active ? 'btn-secondary' : 'btn-primary'}" onclick="vpToggle(${p.idx},${p.active ? 'false' : 'true'})">${p.active ? 'Disable' : 'Enable'}</button></td>
+    </tr>`).join('');
+  } catch (e) {
+    tb.innerHTML = '<tr><td colspan="9" class="empty">Failed: ' + escHtml(e.message) + '</td></tr>';
+  }
+}
+
+async function vpAddPackage() {
+  const out = document.getElementById('vp-out');
+  const name = (document.getElementById('vp-name').value || '').trim();
+  const days = parseFloat(document.getElementById('vp-days').value);
+  const rate = parseFloat(document.getElementById('vp-rate').value);
+  const min  = parseFloat(document.getElementById('vp-min').value);
+  const pen  = parseFloat(document.getElementById('vp-pen').value || '0');
+  if (!name) { out.textContent = '✗ Step 1 — give the package a name.'; out.style.color = '#ff3b30'; return; }
+  if (!isFinite(days) || days < 0) { out.textContent = '✗ Step 2 — enter the lock term in days (0 = no lock).'; out.style.color = '#ff3b30'; return; }
+  if (!isFinite(rate) || rate < 0) { out.textContent = '✗ Step 3 — enter the monthly rate (%).'; out.style.color = '#ff3b30'; return; }
+  const cap = vpMonthlyCapPct();
+  if (cap !== null && rate > cap) { out.textContent = '✗ Monthly rate exceeds your cap (' + cap + '%/month = your package APR ÷ 12).'; out.style.color = '#ff3b30'; return; }
+  if (!(min > 0)) { out.textContent = '✗ Step 4 — enter the minimum deposit per position (ELN).'; out.style.color = '#ff3b30'; return; }
+  if (!isFinite(pen) || pen < 0 || pen > 20) { out.textContent = '✗ Penalty must be between 0 and 20%.'; out.style.color = '#ff3b30'; return; }
+  if (!S.privateKey) { out.textContent = '✗ Sign in with your key file first.'; out.style.color = '#ff3b30'; return; }
+  out.textContent = 'Publishing package on-chain…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/add-package', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, name, lockDays: days, minEln: min, ratePctMonthly: rate, penaltyPct: pen }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Package live — delegators can now join it on your public page. tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>';
+    out.style.color = '#15a878';
+    document.getElementById('vp-name').value = '';
+    setTimeout(loadMyVPackages, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+async function vpToggle(idx, active) {
+  const out = document.getElementById('vp-out');
+  if (!active && !confirm('Disable this package? New delegators can no longer join it (existing positions keep their terms).')) return;
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/set-package-active', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, idx, active }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Package ' + (active ? 'enabled' : 'disabled') + '.'; out.style.color = '#15a878';
+    setTimeout(loadMyVPackages, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// ═══ TWO-TIER: My Page (public profile on /validator.html) ═══════════
+function pfPopulate(v) {
+  const link = document.getElementById('pf-view-link');
+  if (link) {
+    const target = v && v.code ? '/validator.html?code=' + encodeURIComponent(v.code)
+                               : (S.address ? '/validator.html?address=' + S.address : null);
+    if (target) { link.href = target; link.style.display = ''; } else link.style.display = 'none';
+  }
+  const p = (v && v.profileData) || null;
+  [['pf-company', 'company'], ['pf-contact', 'contact'], ['pf-address', 'address'],
+   ['pf-website', 'website'], ['pf-about', 'about']].forEach(([id, k]) => {
+    const el = document.getElementById(id);
+    if (el && !el.dataset.touched && !el.value && p && p[k]) el.value = p[k];
+  });
+}
+['pf-company','pf-contact','pf-address','pf-website','pf-about'].forEach(id => {
+  document.addEventListener('input', e => { if (e.target && e.target.id === id) e.target.dataset.touched = '1'; });
+});
+
+async function pfSave() {
+  const out = document.getElementById('pf-out');
+  if (!S.privateKey) { out.textContent = '✗ Sign in with your key file first.'; out.style.color = '#ff3b30'; return; }
+  const profile = {
+    company: (document.getElementById('pf-company').value || '').trim(),
+    contact: (document.getElementById('pf-contact').value || '').trim(),
+    address: (document.getElementById('pf-address').value || '').trim(),
+    website: (document.getElementById('pf-website').value || '').trim(),
+    about:   (document.getElementById('pf-about').value || '').trim(),
+  };
+  out.textContent = 'Saving profile on-chain…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/set-profile', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, profile }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Profile saved — it is live on your public page. tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>';
+    out.style.color = '#15a878';
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// ═══ v9: Delegators tab — POSITIONS (one row per deposit) ════════════
+async function loadDelegators() {
+  if (!S.address) return;
+  const tb = document.getElementById('del-rows');
+  try {
+    const r = await fetch('/api/proxy/api/apos/delegators/' + S.address).then(r => r.json());
+    const list = (r && (r.positions || r.delegators)) || [];
+    const open = list.filter(p => BigInt(p.amountWei || '0') > 0n);
+    let total = 0n, accrued = 0n;
+    for (const p of open) { total += BigInt(p.amountWei || '0'); accrued += BigInt(p.accruedWei || '0'); }
+    document.getElementById('del-count').textContent = open.length;
+    document.getElementById('del-total').textContent = fmtEln(total.toString());
+    document.getElementById('del-distributed').textContent = fmtEln(accrued.toString());
+    if (!open.length) {
+      tb.innerHTML = '<tr><td colspan="8" class="empty">No delegation positions yet — share your public page link (My Validator tab → My Page) so people can join your packages.</td></tr>';
+      return;
+    }
+    tb.innerHTML = open.map(p => {
+      const since = p.since ? new Date(p.since * 1000).toLocaleDateString() : '—';
+      const name = p.label ? escHtml(p.label) : '<span style="color:var(--text-3)">unnamed</span>';
+      const penPct = Number(p.penaltyPct || (Number(p.penaltyBps || 0) / 100));
+      const early = p.earlyUntil && (Date.now() / 1000) < p.earlyUntil
+        ? ' <span title="Still inside the package lock — self-withdraw pays the ' + penPct + '% early-exit penalty (kept by you)" style="color:var(--warn)">⏳</span>' : '';
+      const pkgCell = p.vpkgName
+        ? '<b>' + escHtml(p.vpkgName) + '</b><br><span style="font-size:11px;color:var(--text-3)">' + Number(p.lockDays || 0) + 'd lock · ' + penPct + '% penalty</span>'
+        : '<span style="color:var(--text-3)">—</span>';
+      return `<tr>
+        <td><b>${name}</b></td>
+        <td class="mono" style="font-size:12px">${p.delegator}</td>
+        <td>${pkgCell}</td>
+        <td style="font-weight:600;color:#15a878">${fmtEln(p.amountWei)}</td>
+        <td>${((p.rateBps || 0) / 100).toFixed(2)}%/yr</td>
+        <td style="color:var(--text-3)">${since}${early}</td>
+        <td>${fmtEln(p.accruedWei || '0')}</td>
+        <td>
+          <button class="btn-small btn-secondary" onclick="delRename('${p.delegator}', '${(p.label || '').replace(/'/g, '')}')">✏ Name</button>
+          <button class="btn-small btn-primary" style="margin-left:6px" onclick="delRelease('${p.delegator}', ${Number(p.posIdx)}, '${p.amountWei}')">↩ Release</button>
+          <button class="btn-small btn-secondary" style="margin-left:6px" onclick="delDistribute('${p.delegator}')">🎁 Gift</button>
+        </td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tb.innerHTML = '<tr><td colspan="8" class="empty">Failed: ' + e.message + '</td></tr>';
+  }
+}
+
+async function delRename(delegator, current) {
+  const label = prompt('Name this delegator (shown only in your panel + on-chain label):', current || '');
+  if (label === null) return;
+  const out = document.getElementById('del-out');
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/label-delegator', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, delegator, label }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Renamed.'; out.style.color = '#15a878';
+    setTimeout(loadDelegators, 2000);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+async function delDistribute(delegator) {
+  const amt = prompt('Reward to send to ' + delegator.slice(0, 10) + '…' + delegator.slice(-6) + ' (ELN, from your wallet):', '1');
+  if (amt === null) return;
+  if (!(parseFloat(amt) > 0)) return;
+  const out = document.getElementById('del-out');
+  out.textContent = 'Distributing…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/distribute', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, delegator, amountEther: amt }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Sent ' + amt + ' ELN — tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>'; out.style.color = '#15a878';
+    setTimeout(loadDelegators, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// ↩ Release a POSITION's principal back to its delegator (no penalty; the
+//    position's accrued profit is paid out too).
+async function delRelease(delegator, posIdx, amountWei) {
+  const maxEly = weiToEly(amountWei || '0');
+  const amt = prompt('Principal to RETURN to ' + delegator.slice(0, 10) + '…' + delegator.slice(-6) +
+    ' from position #' + posIdx + ' (ELN, max ' + maxEly.toLocaleString() + ').\nNo penalty — their accrued profit is paid out too:', String(maxEly));
+  if (amt === null) return;
+  if (!(parseFloat(amt) > 0)) { const o = document.getElementById('del-out'); o.textContent = '✗ Enter an amount > 0.'; o.style.color = '#ff3b30'; return; }
+  const out = document.getElementById('del-out');
+  out.textContent = 'Releasing principal + accrued profit…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/release', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, delegator, posIdx, amountEther: amt }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Released ' + amt + ' ELN (+ accrued profit) back to the delegator — tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>'; out.style.color = '#15a878';
+    setTimeout(loadDelegators, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// ═══ Delegation desk (validator side): requests + two-way chat ═══════
+let _deskThreads = [], _deskOpen = null;
+
+function deskAgo(ms) {
+  const s = Math.floor((Date.now() - Number(ms || 0)) / 1000);
+  if (s < 10) return 'just now';
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+
+async function loadDesk() {
+  if (!S.address) return;
+  // The admin validator does not accept delegators — show a notice instead
+  // of the delegation-requests card.
+  try {
+    const info = await getAposInfo();
+    if (info.admin && String(info.admin).toLowerCase() === String(S.address).toLowerCase()) {
+      const card = document.getElementById('desk-card');
+      if (card && !card.dataset.adminNotice) {
+        card.dataset.adminNotice = '1';
+        card.innerHTML = '<h3 style="margin-top:0">📨 Delegation requests</h3>' +
+          '<div class="empty" style="padding:24px">The admin validator does not accept delegators.</div>';
+      }
+      return;
+    }
+  } catch {}
+  try {
+    const r = await fetch('/api/proxy/api/desk/for-validator/' + S.address).then(r => r.json());
+    _deskThreads = (r && r.threads) || [];
+    renderDeskThreads();
+  } catch (e) {
+    const box = document.getElementById('desk-threads');
+    if (box && !_deskThreads.length) box.innerHTML = '<div class="empty" style="padding:24px">Could not load requests: ' + escHtml(e.message) + '</div>';
+  }
+}
+
+function renderDeskThreads() {
+  const box = document.getElementById('desk-threads');
+  if (!box) return;
+  if (!_deskThreads.length) {
+    box.innerHTML = '<div class="empty" style="padding:24px">No delegation requests yet — publish your offer on the My Validator tab and delegators will knock here.</div>';
+    return;
+  }
+  // keep half-typed replies across the 8s poll re-render
+  const keep = {};
+  box.querySelectorAll('input[data-keep]').forEach(i => { keep[i.id] = i.value; });
+  const sorted = [..._deskThreads].sort((a, b) => Number(b.updatedAt || 0) - Number(a.updatedAt || 0));
+  box.innerHTML = sorted.map(t => {
+    const msgs = t.messages || [];
+    const last = msgs[msgs.length - 1];
+    const lastReal = [...msgs].reverse().find(m => !m.system);
+    const unread = !!(lastReal && lastReal.from === 'delegator' && t.status !== 'closed');
+    const open = _deskOpen === t.id;
+    const stCls = ['open', 'accepted', 'declined', 'closed'].includes(t.status) ? t.status : 'open';
+    const shortAddr = t.delegator.slice(0, 10) + '…' + t.delegator.slice(-6);
+    // TWO-TIER: the package the delegator chose on your public page.
+    const vp = t.vpkg || null;
+    const vpChip = vp
+      ? '<span title="Requested package" style="font-size:11px;font-weight:600;color:var(--accent-2);background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.3);border-radius:999px;padding:3px 10px;white-space:nowrap">📦 ' + escHtml(vp.name) + ' · ' + vp.monthlyPct + '%/mo</span>'
+      : '';
+    let chat = '';
+    if (open) {
+      if (vp) {
+        chat += '<div style="margin:8px 14px 0;font-size:12.5px;color:var(--text-2);background:var(--surface-alt);border-radius:var(--radius);padding:8px 12px">Wants to join <b>' + escHtml(vp.name) + '</b> — ' + vp.monthlyPct + '%/month · ' + vp.lockDays + 'd lock · ' + vp.penaltyPct + '% early-exit penalty · min ' + fmtEln(vp.minAmountWei || vp.maxAmountWei) + '</div>';
+      }
+      chat += '<div class="desk-chat">' + msgs.map(m => {
+        if (m.system) return '<div class="desk-bub sys">' + escHtml(m.body) + ' · ' + deskAgo(m.at) + '</div>';
+        const me = m.from === 'validator';
+        return '<div class="desk-bub ' + (me ? 'me' : 'them') + '">' + escHtml(m.body) +
+          '<div class="at">' + (me ? 'me' : 'delegator') + ' · ' + deskAgo(m.at) + '</div></div>';
+      }).join('');
+      chat += '<div class="desk-reply">' +
+        '<input id="dk-in-' + t.id + '" data-keep maxlength="2000" placeholder="Reply to the delegator…" onkeydown="if(event.key===\'Enter\')deskReply(' + t.id + ')">' +
+        '<button class="btn-small btn-primary" onclick="deskReply(' + t.id + ')">Send</button></div>';
+      if (t.status === 'open') {
+        chat += '<div style="display:flex;gap:8px;margin-top:10px;flex-wrap:wrap">' +
+          '<button class="btn-small btn-primary" onclick="deskStatus(' + t.id + ',\'accepted\')">✓ Accept — let them deposit</button>' +
+          '<button class="btn-small btn-secondary" style="color:var(--danger);border-color:var(--danger)" onclick="deskStatus(' + t.id + ',\'declined\')">✕ Decline</button></div>';
+      } else if (t.status !== 'closed') {
+        chat += '<div style="margin-top:10px"><button class="btn-small btn-secondary" onclick="deskStatus(' + t.id + ',\'closed\')">Close thread</button></div>';
+      }
+      chat += '</div>';
+    }
+    return '<div class="desk-th' + (unread ? ' unread' : '') + '">' +
+      '<div class="desk-head" onclick="deskToggle(' + t.id + ')">' +
+        (unread ? '<span title="New message from the delegator" style="width:8px;height:8px;border-radius:50%;background:#15a878;flex:0 0 auto"></span>' : '') +
+        '<code style="font-size:12px" title="' + escHtml(t.delegator) + '">' + escHtml(shortAddr) + '</code>' +
+        '<span class="desk-badge ' + stCls + '">' + escHtml(t.status) + '</span>' + vpChip +
+        '<span style="flex:1;color:var(--text-3);font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:60px">' + (last ? escHtml(String(last.body).slice(0, 80)) : '') + '</span>' +
+        '<span style="font-size:11px;color:var(--text-3);font-family:\'JetBrains Mono\',monospace">' + deskAgo(t.updatedAt) + '</span>' +
+        '<span style="color:#15a878">' + (open ? '▾' : '▸') + '</span>' +
+      '</div>' + chat + '</div>';
+  }).join('');
+  Object.keys(keep).forEach(id => { const el = document.getElementById(id); if (el) el.value = keep[id]; });
+}
+
+function deskToggle(id) {
+  _deskOpen = _deskOpen === id ? null : id;
+  renderDeskThreads();
+}
+
+async function deskReply(id) {
+  const inp = document.getElementById('dk-in-' + id);
+  const body = ((inp && inp.value) || '').trim();
+  if (!body) return;
+  try {
+    const r = await fetch('/api/proxy/api/desk/' + id + '/reply', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'validator', address: S.address, body }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    if (inp) inp.value = '';
+    await loadDesk();
+  } catch (e) {
+    const out = document.getElementById('del-out');
+    if (out) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+  }
+}
+
+async function deskStatus(id, status) {
+  if (status === 'declined' && !confirm('Decline this delegation request?')) return;
+  try {
+    const r = await fetch('/api/proxy/api/desk/' + id + '/status', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address: S.address, status }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    await loadDesk();
+  } catch (e) {
+    const out = document.getElementById('del-out');
+    if (out) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+  }
+}
+
+async function rpc(method, params=[]) {
+  const r = await fetch('/api/proxy/api/rpc', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ jsonrpc:'2.0', method, params, id:1 }),
+  }).then(r => r.json());
+  if (r.error) throw new Error(r.error.message);
+  return r.result;
+}
+
+async function refreshAll() {
+  try {
+    const tip = parseInt(await rpc('eth_blockNumber'), 16);
+    const cid = parseInt(await rpc('eth_chainId'), 16);
+    const gp  = await rpc('eth_gasPrice');
+    $('s-tip').textContent = '#' + tip;
+    $('s-cid').textContent = cid;
+    $('s-gas').textContent = (Number(BigInt(gp) / 1000000n) / 1000) + ' Gwei';
+    try {
+      const st = await fetch('/api/proxy/api/status').then(r => r.json());
+      $('s-peers').textContent = st.peers ?? '—';
+    } catch {}
+    const rows = [];
+    for (let i = 0; i < 25 && tip - i >= 0; i++) {
+      const b = await rpc('eth_getBlockByNumber', ['0x' + (tip - i).toString(16), false]);
+      if (b) rows.push({
+        number: parseInt(b.number, 16), hash: b.hash, miner: b.miner,
+        txCount: (b.transactions || []).length, timestamp: parseInt(b.timestamp, 16),
+      });
+    }
+    renderBlocks(rows);
+  } catch (e) { console.warn(e); }
+}
+function renderBlocks(blocks) {
+  if (!blocks.length) { $('explorer-rows').innerHTML = '<tr><td colspan="5" class="empty">No blocks.</td></tr>'; return; }
+  // Memoize on the block data — skip the rewrite when nothing changed so
+  // text selections in the table survive idle polls.
+  const sig = JSON.stringify(blocks.map(b => [b.number, b.hash, b.txCount]));
+  if ($('explorer-rows').dataset.sig === sig) return;
+  $('explorer-rows').dataset.sig = sig;
+  $('explorer-rows').innerHTML = blocks.map(b => `
+    <tr>
+      <td><b>#${b.number}</b></td>
+      <td class="mono">${(b.hash || '').slice(0,12)}…${(b.hash || '').slice(-6)}</td>
+      <td class="mono">${(b.miner || '').slice(0,10)}…${(b.miner || '').slice(-4)}</td>
+      <td>${b.txCount}</td>
+      <td style="color:var(--text-3)">${timeAgo(b.timestamp)}</td>
+    </tr>
+  `).join('');
+}
+function timeAgo(ts) {
+  const s = Math.floor(Date.now()/1000 - ts);
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  return Math.floor(s/3600) + 'h ago';
+}
+
+// v7.10.4 — withLoading helper: disable button + spinner while action runs.
+async function withLoading(btn, label, fn) {
+  if (!btn) return fn();
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.dataset.loading = '1';
+  btn.innerHTML = '<span class="btn-spin"></span>' + label;
+  try { return await fn(); }
+  finally {
+    btn.disabled = false;
+    btn.dataset.loading = '0';
+    btn.innerHTML = orig;
+  }
+}
+
+// ── Nodes ───────────────────────────────────────────────────────────
+// v7.10.3 — match the on-chain enum {NONE, PENDING, ACTIVE, REJECTED,
+// SUSPENDED, BELOW_MIN}. status 1 = PENDING (needs Approve button),
+// 2 = ACTIVE, 5 = BELOW_MIN (STAKE fell under the network minimum — earnings
+// paused; auto-recovers to ACTIVE once the validator stakes back above it).
+const STATUS_NAME = s =>
+  s === 2 ? 'active'
+  : s === 1 ? 'pending'
+  : s === 3 ? 'rejected'
+  : s === 4 ? 'suspended'
+  : s === 5 ? 'below min'
+  : 'none';
+
+// ═══ v8: Validators (admin) — approvals + code issuance ══════════════
+async function loadValidatorsAdmin() {
+  const tb = $('va-rows');
+  try {
+    const r = await fetch('/api/proxy/api/apos/validators').then(r => r.json());
+    const list = (r && r.validators) || [];
+    const pend = list.filter(v => v.status === 1);
+    const act  = list.filter(v => v.status === 2);
+    // v9 Σ POOL of active validators (own stake + delegations — the tier basis).
+    let staked = 0n;
+    for (const v of act) staked += BigInt(v.stakeWei || v.selfStakeWei || '0') + BigInt(v.delegatedTotalWei || '0');
+    $('va-pending').textContent = pend.length;
+    $('va-active').textContent  = act.length;
+    $('va-pool').textContent    = fmtEln(staked.toString());
+    try {
+      const info = await fetch('/api/proxy/api/apos/info').then(r => r.json());
+      $('va-gasshare').textContent = ((info.totalGasShareBps || 0) / 100).toFixed(2) + '%';
+    } catch {}
+    if (!list.length) { tb.innerHTML = '<tr><td colspan="8" class="empty">No validator applications yet.</td></tr>'; return; }
+    tb.innerHTML = list.map(v => {
+      const st = STATUS_NAME(v.status);
+      const stHtml = st === 'active'
+        ? '<span class="pill" style="background:rgba(21,168,120,.15);color:#15a878">● active</span>'
+        : st === 'pending'
+          ? '<span class="pill" style="background:rgba(245,158,11,.15);color:#b45309">pending</span>'
+          : st === 'below min'
+            ? '<span class="pill" style="background:rgba(245,158,11,.15);color:#b45309;border:1px solid rgba(220,38,38,.35)" title="POOL (own stake + delegations) fell below the network minimum — earnings paused; auto-recovers once the pool refills">⚠ below min</span>'
+            : '<span style="color:var(--text-3)">' + st + '</span>';
+      let actions = '';
+      if (v.status === 1) {
+        actions = `<button class="btn-small btn-primary" onclick="vaApprove('${v.address}')">✓ Approve + issue code</button>
+                   <button class="btn-small btn-secondary" style="margin-left:6px" onclick="vaReject('${v.address}')">Reject</button>`;
+      } else if (v.status === 2 || v.status === 5) {
+        actions = `<button class="btn-small btn-secondary" onclick="vaSetCode('${v.address}','${v.code || ''}')">✏ Code</button>
+                   <button class="btn-small btn-secondary" style="margin-left:6px" onclick="vaRefreshTier('${v.address}')">↻ Re-tier</button>
+                   <button class="btn-small btn-secondary" style="margin-left:6px;color:var(--danger)" onclick="vaSuspend('${v.address}')">Suspend</button>`;
+      } else if (v.status === 4) {
+        actions = `<button class="btn-small btn-primary" onclick="vaApprove('${v.address}','${v.code || ''}')">Re-approve</button>`;
+      }
+      const code = v.code ? `<code style="font-family:'JetBrains Mono',monospace;color:#15a878;font-weight:700">${v.code}</code>` : '<span style="color:var(--text-3)">—</span>';
+      return `<tr>
+        <td class="mono" style="font-size:12px">${v.address}</td>
+        <td>${code}</td>
+        <td>${stHtml}</td>
+        <td title="ONE POOL (own stake + delegations) — the tier basis"><b>${fmtEln((BigInt(v.stakeWei || v.selfStakeWei || '0') + BigInt(v.delegatedTotalWei || '0')).toString())}</b></td>
+        <td title="Delegator rate — locked into each position at deposit; capped at the package APR">${((Number(v.delegatorRateBps) || 0) / 100).toFixed(2)}%</td>
+        <td>${(v.gasShareBps/100).toFixed(1)}%</td>
+        <td>${v.delegatorCount}</td>
+        <td>${actions}</td>
+      </tr>`;
+    }).join('');
+  } catch (e) {
+    tb.innerHTML = '<tr><td colspan="8" class="empty">Could not load validators: ' + e.message + '</td></tr>';
+  }
+}
+
+async function vaApprove(addr, presetCode) {
+  const code = prompt('Unique public APOS code for this validator (shown on the public site; delegators use it to fund the pool):', presetCode || ('VAL-' + addr.slice(2, 8).toUpperCase()));
+  if (!code) return;
+  const out = $('va-out');
+  out.textContent = 'Approving…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/admin/approve-validator', {
+      method: 'POST', headers: authedHeaders(),
+      body: JSON.stringify({ address: addr, code, privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Approved with code <b>' + code + '</b> — tx <code>' + (r.txHash || '').slice(0,16) + '…</code>'; out.style.color = '#15a878';
+    loadValidatorsAdmin();
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+async function vaReject(addr) {
+  if (!confirm('Reject this validator application?')) return;
+  const out = $('va-out');
+  try {
+    const r = await fetch('/api/proxy/api/apos/admin/reject-validator', {
+      method: 'POST', headers: authedHeaders(),
+      body: JSON.stringify({ address: addr, privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.textContent = '✓ Rejected.'; out.style.color = '#15a878';
+    loadValidatorsAdmin();
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+async function vaSuspend(addr) {
+  const reason = prompt('Suspend reason (recorded on-chain):', '');
+  if (reason === null) return;
+  const out = $('va-out');
+  try {
+    const r = await fetch('/api/proxy/api/apos/admin/suspend-validator', {
+      method: 'POST', headers: authedHeaders(),
+      body: JSON.stringify({ address: addr, reason, privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.textContent = '✓ Suspended.'; out.style.color = '#15a878';
+    loadValidatorsAdmin();
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+async function vaSetCode(addr, current) {
+  const code = prompt('New public APOS code:', current || '');
+  if (!code || code === current) return;
+  const out = $('va-out');
+  try {
+    const r = await fetch('/api/proxy/api/apos/admin/set-validator-code', {
+      method: 'POST', headers: authedHeaders(),
+      body: JSON.stringify({ address: addr, code, privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.textContent = '✓ Code updated.'; out.style.color = '#15a878';
+    loadValidatorsAdmin();
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+async function vaRefreshTier(addr) {
+  const out = $('va-out');
+  try {
+    const r = await fetch('/api/proxy/api/apos/admin/refresh-tier', {
+      method: 'POST', headers: authedHeaders(),
+      body: JSON.stringify({ address: addr, privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.textContent = '✓ Tier re-evaluated.'; out.style.color = '#15a878';
+    loadValidatorsAdmin();
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// ═══ v8: Tier curve editor (admin) ═══════════════════════════════════
+let _tierDraft = [];
+async function loadTiers() {
+  try {
+    const r = await fetch('/api/proxy/api/apos/tiers').then(r => r.json());
+    _tierDraft = ((r && r.tiers) || []).map(t => ({
+      minPoolEther: weiToEly(t.minPoolWei), gasShareBps: t.gasShareBps,
+    }));
+    if (!_tierDraft.length) {
+      $('tier-rows').innerHTML = '<tr><td colspan="4" class="empty">No tier curve on-chain yet — add tiers or load the suggested defaults, then Save.</td></tr>';
+      return;
+    }
+    renderTierRows();
+  } catch (e) {
+    $('tier-rows').innerHTML = '<tr><td colspan="4" class="empty">Failed: ' + e.message + '</td></tr>';
+  }
+}
+function renderTierRows() {
+  if (!_tierDraft.length) {
+    $('tier-rows').innerHTML = '<tr><td colspan="4" class="empty">No tiers in the draft — add one.</td></tr>';
+    return;
+  }
+  $('tier-rows').innerHTML = _tierDraft.map((t, i) => `
+    <tr>
+      <td><b>${i + 1}</b></td>
+      <td><input class="text" style="max-width:160px" type="number" min="0" value="${t.minPoolEther}" onchange="_tierDraft[${i}].minPoolEther=Number(this.value)"></td>
+      <td><input class="text" style="max-width:110px" type="number" min="0" step="0.1" value="${(t.gasShareBps/100)}" onchange="_tierDraft[${i}].gasShareBps=Math.round(Number(this.value)*100)"></td>
+      <td><button class="btn-small btn-secondary" style="color:var(--danger)" onclick="_tierDraft.splice(${i},1);renderTierRows()">✕</button></td>
+    </tr>`).join('');
+}
+function tierAddRow() {
+  const last = _tierDraft[_tierDraft.length - 1];
+  _tierDraft.push({
+    minPoolEther: last ? last.minPoolEther * 10 || 1000 : 0,
+    gasShareBps: last ? Math.min(last.gasShareBps + 500, 3000) : 500,
+  });
+  renderTierRows();
+}
+function tierDefaults() {
+  _tierDraft = [
+    { minPoolEther: 0,      gasShareBps: 500  },
+    { minPoolEther: 1000,   gasShareBps: 1000 },
+    { minPoolEther: 10000,  gasShareBps: 1500 },
+    { minPoolEther: 100000, gasShareBps: 2000 },
+  ];
+  renderTierRows();
+}
+async function tierSave() {
+  const out = $('tier-out');
+  if (!_tierDraft.length) { out.textContent = 'Draft is empty.'; out.style.color = '#ff3b30'; return; }
+  const sorted = [..._tierDraft].sort((a, b) => a.minPoolEther - b.minPoolEther)
+    // Tier APR is retired — APR comes only from packages. Always send aprBps: 0.
+    .map(t => ({ minPoolEther: t.minPoolEther, aprBps: 0, gasShareBps: t.gasShareBps }));
+  out.textContent = 'Saving curve on-chain…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/admin/set-tiers', {
+      method: 'POST', headers: authedHeaders(),
+      body: JSON.stringify({ tiers: sorted, privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Curve saved (' + sorted.length + ' tiers) — tx <code>' + (r.txHash || '').slice(0,16) + '…</code>. Use ↻ Re-tier on active validators to apply immediately.';
+    out.style.color = '#15a878';
+    _tiersCache = null;
+    loadTiers();
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+// ── Send ELN ────────────────────────────────────────────────────────
+// ticket #8 (BUG-004): rich tx lifecycle UI + nonce-gap warning + better
+// error messaging for AlreadyKnown / ReplacementNotAllowed states.
+async function _rpc(method, params) {
+  const r = await fetch('/api/proxy/api/rpc', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: 1, method, params: params || [] }),
+  }).then(r => r.json()).catch(() => null);
+  return r && r.result;
+}
+async function _showNonceGap(addr) {
+  if (!addr) return;
+  try {
+    const [latest, pending] = await Promise.all([
+      _rpc('eth_getTransactionCount', [addr, 'latest']),
+      _rpc('eth_getTransactionCount', [addr, 'pending']),
+    ]);
+    if (latest == null || pending == null) return;
+    const L = Number(BigInt(latest)), P = Number(BigInt(pending));
+    if (P > L) {
+      const w = $('send-nonce-warn');
+      w.style.display = 'block';
+      w.textContent = 'Nonce gap: latest=' + L + ' pending=' + P + ' — ' + (P - L) +
+        ' transaction(s) are sitting in the mempool unconfirmed. New sends will hit AlreadyKnown / ReplacementNotAllowed until they mine or are dropped. If this persists, the node operator may need to restart the node to clear the stuck pending queue.';
+    }
+  } catch {}
+}
+function _humanizeSendErr(msg) {
+  const m = String(msg || '');
+  if (/AlreadyKnown/i.test(m))         return 'AlreadyKnown — the same transaction is already in this node\'s pending pool. Wait for it to mine, or restart the node if it has been stuck >5 min.';
+  if (/ReplacementNotAllowed/i.test(m))return 'ReplacementNotAllowed — there is already a pending transaction at the same nonce and the new one does not bump the gas price enough to replace it. Wait for the pending one to mine.';
+  if (/nonce too low/i.test(m))        return 'Nonce too low — the local sender state is behind the chain. A page refresh usually clears it.';
+  if (/insufficient funds/i.test(m))   return 'Insufficient funds for transfer + gas. Check the sending wallet\'s balance.';
+  return m;
+}
+async function _trackTx(hash) {
+  const card  = $('send-tx-card');
+  const state = $('send-tx-state');
+  const detail= $('send-tx-detail');
+  const hashEl= $('send-tx-hash');
+  card.style.display = 'block';
+  hashEl.textContent = hash;
+  state.textContent  = 'Submitted';
+  detail.textContent = 'Waiting for the network to include the transaction…';
+  let mined = null;
+  for (let i = 0; i < 90; i++) { // ~3 min cap
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const rec = await _rpc('eth_getTransactionReceipt', [hash]);
+      if (rec && rec.blockNumber) {
+        const blk = Number(BigInt(rec.blockNumber));
+        if (!mined) {
+          mined = blk;
+          state.textContent = 'Mined';
+          state.style.color = 'var(--accent)';
+        }
+        const head = Number(BigInt(await _rpc('eth_blockNumber', []) || '0x0'));
+        const confs = Math.max(0, head - blk + 1);
+        const ok = rec.status === '0x1';
+        detail.innerHTML = (ok ? '✓ ' : '✗ ') + 'Block ' + blk + ' · ' + confs + ' confirmation' + (confs === 1 ? '' : 's') +
+          ' · gas used ' + Number(BigInt(rec.gasUsed || '0x0')).toLocaleString() +
+          (ok ? '' : ' · <b>reverted</b>');
+        state.textContent = ok ? (confs >= 6 ? 'Confirmed' : 'Mined') : 'Reverted';
+        state.style.color = ok ? 'var(--success)' : 'var(--danger)';
+        if (ok && confs >= 6) return;
+        if (!ok) return;
+        continue;
+      }
+      // not mined yet — check if still in mempool
+      const tx = await _rpc('eth_getTransactionByHash', [hash]);
+      if (tx) {
+        state.textContent = 'Pending';
+        detail.textContent = 'In mempool (nonce ' + Number(BigInt(tx.nonce || '0x0')) + ') — waiting for a block.';
+      } else {
+        detail.textContent = 'Submitted ' + (i * 2) + 's ago, not yet visible — node may still be propagating it.';
+      }
+    } catch {}
+  }
+  if (!mined) {
+    state.textContent = 'Timed out';
+    state.style.color = 'var(--warn)';
+    detail.textContent = 'No receipt after ~3 minutes. The tx may still mine later; check the explorer with this hash.';
+  }
+}
+async function sendUnp() {
+  const to = ($('send-to').value || '').trim();
+  const amt = ($('send-amount').value || '').trim();
+  if (!/^0x[0-9a-fA-F]{40}$/.test(to)) { $('send-status').innerHTML = '<span style="color:var(--danger)">Invalid recipient.</span>'; return; }
+  if (!amt || Number(amt) <= 0) { $('send-status').innerHTML = '<span style="color:var(--danger)">Amount must be > 0.</span>'; return; }
+  $('send-status').textContent = 'Submitting…';
+  $('send-tx-card').style.display = 'none';
+  $('send-nonce-warn').style.display = 'none';
+  try {
+    const r = await fetch('/api/proxy/api/wallet/send-native', {
+      method:'POST', headers: authedHeaders(),
+      body: JSON.stringify({ to, amountUnp: amt }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    const hash = r.hash || r.transactionHash || '';
+    $('send-status').innerHTML = '<span style="color:var(--success)">Submitted — tracking lifecycle below.</span>';
+    if (r.from) _showNonceGap(r.from);
+    if (hash) _trackTx(hash);
+  } catch (e) {
+    $('send-status').innerHTML = '<span style="color:var(--danger)">' + _humanizeSendErr(e.message) + '</span>';
+    // Even on error, show nonce gap if we can derive sender from /api/role-info
+    try {
+      const info = await fetch('/api/role-info').then(r => r.json());
+      const a = (info.validatorAddress || info.adminAddress || '').toLowerCase();
+      if (a) _showNonceGap(a);
+    } catch {}
+  }
+}
+
+// ── Packages ────────────────────────────────────────────────────────
+// v7.11.13 — 6-decimal precision so per-tx node-shares (~0.0002 ELN at
+// 21k gas × 100 gwei × 10 % nodeBps) don't round to 0 in the Node
+// Earnings table.
+function weiToAux(weiStr) {
+  if (!weiStr) return '—';
+  try {
+    const w = BigInt(weiStr);
+    const microEly = Number(w / 10n**12n);
+    const v = microEly / 1e6;
+    return v.toLocaleString(undefined, { maximumFractionDigits: 6 });
+  } catch { return '—'; }
+}
+
+async function loadPackages() {
+  const tb = $('vpkg-rows');
+  try {
+    const r = await fetch('/api/proxy/api/apos/packages').then(r => r.json());
+    const pkgs = Array.isArray(r) ? r : (r.packages || []);
+    if (!pkgs.length) { tb.innerHTML = '<tr><td colspan="7" class="empty">No packages published yet' + (window.__role === 'admin' ? ' — add one below.' : '.') + '</td></tr>'; return; }
+    // ACTIVE (2) and BELOW_MIN (5) may both stake — staking again is how a
+    // below-min validator restores its STAKE and recovers ACTIVE status.
+    const isActiveValidator = _myVal && (Number(_myVal.status) === 2 || Number(_myVal.status) === 5);
+    const selectedId = _myVal ? Number(_myVal.selectedPackageId) : 0;
+    tb.innerHTML = pkgs.map(p => {
+      const lockDays = p.lockSeconds ? Math.round(p.lockSeconds / 86400) : '—';
+      const apr      = ((p.aprBps ?? 0) / 100).toFixed(2);
+      const minAux   = weiToAux(p.minAmountWei);
+      const early = p.allowEarlyWithdraw
+        ? '<span class="pill" style="background:rgba(255,159,10,.15);color:var(--warn)">yes</span>'
+        : '<span style="color:var(--text-3)">no</span>';
+      const isMine = selectedId === Number(p.id);
+      const status = !p.active
+        ? '<span style="color:var(--text-3)">disabled</span>'
+        : isMine
+          ? '<span class="pill" style="background:rgba(21,168,120,.2);color:#15a878;font-weight:700">★ selected</span>'
+          : '<span class="pill">active</span>';
+      let actions = '';
+      if (isActiveValidator && p.active) {
+        // ONE PACKAGE AT A TIME: top-up only into the selected package;
+        // switching requires the current term to have ended.
+        if (isMine || !selectedId) {
+          actions = `<button class="btn-small btn-primary" onclick="vpkgStake(${p.id}, ${weiToEly(p.minAmountWei)})">＋ ${isMine ? 'Top up' : 'Stake into'}</button>`;
+        } else {
+          actions = `<button class="btn-small btn-secondary" onclick="vpkgSelect(${p.id})">Switch here (term must end)</button>`;
+        }
+      } else if (!isActiveValidator) {
+        actions = '<span style="font-size:12px;color:var(--text-3)">🔒 approved validators only</span>';
+      }
+      if (window.__role === 'admin') {
+        actions += ` <button class="btn-small btn-secondary" style="margin-left:6px" onclick="vpkgToggle(${p.id}, ${p.active ? 'false' : 'true'})">${p.active ? 'Disable' : 'Enable'}</button>`;
+      }
+      return `
+        <tr${isMine ? ' style="background:rgba(21,168,120,.05)"' : ''}>
+          <td><b>${p.name || p.id || '—'}</b></td>
+          <td>${lockDays}d</td>
+          <td>${apr}%</td>
+          <td>${minAux} ELN</td>
+          <td>${early}</td>
+          <td>${status}</td>
+          <td>${actions}</td>
+        </tr>`;
+    }).join('');
+  } catch (e) {
+    tb.innerHTML = '<tr><td colspan="7" class="empty">Could not load packages: ' + e.message + '</td></tr>';
+  }
+}
+
+async function vpkgStake(packageId, minEly) {
+  const amt = prompt('Amount to stake into package #' + packageId + ' (ELN). Grows your pool (tier basis) and re-locks your whole stake for the package term:', String(minEly));
+  if (amt === null || !(parseFloat(amt) > 0)) return;
+  const out = $('vpkg-out');
+  out.textContent = 'Staking…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/stake-package', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, packageId, amountEther: amt }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Staked ' + amt + ' ELN into #' + packageId + ' — tx <code>' + (r.txHash || '').slice(0,16) + '…</code>'; out.style.color = '#15a878';
+    setTimeout(() => { refreshValidatorTab().then(loadPackages); }, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+async function vpkgSelect(packageId) {
+  if (!confirm('Switch your selected package to #' + packageId + '? Only possible once your current term has ended — your self-stake then re-locks for the new package term.')) return;
+  const out = $('vpkg-out');
+  out.textContent = 'Switching…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/proxy/api/apos/validator/select-package', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey, packageId }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Switched to package #' + packageId + ' — tx <code>' + (r.txHash || '').slice(0,16) + '…</code>'; out.style.color = '#15a878';
+    setTimeout(() => { refreshValidatorTab().then(loadPackages); }, 2500);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+async function vpkgToggle(id, active) {
+  const out = $('vpkg-out');
+  try {
+    const r = await fetch('/api/proxy/api/apos/admin/set-package-active', {
+      method: 'POST', headers: authedHeaders(),
+      body: JSON.stringify({ id, active, privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.textContent = '✓ Package ' + (active === 'true' || active === true ? 'enabled' : 'disabled') + '.'; out.style.color = '#15a878';
+    loadPackages();
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+
+async function addPackage() {
+  const name = ($('np-name').value || '').trim();
+  const days = parseInt($('np-days').value, 10);
+  const apr  = Number($('np-apr').value);
+  const min  = Number($('np-min').value);
+  const early = !!$('np-early').checked;
+  if (!name || !days || isNaN(apr) || !min) { $('np-status').innerHTML = '<span style="color:var(--danger)">All fields required.</span>'; return; }
+  $('np-status').textContent = 'Publishing…';
+  try {
+    const r = await fetch('/api/proxy/api/apos/admin/add-package', {
+      method:'POST', headers: authedHeaders(),
+      body: JSON.stringify({
+        name, lockDays: days, aprBps: Math.round(apr*100),
+        minAmountEther: min, allowEarlyWithdraw: early,
+        privateKey: S.privateKey,
+      }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    $('np-status').innerHTML = '<span style="color:var(--success)">Published — tx ' + (r.txHash || '').slice(0,16) + '…</span>';
+    loadPackages();
+  } catch (e) {
+    $('np-status').innerHTML = '<span style="color:var(--danger)">' + e.message + '</span>';
+  }
+}
+
+// ═══ v8: Fee earnings — on-chain accumulated validator shares ════════
+async function loadEarnings() {
+  try {
+    const r = await fetch('/api/proxy/api/apos/credits').then(r => r.json());
+    const rows = (r && r.credits) || [];
+    const mine = rows.find(c => (c.address || '').toLowerCase() === (S.address || '').toLowerCase());
+    $('earn-node').textContent  = weiToAux(mine ? mine.accumulatedFeesWei : '0') + ' ELN';
+    $('earn-share').textContent = mine ? ((mine.gasShareBps || 0) / 100).toFixed(2) + '%' : '—';
+    if (window.__role === 'admin') {
+      $('earn-gross').textContent = weiToAux(r.totalValidatorShareWei || '0') + ' ELN';
+      $('earn-admin').textContent = weiToAux(r.adminAccumulatedFeesWei || '0') + ' ELN';
+    }
+    if (!rows.length) {
+      $('earn-rows').innerHTML = '<tr><td colspan="4" class="empty">No validators registered yet — fees route to the admin pool until validators are approved.</td></tr>';
+      return;
+    }
+    $('earn-rows').innerHTML = rows
+      .sort((a, b) => (BigInt(b.accumulatedFeesWei) > BigInt(a.accumulatedFeesWei) ? 1 : -1))
+      .map(c => `
+        <tr>
+          <td class="mono" style="font-size:12px">${c.address}</td>
+          <td><code style="color:#15a878;font-weight:700">${c.code || '—'}</code></td>
+          <td>${((c.gasShareBps || 0) / 100).toFixed(2)}%</td>
+          <td style="color:var(--success);font-weight:600">${weiToAux(c.accumulatedFeesWei)} ELN</td>
+        </tr>`).join('');
+  } catch (e) {
+    $('earn-rows').innerHTML = '<tr><td colspan="4" class="empty">Failed: ' + e.message + '</td></tr>';
+  }
+}
+
+async function callAdminAction(path, body) {
+  try {
+    const r = await fetch('/api/proxy' + path, {
+      method: 'POST', headers: authedHeaders(),
+      body: JSON.stringify({ ...body, privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    return r;
+  } catch (e) {
+    alert('Action failed: ' + e.message);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+ * PoS Staking tab — wires the four endpoints already in server.js:
+ *   POST /api/staking/stake-producer    { amountEther }
+ *   POST /api/staking/request-unstake
+ *   GET  /api/staking/status/:address
+ *   GET  /api/staking/active-validators
+ *   POST /api/staking/withdraw          (if it exists; falls back gracefully)
+ * The PoS stake makes the signed-in validator a BLOCK PRODUCER.
+ * It is intentionally separate from APOS package staking which lives on
+ * the Staking Packages tab — different contract, different purpose. */
+function fmtEly(wei) {
+  if (!wei || wei === '0') return '0 ELN';
+  try { return (BigInt(wei) / 10n ** 15n).toString().slice(0, -3) + '.000 ELN'; }
+  catch { return wei + ' wei'; }
+}
+async function refreshPosTab() {
+  const sec = document.getElementById('tab-pos');
+  if (!sec || !sec.classList.contains('active')) return;
+  try {
+    const info  = await fetch('/api/role-info').then(r => r.json());
+    // ticket #7 (BUG-003): fall back to the status response's contractAddress
+    // and accept both stake/stakeWei + minStake/minStakeWei field shapes so
+    // the panel populates regardless of which server version is in front.
+    // ticket #5 follow-up: when the operator signs in with their own key file
+    // (S.address), show THEIR on-chain stake — not the node's chain-admin
+    // validator key. The previous code always read info.validatorAddress,
+    // which on a hosted node is the chain admin, so an operator who staked
+    // from their own wallet saw "Your stake: 0" / "Inactive" while their
+    // actual stake was sitting on-chain under their own address.
+    const myAddr = (S.address || info.validatorAddress || info.adminAddress || '').toLowerCase();
+    // Show whose status is being displayed so the operator can confirm.
+    const whoLabel = document.getElementById('pos-mine-who');
+    if (whoLabel) whoLabel.textContent = myAddr ? ('queried address: ' + myAddr) : '';
+    let s = null;
+    if (myAddr) {
+      s = await fetch('/api/staking/status/' + myAddr).then(r => r.json()).catch(() => null);
+    }
+    const contractAddr = info.stakingContract || (s && s.contractAddress) || '';
+    if (contractAddr) document.getElementById('pos-contract').textContent = contractAddr;
+    if (myAddr) {
+      if (s && !s.error) {
+        const stakeWei    = s.stakeWei    != null ? s.stakeWei    : s.stake;
+        const minStakeWei = s.minStakeWei != null ? s.minStakeWei : s.minStake;
+        document.getElementById('pos-min').textContent          = fmtEly(minStakeWei);
+        document.getElementById('pos-mine').textContent         = fmtEly(stakeWei);
+        document.getElementById('pos-mine-status').textContent  =
+          (s.unstakeRequestBlock && s.unstakeRequestBlock !== '0')
+            ? ('Unstake requested at block ' + s.unstakeRequestBlock)
+            : (s.active ? '● Active producer' : 'Inactive (stake below min, or not yet activated)');
+        document.getElementById('pos-mine-status').style.color  = s.active ? '#15a878' : '#94a3b8';
+        // Enable Withdraw button only once delay has elapsed
+        const wb = document.getElementById('pos-withdraw-btn');
+        if (wb) {
+          const elapsed = s.unstakeRequestBlock && s.unstakeRequestBlock !== '0'
+            && Number(s.blocksSinceRequest || 0) >= Number(s.unstakeDelay || 100);
+          wb.disabled = !elapsed;
+          document.getElementById('pos-unstake-status').textContent =
+            (s.unstakeRequestBlock && s.unstakeRequestBlock !== '0')
+              ? ('blocks elapsed: ' + (s.blocksSinceRequest || 0) + ' / ' + (s.unstakeDelay || 100))
+              : '';
+        }
+      }
+    }
+    const av = await fetch('/api/staking/active-validators').then(r => r.json()).catch(() => ({validators:[]}));
+    const list = av.validators || [];
+    document.getElementById('pos-active-count').textContent = list.length;
+    const tb = document.getElementById('pos-validators-rows');
+    // Skip the rewrite when the validator set is unchanged (keeps selections).
+    const vSig = JSON.stringify(list.map(v => [v.address, v.stakeWei, v.active]));
+    if (tb.dataset.sig === vSig) return;
+    tb.dataset.sig = vSig;
+    tb.innerHTML = list.length
+      ? list.map((v, i) => '<tr><td>' + (i + 1) + '</td><td style="font-family:\'JetBrains Mono\',monospace;font-size:12px">' + v.address + '</td><td>' + fmtEly(v.stakeWei) + '</td><td>' + (v.active ? '<span style="color:#15a878">● active</span>' : 'inactive') + '</td></tr>').join('')
+      : '<tr><td colspan="4" class="empty">No active validators yet — the chain admin is currently the only producer.</td></tr>';
+  } catch (e) { console.warn('[pos] refresh:', e.message); }
+}
+// ticket #5 follow-up (auth/field mismatch): the staking endpoints are
+// requireAuth-gated and read { amount, privateKey } — the old client sent
+// neither the Bearer token nor the right field name. Now we send the auth
+// header used everywhere else on the page (authedHeaders) and include the
+// signed-in operator's privateKey from S.privateKey so the on-chain stake
+// is signed by THEIR wallet (not the chain admin's).
+async function posStake() {
+  const out  = document.getElementById('pos-stake-out');
+  const amt  = parseFloat(document.getElementById('pos-amount').value || '0');
+  if (!(amt > 0)) { out.textContent = 'Enter an amount > 0'; out.style.color = '#ff3b30'; return; }
+  out.textContent = 'Submitting stake transaction…'; out.style.color = '';
+  try {
+    const r = await fetch('/api/staking/stake-producer', {
+      method: 'POST',
+      headers: authedHeaders(),
+      body: JSON.stringify({ amount: amt, privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.innerHTML = '✓ Staked ' + amt + ' ELN · tx <code>' + (r.txHash || '').slice(0, 16) + '…</code>';
+    out.style.color = '#15a878';
+    setTimeout(refreshPosTab, 2000);
+  } catch (e) { out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30'; }
+}
+async function posRequestUnstake() {
+  try {
+    const r = await fetch('/api/staking/request-unstake', {
+      method: 'POST',
+      headers: authedHeaders(),
+      body: JSON.stringify({ privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    alert('Unstake requested at block ' + (r.requestBlock || '?') + '. Withdraw unlocks after the 100-block delay.');
+    refreshPosTab();
+  } catch (e) { alert('Failed: ' + e.message); }
+}
+async function posWithdraw() {
+  try {
+    const r = await fetch('/api/staking/withdraw', {
+      method: 'POST',
+      headers: authedHeaders(),
+      body: JSON.stringify({ privateKey: S.privateKey }),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    alert('Withdraw complete · tx ' + (r.txHash || '').slice(0, 16) + '…');
+    refreshPosTab();
+  } catch (e) { alert('Failed: ' + e.message); }
+}
+// Trigger refresh whenever the PoS tab becomes visible.
+const _origSwitch = window.switchTab;
+window.switchTab = function (name) {
+  if (typeof _origSwitch === 'function') _origSwitch(name);
+  if (name === 'pos')       refreshPosTab();
+  if (name === 'faucet')    refreshFaucetTab();
+  if (name === 'lbweights') refreshLbWeightsTab();
+};
+setInterval(() => { const s = document.getElementById('tab-pos'); if (s && s.classList.contains('active') && !uiBusy()) refreshPosTab(); }, 8000);
+setInterval(() => { const s = document.getElementById('tab-faucet'); if (s && s.classList.contains('active') && !uiBusy()) refreshFaucetTab(); }, 10000);
+
+// ── Leaderboard weights tab ─────────────────────────────────────────
+async function refreshLbWeightsTab() {
+  const loading    = document.getElementById('lbw-loading');
+  const undeployed = document.getElementById('lbw-undeployed');
+  const editor     = document.getElementById('lbw-editor');
+  try {
+    const r = await fetch('/api/lb/state').then(r => r.json());
+    if (loading) loading.style.display = 'none';
+    if (!r.deployed) {
+      undeployed.style.display = '';
+      editor.style.display     = 'none';
+      return;
+    }
+    undeployed.style.display = 'none';
+    editor.style.display     = '';
+    document.getElementById('lbw-addr').textContent   = r.contractAddress;
+    document.getElementById('lbw-month').textContent  = r.currentMonth;
+    document.getElementById('lbw-ncount').textContent = r.nodeCount;
+    const c = r.coefficients || {};
+    document.getElementById('lbw-c-txc').value  = c.txCountWeight      || 0;
+    document.getElementById('lbw-c-txv').value  = c.txVolumeWeight     || 0;
+    document.getElementById('lbw-c-own').value  = c.ownersStakedWeight || 0;
+    document.getElementById('lbw-c-up').value   = c.uptimeWeight       || 0;
+    document.getElementById('lbw-c-stk').value  = c.stakePackageWeight || 0;
+    document.getElementById('lbw-c-base').value = c.stakePackageBase   || 0;
+  } catch (e) {
+    if (loading) loading.textContent = 'Failed to load: ' + e.message;
+  }
+}
+
+async function lbwSave() {
+  const btn = document.getElementById('lbw-save-btn');
+  const out = document.getElementById('lbw-out');
+  btn.disabled = true; out.textContent = 'Saving (signs an on-chain tx, takes ~5–10 s)…'; out.style.color = '';
+  try {
+    const body = {
+      txCountWeight:      +document.getElementById('lbw-c-txc').value  || 0,
+      txVolumeWeight:     +document.getElementById('lbw-c-txv').value  || 0,
+      ownersStakedWeight: +document.getElementById('lbw-c-own').value  || 0,
+      uptimeWeight:       +document.getElementById('lbw-c-up').value   || 0,
+      stakePackageWeight: +document.getElementById('lbw-c-stk').value  || 0,
+      stakePackageBase:   +document.getElementById('lbw-c-base').value || 0,
+    };
+    const r = await fetch('/api/lb/admin/coefficients', {
+      method: 'POST',
+      headers: authedHeaders(),
+      body: JSON.stringify(body),
+    }).then(r => r.json());
+    if (r.error) throw new Error(r.error);
+    out.textContent = '✓ Saved · tx ' + (r.txHash || '').slice(0, 14) + '…';
+    out.style.color = '#15a878';
+    setTimeout(refreshLbWeightsTab, 1500);
+  } catch (e) {
+    out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30';
+  } finally { btn.disabled = false; }
+}
+
+async function refreshFaucetTab() {
+  const loading    = document.getElementById('faucet-state-loading');
+  const undeployed = document.getElementById('faucet-state-undeployed');
+  const deployed   = document.getElementById('faucet-state-deployed');
+  try {
+    const s = await fetch('/api/faucet/v2/info').then(r => r.json());
+    if (loading) loading.style.display = 'none';
+    if (!s.deployed) {
+      undeployed.style.display = '';
+      deployed.style.display   = 'none';
+    } else {
+      undeployed.style.display = 'none';
+      deployed.style.display   = '';
+      const fmt = (wei) => { try { return (BigInt(wei) / 10n ** 18n).toString(); } catch { return '—'; } };
+      document.getElementById('faucet-eln-addr').textContent    = s.token?.address  || '—';
+      document.getElementById('faucet-fct-addr').textContent    = s.faucet?.address || '—';
+      document.getElementById('faucet-deployed-at').textContent = s.deployedAt || '(unknown)';
+      document.getElementById('faucet-deployed-by').textContent = s.deployedBy || '(unknown)';
+      document.getElementById('faucet-amt-val').textContent     = fmt(s.amounts?.validator || '0');
+      document.getElementById('faucet-amt-del').textContent     = fmt(s.amounts?.delegator || '0');
+      document.getElementById('faucet-cap').textContent         = fmt(s.dailyCap || '0');
+      const sentToday = BigInt(s.dailyCap || '0') - BigInt(s.remainingInEpoch || '0');
+      document.getElementById('faucet-sent-today').textContent  = fmt(sentToday.toString());
+    }
+  } catch (e) {
+    if (loading) loading.textContent = 'Failed to load: ' + e.message;
+  }
+}
+
+async function faucetDeploy() {
+  const btn = document.getElementById('faucet-deploy-btn');
+  const out = document.getElementById('faucet-deploy-out');
+  btn.disabled = true; out.textContent = 'Deploying ELNTST + Faucet (this can take 30–60 s)…'; out.style.color = '';
+  async function post(body) {
+    return fetch('/api/faucet/v2/admin/deploy', {
+      method: 'POST',
+      headers: authedHeaders(),
+      body: JSON.stringify(body || {}),
+    }).then(r => r.json());
+  }
+  try {
+    let r = await post({});
+    if (r.error && /admin signer not available/i.test(r.error)) {
+      out.textContent = 'No admin signer on this node — select your admin key file (.txt) to continue…';
+      const pk = await _mgrPromptForKey();
+      if (!pk) throw new Error('cancelled');
+      out.textContent = 'Deploying ELNTST + Faucet (this can take 30–60 s)…';
+      r = await post({ adminPrivateKey: pk });
+    }
+    if (r.error) throw new Error(r.error);
+    out.textContent = '✓ Deployed. ELNTST=' + (r.elnAddress || '').slice(0, 10) + '… Faucet=' + (r.faucetAddress || '').slice(0, 10) + '…';
+    out.style.color = '#15a878';
+    setTimeout(refreshFaucetTab, 1500);
+  } catch (e) {
+    out.textContent = '✗ ' + e.message; out.style.color = '#ff3b30';
+  } finally { btn.disabled = false; }
+}
+
+function _mgrPromptForKey() {
+  return new Promise((resolve) => {
+    const inp = document.createElement('input');
+    inp.type = 'file';
+    inp.accept = '.txt,text/plain';
+    inp.style.display = 'none';
+    document.body.appendChild(inp);
+    inp.onchange = () => {
+      const f = inp.files && inp.files[0];
+      if (!f) { document.body.removeChild(inp); resolve(null); return; }
+      const reader = new FileReader();
+      reader.onload = () => {
+        const txt = String(reader.result || '');
+        let key = null;
+        const m = txt.match(/privatekey\s*[:=]\s*0?x?([0-9a-fA-F]{64})/i);
+        if (m) key = m[1];
+        else {
+          const m2 = txt.replace(/\s+/g, '').match(/^(0x)?([0-9a-fA-F]{64})$/);
+          if (m2) key = m2[2];
+        }
+        document.body.removeChild(inp);
+        if (!key) { alert('Could not parse a private key from that file.'); resolve(null); return; }
+        resolve(key);
+      };
+      reader.onerror = () => { document.body.removeChild(inp); resolve(null); };
+      reader.readAsText(f);
+    };
+    inp.click();
+  });
+}
+
+// On load: adapt the gate to whether this node is configured yet.
+detectGateMode();
+
+/* ticket #5 hardening (v7.45): bind the PoS staking buttons via
+   addEventListener instead of inline onclick="trackBtn(...)". This way
+   the buttons work even if the global trackBtn helper isn't loaded
+   (e.g. a stale CDN edge node still serving an old elyon-fx.js, or any
+   ad/script blocker that skips inline scripts). Each handler implements
+   its own loading-state wrapper inline. */
+(function wirePosButtons(){
+  function wrap(btn, fn, loadingText){
+    if (!btn) return;
+    btn.addEventListener('click', async function(){
+      if (btn.dataset.loading === '1') return;
+      var orig = btn.innerHTML;
+      btn.dataset.loading = '1'; btn.disabled = true;
+      btn.innerHTML = (loadingText || 'Working…');
+      try { await fn(); }
+      catch (e) { console.error('[pos] '+(btn.id||'btn')+':', e); }
+      finally { delete btn.dataset.loading; btn.disabled = false; btn.innerHTML = orig; }
+    });
+  }
+  wrap(document.getElementById('pos-stake-btn'),    posStake,          'Staking…');
+  wrap(document.getElementById('pos-unstake-btn'),  posRequestUnstake, 'Requesting…');
+  wrap(document.getElementById('pos-withdraw-btn'), posWithdraw,       'Withdrawing…');
+  // v8 — validator-tab buttons, same hardened binding pattern.
+  wrap(document.getElementById('val-apply-btn'),          valApply, 'Applying…');
+  wrap(document.getElementById('val-withdraw-stake-btn'), () => valWithdrawStake('val-actions-out'), 'Withdrawing…');
+  wrap(document.getElementById('val-withdraw-fees-btn'),  () => valWithdrawFees('val-actions-out'),  'Withdrawing…');
+  wrap(document.getElementById('val-rej-withdraw-btn'),   () => valWithdrawStake('val-rej-out'),     'Withdrawing…');
+  wrap(document.getElementById('earn-withdraw-btn'),      () => valWithdrawFees('earn-out'),         'Withdrawing…');
+  wrap(document.getElementById('tier-save-btn'),          tierSave,     'Saving…');
+  wrap(document.getElementById('tier-defaults-btn'),      async () => tierDefaults(), 'Loading…');
+})();
+</script>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,1499 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elyon Chain — Delegator Portal</title>
+<link rel="icon" href="site-assets/icon.png" type="image/png">
+<link rel="stylesheet" href="/elyon-theme.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════════
+   ELYON DELEGATOR PORTAL — v10 light premium identity (matches the app).
+   #f6f8fa base · #ffffff cards · emerald #15a878→#0e7d5a gradients ·
+   dark ink #1c2733 / #5a6b7a secondary · thin rgba(20,40,60,.08) borders.
+   Donut pool rings, tier meters, chat — all kept, restyled for light.
+   Page LOGIC untouched — style + markup classes only.
+   ════════════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#f6f8fa; --bg2:#ffffff; --glass:#ffffff; --glass2:#f4f8f6;
+  --line:rgba(20,40,60,.08); --line2:rgba(21,168,120,.38);
+  --text:#1c2733; --text2:#5a6b7a; --text3:#5a6b7a;
+  --accent:#15a878; --accent2:#0e7d5a; --accent3:#0c8f68; --accent-deep:#0e7d5a;
+  --red:#dc2626; --amber:#b45309;
+  --grad:linear-gradient(120deg,#15a878,#0e7d5a);
+  --grad-bright:linear-gradient(120deg,#0c8f68,#0e7d5a);
+  --fh:'Space Grotesk','Inter',sans-serif;
+  --fb:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --fm:'JetBrains Mono','Fira Code',Consolas,monospace;
+  --ease:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:var(--fb);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--fh);letter-spacing:-.02em}
+code{font-family:var(--fm)}
+a{color:var(--accent2)}
+.wrap{max-width:1100px;margin:0 auto}
+
+/* ── HERO — white premium card, static emerald aurora wash behind ── */
+.dg-hero{position:relative;text-align:center;padding:64px 20px 36px;border-radius:28px;overflow:hidden;
+  border:1px solid transparent;isolation:isolate;margin-bottom:26px;
+  box-shadow:0 8px 32px rgba(20,40,60,.08);
+  background:
+    linear-gradient(170deg,#ffffff,#fcfdfd) padding-box,
+    linear-gradient(135deg,rgba(21,168,120,.45),rgba(20,40,60,.08) 40%,rgba(20,40,60,.06) 65%,rgba(14,125,90,.35)) border-box}
+/* static gradient wash (perf: no blur filter, no infinite animation) */
+.dg-aurora{position:absolute;inset:0;z-index:-2;opacity:.6;pointer-events:none;
+  background:
+    radial-gradient(38% 34% at 24% 36%,rgba(21,168,120,.10),transparent 70%),
+    radial-gradient(34% 36% at 74% 30%,rgba(14,125,90,.07),transparent 70%),
+    radial-gradient(40% 38% at 56% 76%,rgba(21,168,120,.08),transparent 70%)}
+.dg-hero::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+  background:
+    linear-gradient(transparent 95%,rgba(21,168,120,.10) 96%),
+    linear-gradient(90deg,transparent 95%,rgba(21,168,120,.10) 96%);
+  background-size:46px 46px;mask-image:radial-gradient(60% 70% at 50% 35%,#000,transparent);
+  -webkit-mask-image:radial-gradient(60% 70% at 50% 35%,#000,transparent)}
+.dg-eyebrow{display:inline-flex;align-items:center;gap:9px;font-family:var(--fm);font-size:11.5px;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--accent2);background:rgba(21,168,120,.10);
+  border:1px solid rgba(21,168,120,.25);padding:7px 16px;border-radius:999px;margin-bottom:18px}
+.dg-eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:dgPulse 1.8s infinite}
+@keyframes dgPulse{0%{box-shadow:0 0 0 0 rgba(21,168,120,.5)}70%,100%{box-shadow:0 0 0 8px rgba(21,168,120,0)}}
+.dg-hero h1{font-size:clamp(2.2rem,5.6vw,3.9rem);font-weight:800;line-height:1.05;margin-bottom:14px}
+.dg-hero h1 .grad{background:var(--grad-bright);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.dg-hero p.lede{max-width:640px;margin:0 auto;color:var(--text2);font-size:1.02rem;line-height:1.65}
+.dg-wallet-pill{display:none;margin:20px auto 0;align-items:center;gap:9px;background:rgba(21,168,120,.10);
+  border:1px solid rgba(21,168,120,.35);color:var(--accent2);font-family:var(--fm);font-size:.8rem;font-weight:600;
+  padding:9px 18px;border-radius:999px;width:max-content;max-width:94%}
+.dg-wallet-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--accent);animation:dgPulse 1.8s infinite}
+
+/* hero stats */
+.dg-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:12px;max-width:980px;margin:34px auto 6px;text-align:left}
+.dg-stat{position:relative;background:#ffffff;border:1px solid var(--line);border-radius:16px;
+  padding:15px 16px;overflow:hidden;box-shadow:0 2px 10px rgba(20,40,60,.05);transition:border-color .3s,transform .3s var(--ease)}
+.dg-stat:hover{border-color:var(--line2);transform:translateY(-3px)}
+.dg-stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--grad-bright);opacity:.85}
+.dg-stat .lbl{font-family:var(--fm);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.dg-stat .val{font-family:var(--fh);font-size:1.28rem;font-weight:800;margin-top:7px;color:var(--text);letter-spacing:-.02em;word-break:break-word}
+.dg-stat .val.green{color:var(--accent2)}
+.dg-stat .sub{font-size:10.5px;color:var(--text3);margin-top:3px;font-family:var(--fm)}
+
+/* ── white premium cards / sections (perf: no backdrop-filter) ──── */
+.dg-card{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:26px;margin-bottom:22px;
+  box-shadow:0 8px 32px rgba(20,40,60,.08);
+  transition:border-color .3s,box-shadow .3s,transform .45s var(--ease)}
+.dg-card:hover{border-color:rgba(21,168,120,.28);box-shadow:0 16px 48px rgba(21,168,120,.12)}
+.dg-card h2{font-size:1.25rem;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:11px}
+.dg-card h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--grad);box-shadow:0 0 10px rgba(21,168,120,.5);flex:0 0 auto}
+.dg-card .sub{color:var(--text2);font-size:.88rem;line-height:1.6;margin-bottom:18px}
+
+/* reveal-on-scroll — opacity + translate only (perf: no filter:blur) */
+.reveal{opacity:0;transform:translateY(26px);
+  transition:opacity .75s ease,transform .75s var(--ease)}
+.reveal.in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.reveal{opacity:1;transform:none;transition:none}}
+
+/* ── buttons / fields ───────────────────────────────────────────── */
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:999px;
+  border:1px solid transparent;color:#0e7d5a;font-family:var(--fh);
+  background:linear-gradient(160deg,#ffffff,#fcfdfd) padding-box,linear-gradient(120deg,#15a878,#0e7d5a) border-box;
+  font-weight:600;font-size:.9rem;cursor:pointer;transition:all .22s var(--ease)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(21,168,120,.20);color:#0a5c43}
+.btn.primary{background:var(--grad);border:0;color:#ffffff;box-shadow:0 8px 24px rgba(21,168,120,.28)}
+.btn.primary:hover{box-shadow:0 14px 38px rgba(21,168,120,.38);transform:translateY(-3px)}
+.btn.primary::after{content:'';position:absolute;top:0;bottom:0;width:55%;left:-80%;pointer-events:none;
+  background:linear-gradient(105deg,transparent,rgba(255,255,255,.3),transparent);
+  transform:skewX(-18deg);animation:btnSheen 4.4s ease-in-out infinite}
+@keyframes btnSheen{0%,60%{left:-80%}90%,100%{left:135%}}
+@media(prefers-reduced-motion:reduce){.btn.primary::after{animation:none}}
+.btn.danger{border-color:rgba(220,38,38,.40);color:var(--red);background:#ffffff}
+.btn.danger:hover{background:rgba(220,38,38,.06)}
+.btn.sm{padding:8px 16px;font-size:.8rem}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn .spin,.spin-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+.spin-inline{width:12px;height:12px;border-color:rgba(21,168,120,.3);border-top-color:#15a878;vertical-align:-1px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.field label{display:block;font-family:var(--fm);font-size:.66rem;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text2);margin-bottom:7px}
+.field input{width:100%;padding:13px 15px;background:#ffffff;border:1px solid rgba(20,40,60,.14);border-radius:13px;
+  color:var(--text);font-size:.95rem;font-family:var(--fb);transition:border-color .2s,box-shadow .2s}
+.field input.mono{font-family:var(--fm);letter-spacing:.02em}
+.field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(21,168,120,.14)}
+.field input::placeholder{color:var(--text3)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:620px){.row2{grid-template-columns:1fr}}
+.hint{font-size:.78rem;color:var(--text3);line-height:1.55}
+
+/* mode tabs (MetaMask vs private key) */
+.mode-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.mode-tab{padding:9px 18px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text2);
+  font-family:var(--fh);font-weight:600;font-size:.84rem;cursor:pointer;transition:all .2s}
+.mode-tab:hover{border-color:var(--line2);color:var(--text)}
+.mode-tab.active{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 6px 20px rgba(21,168,120,.3)}
+.conn-banner{display:none;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(21,168,120,.07);
+  border:1px solid rgba(21,168,120,.30);border-radius:14px;padding:13px 16px;font-size:.86rem}
+.conn-banner code{color:var(--accent2);font-size:.82rem;word-break:break-all}
+.conn-banner .tag{font-family:var(--fm);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  background:rgba(21,168,120,.18);color:var(--accent2);padding:4px 10px;border-radius:999px}
+
+/* ── validator cards grid ───────────────────────────────────────── */
+.v-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(295px,1fr));gap:18px;perspective:1100px}
+.v-grid .reveal{transform:translateY(38px) rotateX(8deg) scale(.97)}
+.v-grid .reveal.in{transform:none}
+.v-card{position:relative;background:linear-gradient(165deg,#ffffff,#fcfdfd);
+  border:1px solid var(--line);border-radius:20px;padding:22px;overflow:hidden;cursor:default;
+  transform-style:preserve-3d;will-change:transform;box-shadow:0 8px 32px rgba(20,40,60,.08);
+  transition:border-color .3s,box-shadow .3s,transform .18s ease-out}
+.v-card:hover{border-color:rgba(21,168,120,.45);box-shadow:0 16px 48px rgba(21,168,120,.14)}
+.v-card::before{content:"";position:absolute;top:-70px;right:-70px;width:190px;height:190px;border-radius:50%;
+  background:radial-gradient(circle,rgba(21,168,120,.10),transparent 70%);pointer-events:none;
+  transition:opacity .35s;opacity:.5}
+.v-card:hover::before{opacity:1}
+.v-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:16px}
+.v-code{position:relative;display:inline-block;font-family:var(--fm);font-size:1.16rem;font-weight:700;letter-spacing:.1em;
+  color:#0e7d5a;background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.35);padding:8px 16px;border-radius:12px;overflow:hidden}
+.v-code::after{content:"";position:absolute;inset:0;
+  background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.55) 50%,transparent 70%);
+  background-size:240% 100%;animation:shimmer 2.8s ease-in-out infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-120% 0}}
+.v-status{font-family:var(--fm);font-size:.6rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  padding:5px 11px;border-radius:999px}
+.st-2{background:rgba(21,168,120,.12);color:var(--accent2);border:1px solid rgba(21,168,120,.35)}
+.st-1{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.35)}
+.st-3,.st-4{background:rgba(220,38,38,.08);color:var(--red);border:1px solid rgba(220,38,38,.30)}
+.st-5{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(220,38,38,.30)} /* BELOW MIN — refillable */
+.st-0{background:#f4f8f6;color:var(--text3);border:1px solid var(--line)}
+.v-pool-big{font-family:var(--fh);font-size:1.7rem;font-weight:800;letter-spacing:-.02em;line-height:1.1}
+.v-pool-big small{font-size:.85rem;font-weight:600;color:var(--text3);margin-left:5px}
+.v-pool-lbl{font-family:var(--fm);font-size:.62rem;letter-spacing:.1em;text-transform:uppercase;color:var(--text3);margin:3px 0 14px}
+.v-meters{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px}
+.v-meter{background:#f4f8f6;border:1px solid var(--line);border-radius:11px;padding:9px 10px;text-align:center}
+.v-meter .n{font-family:var(--fh);font-weight:800;font-size:1.02rem;color:var(--accent2)}
+.v-meter .l{font-family:var(--fm);font-size:.56rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-top:2px}
+/* donut pool-composition ring (decorative; values inlined per card) */
+.v-poolrow{display:flex;align-items:center;gap:14px;margin-bottom:4px}
+.v-poolrow .vd{width:64px;height:64px;flex:0 0 auto}
+.vd circle{fill:none;stroke-width:9;transform:rotate(-90deg);transform-origin:center}
+.vd .bgc{stroke:rgba(20,40,60,.08)}
+.vd .seg{stroke-dasharray:var(--p) 100}
+.vd .vself{stroke:#15a878}
+.vd .vdeleg{stroke:rgba(21,168,120,.35)}
+.v-card.in .vd .seg{animation:vdIn 1.3s cubic-bezier(.4,0,.2,1) .35s both}
+@keyframes vdIn{from{stroke-dasharray:0 100}}
+@media(prefers-reduced-motion:reduce){.v-card.in .vd .seg{animation:none}}
+.v-bar{height:9px;border-radius:999px;background:rgba(20,40,60,.08);overflow:hidden;display:flex;margin-bottom:7px}
+.v-bar .self{height:100%;background:var(--grad-bright);border-radius:999px 0 0 999px;width:0;
+  transition:width 1.1s cubic-bezier(.22,1,.36,1) .25s}
+.v-bar .deleg{height:100%;background:rgba(21,168,120,.28);width:0;transition:width 1.1s cubic-bezier(.22,1,.36,1) .35s}
+.v-legend{display:flex;justify-content:space-between;gap:8px;font-family:var(--fm);font-size:.64rem;color:var(--text3);margin-bottom:16px;flex-wrap:wrap}
+.v-legend b{color:var(--text2);font-weight:600}
+.v-addr{font-family:var(--fm);font-size:.68rem;color:var(--text3);margin-bottom:16px;word-break:break-all;cursor:pointer}
+.v-addr:hover{color:var(--accent2)}
+.v-card .btn{width:100%}
+
+/* validator OFFER panel (what the validator pays for pool filling) */
+.v-offer{background:rgba(21,168,120,.08);border:1px solid rgba(21,168,120,.25);border-radius:13px;padding:11px 13px;margin-bottom:14px}
+.v-offer .ol{font-family:var(--fm);font-size:.58rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--accent2);margin-bottom:4px}
+.v-offer .ot{font-size:.82rem;color:var(--text2);line-height:1.55;font-style:italic;word-break:break-word}
+
+/* request-to-delegate compose box */
+.req-compose{display:none;margin-top:12px;animation:prevIn .3s var(--ease)}
+.req-compose textarea{width:100%;min-height:74px;padding:11px 13px;background:#ffffff;border:1px solid rgba(20,40,60,.14);border-radius:13px;color:var(--text);font-family:var(--fb);font-size:.86rem;resize:vertical}
+.req-compose textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(21,168,120,.14)}
+.v-card .req-compose .btn{width:auto}
+
+/* delegation-desk threads + chat */
+.th-item{background:#ffffff;border:1px solid var(--line);border-radius:17px;overflow:hidden;box-shadow:0 2px 10px rgba(20,40,60,.05);transition:border-color .25s}
+.th-item.open{border-color:var(--line2)}
+.th-head{display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;flex-wrap:wrap}
+.th-head:hover{background:rgba(21,168,120,.04)}
+.th-badge{font-family:var(--fm);font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border-radius:999px;transition:all .35s var(--ease)}
+.th-badge.open{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.35)}
+.th-badge.accepted{background:rgba(21,168,120,.12);color:var(--accent2);border:1px solid rgba(21,168,120,.35)}
+.th-badge.declined,.th-badge.closed{background:rgba(220,38,38,.08);color:var(--red);border:1px solid rgba(220,38,38,.30)}
+.th-chat{padding:4px 18px 16px;display:flex;flex-direction:column;gap:8px}
+.bub{max-width:78%;padding:9px 13px;border-radius:14px;font-size:.85rem;line-height:1.5;word-break:break-word;
+  animation:bubIn .45s cubic-bezier(.34,1.56,.64,1)}
+@keyframes bubIn{from{opacity:0;transform:translateY(12px) scale(.92)}60%{opacity:1}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){.bub{animation:none}}
+.bub.me{align-self:flex-end;border:1px solid transparent;border-bottom-right-radius:4px;color:var(--text);
+  background:linear-gradient(160deg,rgba(21,168,120,.14),rgba(21,168,120,.07)) padding-box,
+    linear-gradient(120deg,rgba(21,168,120,.50),rgba(14,125,90,.35)) border-box;
+  box-shadow:0 4px 14px rgba(21,168,120,.12)}
+.bub.them{align-self:flex-start;border:1px solid transparent;border-bottom-left-radius:4px;color:var(--text);
+  background:linear-gradient(160deg,#f4f8f6,#eef4f1) padding-box,
+    linear-gradient(300deg,rgba(21,168,120,.30),rgba(20,40,60,.10)) border-box;
+  box-shadow:0 4px 12px rgba(20,40,60,.08)}
+.bub.sys{align-self:center;background:transparent;border:0;color:var(--text3);font-family:var(--fm);font-size:.68rem;padding:2px 0}
+.bub .bt{font-family:var(--fm);font-size:.6rem;color:var(--text3);margin-top:4px}
+.th-reply{display:flex;gap:8px;margin-top:6px}
+.th-reply input{flex:1;padding:11px 15px;background:#ffffff;border:1px solid rgba(20,40,60,.14);border-radius:999px;color:var(--text);font-size:.86rem;font-family:var(--fb)}
+.th-reply input:focus{outline:none;border-color:var(--accent)}
+.th-deposit{margin-top:10px;border:1px solid rgba(21,168,120,.30);background:rgba(21,168,120,.06);border-radius:13px;padding:13px 15px;animation:prevIn .35s var(--ease)}
+/* the deposit amount input carries a legacy inline dark background — out-rank
+   it here so the field stays light (styling only; JS untouched) */
+.th-deposit input{background:#ffffff!important;border:1px solid rgba(20,40,60,.14)!important;color:var(--text)!important}
+
+/* delegate preview */
+.dg-preview{display:none;margin-top:14px;border:1px solid rgba(21,168,120,.3);background:rgba(21,168,120,.06);
+  border-radius:15px;padding:15px 17px;font-size:.86rem;line-height:1.7;animation:prevIn .35s var(--ease)}
+@keyframes prevIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.dg-preview.err{border-color:rgba(220,38,38,.35);background:rgba(220,38,38,.05)}
+.dg-preview .pv-code{font-family:var(--fm);font-weight:700;color:#0e7d5a;letter-spacing:.08em}
+.dg-preview .pv-row{display:flex;flex-wrap:wrap;gap:6px 22px;color:var(--text2)}
+.dg-preview .pv-row b{color:var(--text)}
+
+/* my delegations */
+.d-list{display:flex;flex-direction:column;gap:14px}
+.d-item{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:#ffffff;
+  border:1px solid var(--line);border-radius:17px;padding:17px 19px;box-shadow:0 2px 10px rgba(20,40,60,.05);transition:border-color .25s,transform .25s var(--ease)}
+.d-item:hover{border-color:var(--line2);transform:translateX(4px)}
+@media(max-width:760px){.d-item{grid-template-columns:1fr}}
+.d-code{font-family:var(--fm);font-weight:700;font-size:1rem;letter-spacing:.08em;color:#0e7d5a;
+  background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.35);padding:9px 15px;border-radius:11px;
+  position:relative;overflow:hidden;width:max-content}
+.d-code::after{content:"";position:absolute;inset:0;background:linear-gradient(115deg,transparent 30%,rgba(255,255,255,.50) 50%,transparent 70%);background-size:240% 100%;animation:shimmer 3.4s ease-in-out infinite}
+.d-meta{font-size:.84rem;color:var(--text2);line-height:1.75}
+.d-meta b{color:var(--text)}
+.d-meta .green{color:var(--accent2);font-weight:700}
+.d-act{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.d-act input{width:130px;padding:10px 12px;background:#ffffff;border:1px solid rgba(20,40,60,.14);border-radius:11px;
+  color:var(--text);font-size:.86rem;font-family:var(--fm)}
+.d-act input:focus{outline:none;border-color:var(--accent)}
+.empty{text-align:center;color:var(--text3);padding:34px 16px;font-size:.9rem;border:1px dashed rgba(20,40,60,.16);border-radius:16px;background:#ffffff}
+
+/* skeleton shimmer while loading */
+.skel{height:230px;border-radius:20px;border:1px solid var(--line);
+  background:linear-gradient(100deg,#eef2f5 38%,#e3eae6 50%,#eef2f5 62%);
+  background-size:220% 100%;animation:shimmer 1.5s linear infinite}
+
+/* toasts */
+#toasts{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:9px;align-items:center;width:min(94vw,560px)}
+.toast{background:#ffffff;border:1px solid var(--line2);color:var(--text);border-radius:14px;padding:13px 19px;
+  font-size:.86rem;line-height:1.5;box-shadow:0 16px 48px rgba(20,40,60,.18);width:100%;
+  animation:toastIn .4s var(--ease);word-break:break-word}
+.toast.success{border-color:rgba(21,168,120,.55);background:#f2faf7}
+.toast.error{border-color:rgba(220,38,38,.50);background:#fdf3f3}
+.toast.warn{border-color:rgba(245,158,11,.50);background:#fdf8ee}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px) scale(.96)}to{opacity:1;transform:none}}
+.toast.out{opacity:0;transition:opacity .4s}
+
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 16px;flex-wrap:wrap}
+.section-title h2{font-size:1.45rem;font-weight:800}
+.section-title h2 .grad{background:var(--grad-bright);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.refresh-link{font-family:var(--fm);font-size:.74rem;color:var(--accent2);cursor:pointer;text-decoration:none;border:1px solid rgba(21,168,120,.3);padding:7px 14px;border-radius:999px;background:rgba(21,168,120,.07)}
+.refresh-link:hover{background:rgba(21,168,120,.14)}
+</style>
+<link rel="stylesheet" href="/elyon-fx.css">
+<script defer src="/elyon-fx.js"></script>
+
+<link rel="stylesheet" href="/elyon-app.css">
+</head>
+<body class="elx-shelled" data-no-canvas>
+<aside class="elx-sidebar" id="elx-sidebar">
+  <a class="elx-sb-brand" href="/"><img src="/site-assets/logo.png" alt="Elyon Chain"></a>
+  <nav class="elx-sb-nav">
+    <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg><span>Home</span></a>
+    <a href="/owner.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v6c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7z"/><path d="M9 12l2 2 4-4"/></svg><span>Delegate</span></a>
+    <a href="/docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span>Docs</span></a>
+    <a href="/faucet.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg><span>Faucet</span></a>
+    <a href="/leaderboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 1-3 3"/></svg><span>Leaderboard</span></a>
+  </nav>
+  <div class="elx-sb-foot">Elyon Chain · APOS L1</div>
+</aside>
+<div class="elx-app">
+  <header class="elx-topbar">
+    <button class="elx-burger" onclick="document.getElementById('elx-sidebar').classList.toggle('open')">☰</button>
+    <h1>Delegator Portal</h1>
+    <span class="elx-spacer"></span>
+    <span class="elx-net"><span class="dot"></span>Elyon Chain</span>
+  </header>
+  <div class="elx-work">
+
+<div class="wrap">
+
+  <!-- ═══ HERO ═══ -->
+  <section class="dg-hero">
+    <div class="dg-aurora"></div>
+    <span class="dg-eyebrow"><span class="pulse"></span> Validator &amp; Delegator Network</span>
+    <h1 class="fx-display">Delegate to a validator.<br><span class="grad">Grow the pool. Earn rewards.</span></h1>
+    <p class="lede">Validators run Elyon nodes and are admin-approved with a unique public <b>APOS code</b>. Each validator publishes its own <b>packages</b> — a monthly rate, a lock term, a minimum deposit and an early-exit penalty. Visit a validator's page, pick a package, send a delegation request, chat it out — and once accepted, deposit into that package. Every deposit is its own <b>position</b> that locks in the package's terms forever (grandfathered). Profit accrues daily and <b>you withdraw yourself, any time</b>: principal + accrued profit. Exiting before the package lock ends pays that package's penalty.</p>
+    <div class="dg-wallet-pill" id="wallet-pill"><span class="dot"></span><span id="wallet-pill-addr"></span></div>
+    <div class="dg-stats">
+      <div class="dg-stat reveal"><div class="lbl">Validators</div><div class="val" id="st-validators">—</div><div class="sub">registered nodes</div></div>
+      <div class="dg-stat reveal"><div class="lbl">Reward Pool</div><div class="val green" id="st-reward">—</div><div class="sub">ELN funding APR</div></div>
+      <div class="dg-stat reveal"><div class="lbl">Network Fees</div><div class="val" id="st-fees">—</div><div class="sub">ELN accumulated</div></div>
+      <div class="dg-stat reveal"><div class="lbl">Min Validator Stake</div><div class="val" id="st-minstake">—</div><div class="sub">ELN self-stake</div></div>
+      <div class="dg-stat reveal"><div class="lbl">Packages</div><div class="val" id="st-packages">—</div><div class="sub">staking products</div></div>
+      <div class="dg-stat reveal"><div class="lbl">My Balance</div><div class="val green" id="st-balance">—</div><div class="sub">ELN in wallet</div></div>
+    </div>
+  </section>
+
+  <!-- ═══ CONNECT ═══ -->
+  <section class="dg-card fx-card-neo reveal" id="connect-card">
+    <h2><span class="dot"></span> Connect your wallet</h2>
+    <p class="sub">Connect MetaMask (recommended — keys never leave your wallet), or paste a private key as a fallback. A pasted key is kept <b>only in this page's memory</b> and is sent to the chain node solely to sign your delegation — it is never stored.</p>
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-mm" onclick="setMode('mm')">🦊 MetaMask</button>
+      <button class="mode-tab" id="tab-pk" onclick="setMode('pk')">🔑 Private key</button>
+    </div>
+    <div id="mode-mm">
+      <button class="btn primary" id="btn-connect" onclick="connectMetaMask()">Connect MetaMask</button>
+      <div class="hint" style="margin-top:10px">Adds the Elyon Chain network to your wallet automatically if it's missing.</div>
+    </div>
+    <div id="mode-pk" style="display:none">
+      <div class="row2">
+        <div class="field" style="grid-column:1/-1"><label>Private key (0x + 64 hex chars)</label>
+          <input id="pk-input" class="mono" type="password" placeholder="0x…" autocomplete="off"></div>
+      </div>
+      <button class="btn primary" onclick="usePrivateKey(this)">Use this key</button>
+      <div class="hint" style="margin-top:10px">The dashboard node signs your transactions server-side with this key. Use a testnet / throwaway wallet.</div>
+    </div>
+    <div class="conn-banner" id="conn-banner" style="margin-top:16px">
+      <span class="tag" id="conn-mode">—</span>
+      <code id="conn-addr">—</code>
+      <span style="color:var(--text2)">·</span>
+      <span><b id="conn-bal" style="color:var(--accent2)">—</b> <span style="color:var(--text3);font-size:.78rem">ELN</span></span>
+      <span style="flex:1"></span>
+      <button class="btn sm danger" onclick="disconnect()">Disconnect</button>
+    </div>
+  </section>
+
+  <!-- ═══ ONE PACKAGE PER DELEGATOR — active-package summary (after connect) ═══ -->
+  <div id="one-pkg-banner" style="display:none;margin-top:22px"></div>
+
+  <!-- ═══ VALIDATORS ═══ -->
+  <div class="section-title reveal">
+    <h2>Browse <span class="grad">approved validators</span></h2>
+    <a class="refresh-link" href="#" onclick="event.preventDefault();loadValidators();return false">↻ refresh</a>
+  </div>
+  <div class="v-grid" id="val-grid">
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+  </div>
+
+  <!-- ═══ DELEGATE FORM ═══ -->
+  <section class="dg-card fx-card-neo reveal" id="delegate-card" style="margin-top:34px">
+    <h2><span class="dot"></span> Delegate ELN</h2>
+    <p class="sub">Enter a validator's public APOS code (or pick one from the cards above), <b>choose one of their packages</b>, and the amount of ELN to deposit. Each deposit creates a new <b>position</b> that locks in the package's <b>rate, lock term and early-exit penalty forever</b>. Deposits count toward the validator's pool (and tier) directly. You can make multiple deposits and withdraw each position yourself (exiting before the lock ends pays the package's penalty).</p>
+    <div class="row2">
+      <div class="field"><label>Validator APOS code</label>
+        <input id="dg-code" class="mono" placeholder="e.g. ELYON-7F3A" autocomplete="off" oninput="onCodeInput()"></div>
+      <div class="field"><label>Amount (ELN)</label>
+        <input id="dg-amount" class="mono" type="number" min="0" step="0.0001" placeholder="100.0"></div>
+    </div>
+    <div class="dg-preview" id="dg-preview"></div>
+    <div style="margin-top:18px;display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+      <button class="btn primary" id="btn-delegate" onclick="submitDelegate(this)">⚡ Delegate now</button>
+      <span class="hint">Rewards are hand-distributed to you by the validator, recorded on-chain — track them under “My delegations”.</span>
+    </div>
+  </section>
+
+  <!-- ═══ MY CONVERSATIONS (delegation desk) ═══ -->
+  <div class="section-title reveal" id="threads-section">
+    <h2>My <span class="grad">conversations</span></h2>
+    <a class="refresh-link" href="#" onclick="event.preventDefault();loadMyThreads();return false">↻ refresh</a>
+  </div>
+  <div class="d-list reveal" id="my-threads">
+    <div class="empty">Connect a wallet to see your delegation requests &amp; chats.</div>
+  </div>
+
+  <!-- ═══ MY POSITIONS ═══ -->
+  <div class="section-title reveal" style="margin-top:34px">
+    <h2>My <span class="grad">positions</span></h2>
+    <a class="refresh-link" href="#" onclick="event.preventDefault();loadMyDelegations();return false">↻ refresh</a>
+  </div>
+  <div class="d-list reveal" id="my-delegations">
+    <div class="empty">Connect a wallet to see your delegations.</div>
+  </div>
+
+</div>
+
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════
+   ELYON DELEGATOR PORTAL — page logic.
+   MetaMask mode signs delegateByCode(string,uint256) / delegate(address,uint256)
+   directly against the registry. Function selectors are computed at
+   RUNTIME via the node's web3_sha3 (keccak256) through /api/rpc — no
+   external libraries, so CSP script-src 'self' stays intact.
+   Private-key mode uses the server-signed /api/apos endpoints; the key
+   lives only in this page's memory (ST.pk) and is wiped on disconnect.
+   ═══════════════════════════════════════════════════════════════════ */
+
+const ST = {
+  mode: 'mm',        // active connect tab: 'mm' | 'pk'
+  connected: null,   // null | 'mm' | 'pk'
+  addr: null,        // connected wallet address
+  pk: null,          // pasted private key — PAGE MEMORY ONLY, never persisted
+  hs: null,          // /api/apos/handshake → {chainId, chainIdHex, chainName, registry, rpcUrl}
+  sel: {},           // cached 4-byte selectors keyed by signature
+  validators: [],
+  resolveTimer: null,
+  lastResolved: null,
+  adminAddr: undefined, // registry admin (lowercased) — admin takes no delegators
+  pkgMap: null,         // packageId → aprBps (APR comes only from packages)
+  dstat: null,          // /api/apos/delegator-status — ONE package per delegator
+};
+// Index 5 = BELOW_MIN: the validator's POOL (own stake + delegations) fell
+// under the network minimum — it earns nothing until the pool refills.
+// Delegating to it is allowed on purpose: fresh deposits refill the pool
+// directly and auto-restore ACTIVE status.
+const STATUS = ['NONE', 'PENDING', 'ACTIVE', 'REJECTED', 'SUSPENDED', 'BELOW MIN'];
+let WALLET = null;   // chosen injected EIP-1193 provider
+
+/* ── tiny DOM + format helpers ─────────────────────────────────── */
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+function shortAddr(a) { a = String(a || ''); return a.length > 12 ? a.slice(0, 6) + '…' + a.slice(-4) : a; }
+
+// wei (string|BigInt) → "1,234.5678" — 18 decimals, max 4 fraction digits,
+// thousands separators on the integer part.
+function fmtEln(wei, maxFrac) {
+  if (maxFrac == null) maxFrac = 4;
+  let w;
+  try { w = BigInt(String(wei == null ? '0' : wei)); } catch (e) { return '0'; }
+  const neg = w < 0n; if (neg) w = -w;
+  const ONE = 10n ** 18n;
+  const intPart = w / ONE;
+  const frac = (w % ONE).toString().padStart(18, '0').slice(0, maxFrac).replace(/0+$/, '');
+  return (neg ? '-' : '') + intPart.toLocaleString('en-US') + (frac ? '.' + frac : '');
+}
+// "12.5" ELN → wei BigInt (exact, no floats).
+function parseEln(s) {
+  s = String(s == null ? '' : s).trim();
+  if (!/^\d+(\.\d*)?$|^\.\d+$/.test(s)) throw new Error('Enter a valid ELN amount (e.g. 100 or 12.5)');
+  const parts = s.split('.');
+  const i = parts[0] || '0', f = parts[1] || '';
+  const wei = BigInt(i) * 10n ** 18n + BigInt((f + '0'.repeat(18)).slice(0, 18));
+  if (wei <= 0n) throw new Error('Amount must be greater than 0');
+  return wei;
+}
+// wei BigInt → exact decimal-ether string for the server endpoints.
+function weiToEtherString(wei) {
+  const ONE = 10n ** 18n;
+  const f = (wei % ONE).toString().padStart(18, '0').replace(/0+$/, '');
+  return (wei / ONE).toString() + (f ? '.' + f : '');
+}
+function pctOfBps(bps) { return (Number(bps || 0) / 100).toFixed(2).replace(/\.00$/, '').replace(/(\.\d)0$/, '$1'); }
+
+/* v9 — the binding number is the on-chain delegator rate
+   (v.delegatorRateBps); the offer string is a plain display note. */
+function rateOf(v) { return Number((v && v.delegatorRateBps) || 0); }
+
+/* Selected PACKAGE's APR (percent string) — tier APR is retired. */
+function pkgAprOf(v) {
+  const id = Number((v && v.selectedPackageId) || 0);
+  if (!id || !ST.pkgMap || ST.pkgMap[id] == null) return null;
+  return pctOfBps(ST.pkgMap[id]);
+}
+
+/* ── toasts ────────────────────────────────────────────────────── */
+function toast(msg, type, ms) {
+  const box = document.createElement('div');
+  box.className = 'toast ' + (type || '');
+  box.innerHTML = msg;
+  $('toasts').appendChild(box);
+  setTimeout(function () { box.classList.add('out'); setTimeout(function () { box.remove(); }, 450); }, ms || 5200);
+}
+
+/* ── JSON-RPC via the dashboard proxy ──────────────────────────── */
+async function rpc(method, params) {
+  const r = await fetch('/api/rpc', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method: method, params: params || [] }),
+  });
+  const j = await r.json();
+  if (j.error) throw new Error(j.error.message || ('RPC error on ' + method));
+  return j.result;
+}
+
+/* ── runtime ABI encoding (no external libs) ───────────────────── */
+// 4-byte selector via the node's web3_sha3 (keccak256) — cached per signature.
+async function selector(sig) {
+  if (ST.sel[sig]) return ST.sel[sig];
+  const hex = '0x' + Array.from(new TextEncoder().encode(sig))
+    .map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  const h = await rpc('web3_sha3', [hex]);
+  if (!/^0x[0-9a-fA-F]{64}$/.test(h || '')) throw new Error('selector hash failed for ' + sig);
+  ST.sel[sig] = h.slice(0, 10);
+  return ST.sel[sig];
+}
+function pad32(v) { return BigInt(v).toString(16).padStart(64, '0'); }
+// delegateByCode(string,uint256) — payable; the string head offset comes
+// first (0x40 = after the two head words), then the vpkgIdx, then the tail.
+// ABI fragment: {"name":"delegateByCode","type":"function","inputs":
+//   [{"name":"code","type":"string"},{"name":"vpkgIdx","type":"uint256"}],
+//   "stateMutability":"payable"}
+async function encodeDelegateByCode(code, vpkgIdx) {
+  const sel = await selector('delegateByCode(string,uint256)');
+  const bytes = new TextEncoder().encode(code);
+  let hex = Array.from(bytes).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  const padded = hex.padEnd(Math.max(64, Math.ceil(hex.length / 64) * 64), '0');
+  return sel + pad32(64) + pad32(vpkgIdx) + pad32(bytes.length) + padded;
+}
+// delegate(address,uint256) — payable; used when a thread has no public code handy.
+async function encodeDelegateAddr(validator, vpkgIdx) {
+  const sel = await selector('delegate(address,uint256)');
+  return sel + pad32(validator) + pad32(vpkgIdx);
+}
+
+/* ── network / handshake ───────────────────────────────────────── */
+async function loadHandshake() {
+  if (ST.hs && ST.hs.registry) return ST.hs;
+  const r = await fetch('/api/apos/handshake').then(function (x) { return x.json(); });
+  if (!r || !r.registry) throw new Error('APOS registry is not deployed yet — ask the chain admin.');
+  ST.hs = r;
+  return r;
+}
+function fallbackRpcUrl() {
+  return (location.protocol === 'https:' && (!location.port || location.port === '443'))
+    ? location.origin + '/rpc'
+    : location.protocol + '//' + location.hostname + ':8545';
+}
+
+/* ── EIP-6963 provider discovery (multi-wallet safe) ───────────── */
+const __eip6963 = [];
+try {
+  window.addEventListener('eip6963:announceProvider', function (e) {
+    if (e && e.detail && e.detail.provider) __eip6963.push(e.detail);
+  });
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
+} catch (e) {}
+function pickProvider() {
+  if (__eip6963.length) {
+    const mm = __eip6963.find(function (p) { return /metamask/i.test((p.info && (p.info.rdns || p.info.name)) || ''); });
+    return (mm || __eip6963[0]).provider;
+  }
+  const eth = window.ethereum;
+  if (eth && Array.isArray(eth.providers) && eth.providers.length) {
+    return eth.providers.find(function (p) { return p && p.isMetaMask; }) || eth.providers[0];
+  }
+  return eth || null;
+}
+
+// Make sure the wallet is on the Elyon chain — switch, or add it via
+// wallet_addEthereumChain using the handshake's {chainIdHex, chainName, rpcUrl}.
+async function ensureChain() {
+  const hs = await loadHandshake();
+  const cur = await WALLET.request({ method: 'eth_chainId' });
+  if (parseInt(cur, 16) === Number(hs.chainId)) return;
+  const hexId = hs.chainIdHex || ('0x' + Number(hs.chainId).toString(16));
+  try {
+    await WALLET.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hexId }] });
+  } catch (e) {
+    if (e && (e.code === 4902 || /4902|unrecognized chain/i.test(e.message || ''))) {
+      await WALLET.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: hexId,
+          chainName: hs.chainName || 'Elyon Chain',
+          nativeCurrency: { name: 'ELN', symbol: 'ELN', decimals: 18 },
+          rpcUrls: [hs.rpcUrl || fallbackRpcUrl()],
+        }],
+      });
+    } else { throw e; }
+  }
+}
+
+/* ── connect modes ─────────────────────────────────────────────── */
+function setMode(m) {
+  ST.mode = m;
+  $('tab-mm').classList.toggle('active', m === 'mm');
+  $('tab-pk').classList.toggle('active', m === 'pk');
+  $('mode-mm').style.display = m === 'mm' ? '' : 'none';
+  $('mode-pk').style.display = m === 'pk' ? '' : 'none';
+}
+
+async function connectMetaMask() {
+  const btn = $('btn-connect');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Connecting…';
+  try {
+    const inj = pickProvider();
+    if (!inj) throw new Error('No MetaMask / injected wallet detected. Install MetaMask and reload.');
+    WALLET = inj;
+    await loadHandshake();
+    let accounts = await inj.request({ method: 'eth_requestAccounts' });
+    if (!accounts || !accounts.length) accounts = await inj.request({ method: 'eth_accounts' });
+    if (!accounts || !accounts.length) throw new Error('Wallet is locked or has no account selected — unlock it and retry.');
+    await ensureChain();
+    ST.addr = accounts[0];
+    ST.connected = 'mm'; ST.pk = null;
+    if (inj.on && !inj.__elyonHooked) {
+      inj.__elyonHooked = true;
+      try {
+        inj.on('accountsChanged', function () { if (ST.connected === 'mm') location.reload(); });
+        inj.on('chainChanged', function () { if (ST.connected === 'mm') location.reload(); });
+      } catch (e) {}
+    }
+    onConnected('MetaMask');
+  } catch (e) {
+    toast('⚠️ ' + esc(e.message || String(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Connect MetaMask';
+  }
+}
+
+async function usePrivateKey(btn) {
+  const raw = $('pk-input').value.trim();
+  const clean = raw.replace(/^0x/i, '');
+  if (!/^[0-9a-fA-F]{64}$/.test(clean)) { toast('⚠️ Private key must be 0x + 64 hex characters.', 'error'); return; }
+  const orig = btn.textContent;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Deriving address…';
+  try {
+    await loadHandshake();
+    const r = await fetch('/api/wizard/derive-address', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: '0x' + clean }),
+    }).then(function (x) { return x.json(); });
+    if (!r.address) throw new Error(r.error || 'Could not derive an address from that key');
+    ST.pk = '0x' + clean;          // page memory only
+    ST.addr = r.address;
+    ST.connected = 'pk';
+    $('pk-input').value = '';      // wipe the visible field immediately
+    onConnected('Private key');
+  } catch (e) {
+    toast('⚠️ ' + esc(e.message || String(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+
+function onConnected(label) {
+  $('conn-banner').style.display = 'flex';
+  $('conn-mode').textContent = label;
+  $('conn-addr').textContent = ST.addr;
+  $('wallet-pill').style.display = 'flex';
+  $('wallet-pill-addr').textContent = shortAddr(ST.addr) + ' · connected';
+  toast('🔗 Connected as <b>' + esc(shortAddr(ST.addr)) + '</b> via ' + esc(label), 'success');
+  refreshBalance();
+  loadMyDelegations();
+  loadMyThreads();
+  loadDelegatorStatus();
+}
+
+function disconnect() {
+  ST.connected = null; ST.addr = null; ST.pk = null; WALLET = null;
+  ST.dstat = null;
+  $('conn-banner').style.display = 'none';
+  $('wallet-pill').style.display = 'none';
+  $('st-balance').textContent = '—';
+  $('conn-bal').textContent = '—';
+  $('one-pkg-banner').style.display = 'none';
+  $('my-delegations').innerHTML = '<div class="empty">Connect a wallet to see your delegations.</div>';
+  DESK.threads = []; DESK.open = null;
+  $('my-threads').innerHTML = '<div class="empty">Connect a wallet to see your delegation requests &amp; chats.</div>';
+  toast('Wallet disconnected. The pasted key (if any) was wiped from memory.', 'warn');
+}
+
+/* ── ONE PACKAGE PER DELEGATOR — wallet status + summary banner ── */
+async function loadDelegatorStatus() {
+  if (!ST.addr) { ST.dstat = null; renderOnePkgBanner(); return; }
+  try {
+    const r = await fetch('/api/apos/delegator-status/' + encodeURIComponent(ST.addr)).then(function (x) { return x.json(); });
+    ST.dstat = (r && !r.error) ? r : null;
+  } catch (e) { ST.dstat = null; }
+  renderOnePkgBanner();
+}
+// Returns null when the (validator, vpkgIdx) target is allowed (no active
+// package, or a top-up of the SAME validator+package) — otherwise the
+// blocking message (HTML).
+function onePkgGuard(validatorAddr, vpkgIdx) {
+  const d = ST.dstat;
+  if (!d || !d.activeValidator) return null;
+  const same = String(d.activeValidator).toLowerCase() === String(validatorAddr || '').toLowerCase();
+  if (same && Number(d.activeVpkgIdx) === Number(vpkgIdx)) return null;  // top-up OK
+  if (!same) {
+    return 'You already delegate with validator <b>' + esc(d.activeValidatorCode || shortAddr(d.activeValidator)) +
+           '</b> — a delegator can only stake in one package. Withdraw fully there to join here.';
+  }
+  return 'one package per delegator — you already hold “' + esc(d.activeVpkgName || ('package #' + (Number(d.activeVpkgIdx) + 1))) +
+         '” with this validator. Withdraw it fully to switch packages.';
+}
+function renderOnePkgBanner() {
+  const el = $('one-pkg-banner');
+  if (!el) return;
+  const d = ST.dstat;
+  if (!d || !d.activeValidator) { el.style.display = 'none'; el.innerHTML = ''; return; }
+  const code = d.activeValidatorCode || shortAddr(d.activeValidator);
+  const link = d.activeValidatorCode
+    ? '/validator.html?code=' + encodeURIComponent(d.activeValidatorCode)
+    : '/validator.html?address=' + esc(d.activeValidator);
+  el.style.display = 'block';
+  el.innerHTML =
+    '<section class="dg-card" style="border-color:rgba(21,168,120,.5)">' +
+      '<h2><span class="dot"></span> 📦 Your active package</h2>' +
+      '<p class="sub">You delegate with validator <b>' + esc(code) + '</b>' +
+        (d.activeVpkgName ? ' in package “<b>' + esc(d.activeVpkgName) + '</b>”' : '') +
+        ' — outstanding principal <b>' + fmtEln(d.outstandingWei || '0') + ' ELN</b>. ' +
+        'A delegator can only stake in <b>one package of one validator</b>: top-ups of this package are allowed, ' +
+        'but deposits toward any other validator or package are blocked until you withdraw this one fully ' +
+        '(see “My positions” below).</p>' +
+      '<a class="btn sm" href="' + link + '">Open ' + esc(code) + '’s page →</a>' +
+    '</section>';
+}
+
+async function refreshBalance() {
+  if (!ST.addr) return;
+  try {
+    const bal = await rpc('eth_getBalance', [ST.addr, 'latest']);
+    const wei = BigInt(bal);
+    $('conn-bal').textContent = fmtEln(wei);
+    countUpEln($('st-balance'), wei);
+  } catch (e) { /* non-fatal */ }
+}
+
+/* ── network stats (hero) ──────────────────────────────────────── */
+async function loadInfo() {
+  try {
+    const i = await fetch('/api/apos/info').then(function (r) { return r.json(); });
+    if (!i || i.deployed === false) { $('st-validators').textContent = '0'; return; }
+    countUpInt($('st-validators'), Number(i.validatorCount || 0));
+    countUpInt($('st-packages'), Number(i.packageCount || 0));
+    countUpEln($('st-reward'), BigInt(i.rewardPoolWei || '0'));
+    countUpEln($('st-fees'), BigInt(i.adminAccumulatedFeesWei || '0'));
+    countUpEln($('st-minstake'), BigInt(i.minValidatorStakeWei || '0'));
+  } catch (e) { /* hero stays at — */ }
+}
+
+/* ── count-up animations ───────────────────────────────────────── */
+function countUpInt(el, target) {
+  const dur = 1100, t0 = performance.now();
+  function step(t) {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    el.textContent = Math.round(target * e).toLocaleString('en-US');
+    if (k < 1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function countUpEln(el, weiTarget) {
+  const approx = Number(weiTarget) / 1e18;   // animate as float, land on exact
+  const dur = 1100, t0 = performance.now();
+  function step(t) {
+    const k = Math.min(1, (t - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+    if (k < 1) {
+      el.textContent = (approx * e).toLocaleString('en-US', { maximumFractionDigits: 2 });
+      requestAnimationFrame(step);
+    } else {
+      el.textContent = fmtEln(weiTarget);
+    }
+  }
+  requestAnimationFrame(step);
+}
+
+/* ── validator cards ───────────────────────────────────────────── */
+async function loadValidators() {
+  const grid = $('val-grid');
+  try {
+    // Registry admin (the admin validator takes no delegators) + the
+    // package APR map (APR comes only from packages) — fetched once.
+    if (ST.adminAddr === undefined) {
+      try {
+        const i = await fetch('/api/apos/info').then(function (x) { return x.json(); });
+        ST.adminAddr = (i && i.admin) ? String(i.admin).toLowerCase() : null;
+      } catch (e) { ST.adminAddr = null; }
+    }
+    if (!ST.pkgMap) {
+      try {
+        const pr = await fetch('/api/apos/packages').then(function (x) { return x.json(); });
+        const pkgs = Array.isArray(pr) ? pr : ((pr && pr.packages) || []);
+        ST.pkgMap = {};
+        pkgs.forEach(function (p) { ST.pkgMap[Number(p.id)] = Number(p.aprBps) || 0; });
+      } catch (e) { ST.pkgMap = {}; }
+    }
+    const r = await fetch('/api/apos/validators?approved=1').then(function (x) { return x.json(); });
+    const vals = (r && r.validators) || [];
+    ST.validators = vals;
+    if (!vals.length) {
+      grid.innerHTML = '<div class="empty" style="grid-column:1/-1">No approved validators yet — check back soon, or apply to run one via the operator portal.</div>';
+      return;
+    }
+    grid.innerHTML = vals.map(renderValidatorCard).join('');
+    // animate pool-composition bars + attach 3D tilt after first paint
+    requestAnimationFrame(function () {
+      grid.querySelectorAll('.v-bar').forEach(function (bar) {
+        const self = bar.querySelector('.self'), del = bar.querySelector('.deleg');
+        if (self) self.style.width = self.dataset.w + '%';
+        if (del) del.style.width = del.dataset.w + '%';
+      });
+      grid.querySelectorAll('.v-card').forEach(attachTilt);
+      observeReveals();
+    });
+  } catch (e) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">Could not load validators: ' + esc(e.message) + '</div>';
+  }
+}
+
+function renderValidatorCard(v, idx) {
+  // v9 ONE POOL: your stake + delegator deposits — the tier basis.
+  const stake = BigInt(v.stakeWei != null ? v.stakeWei : (v.selfStakeWei || '0'));
+  const deleg = BigInt(v.delegatedTotalWei || '0');
+  const total = stake + deleg;
+  const stakePct = total > 0n ? Number(stake * 1000n / total) / 10 : 0;
+  const poolPct  = total > 0n ? Math.max(0, 100 - stakePct) : 0;
+  const stNum = Number(v.status != null ? v.status : 2);
+  const stLbl = v.statusLabel || STATUS[stNum] || 'ACTIVE';
+  const code = esc(v.code || '');
+  const isAdminVal = !!(ST.adminAddr && String(v.address || '').toLowerCase() === ST.adminAddr);
+  const pApr = pkgAprOf(v);
+  const rBps = rateOf(v);
+  const offerHtml =
+    '<div class="v-offer"><div class="ol">💎 Delegator rate</div><div class="ot" style="font-style:normal">' +
+      (rBps > 0
+        ? '<b>Pays ' + pctOfBps(rBps) + '% per year</b> — locked in at deposit (grandfathered)'
+        : '<b>No rate published yet</b> — deposits would earn 0%') +
+      (v.offer ? '<br>' + esc(String(v.offer).slice(0, 200)) : '') +
+    '</div></div>';
+  const actionHtml = isAdminVal
+    ? '<div style="text-align:center;padding:11px 13px;border:1px dashed rgba(21,168,120,.45);border-radius:13px;color:var(--text2);font-size:.84rem">🛡️ Network admin — does not accept delegations</div>'
+    : '<button class="btn primary" onclick="toggleCompose(' + idx + ')">🤝 Request to delegate</button>' +
+      '<div class="req-compose" id="rq-' + idx + '">' +
+        '<textarea id="rq-msg-' + idx + '" maxlength="2000" placeholder="Hi! I&#39;d like to be your delegate and help fill your pool…"></textarea>' +
+        '<div style="display:flex;gap:8px;margin-top:8px;align-items:center">' +
+          '<button class="btn primary sm" onclick="sendRequest(this,' + idx + ')">📨 Send request</button>' +
+          '<button class="btn sm" onclick="toggleCompose(' + idx + ')">Cancel</button>' +
+        '</div>' +
+      '</div>';
+  return (
+    '<article class="v-card fx-card-neo reveal" style="transition-delay:' + (idx % 6) * 70 + 'ms">' +
+      '<div class="v-head">' +
+        '<span class="v-code fx-badge-code">' + code + '</span>' +
+        '<span class="v-status st-' + stNum + '">' + esc(stLbl) + '</span>' +
+      '</div>' +
+      '<div class="v-poolrow">' +
+        '<svg class="vd" viewBox="0 0 80 80" aria-hidden="true">' +
+          '<circle class="bgc" cx="40" cy="40" r="32"></circle>' +
+          '<circle class="seg vself" cx="40" cy="40" r="32" pathLength="100" style="--p:' + stakePct.toFixed(1) + '"></circle>' +
+          '<circle class="seg vdeleg" cx="40" cy="40" r="32" pathLength="100" style="--p:' + poolPct.toFixed(1) + ';stroke-dashoffset:-' + stakePct.toFixed(1) + '"></circle>' +
+        '</svg>' +
+        '<div>' +
+          '<div class="v-pool-big">' + fmtEln(total) + '<small>ELN</small></div>' +
+          '<div class="v-pool-lbl">Pool (drives tier) — own ' + fmtEln(stake) + ' · delegated ' + fmtEln(deleg) + '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="v-meters">' +
+        '<div class="v-meter"><div class="n">' + (rBps > 0 ? pctOfBps(rBps) + '%' : '—') + '</div><div class="l">Delegator rate</div></div>' +
+        '<div class="v-meter"><div class="n">' + (pApr === null ? '—' : pApr + '%') + '</div><div class="l">Package APR</div></div>' +
+        '<div class="v-meter"><div class="n">' + Number(v.delegatorCount || 0).toLocaleString('en-US') + '</div><div class="l">Positions</div></div>' +
+      '</div>' +
+      '<div class="v-bar"><div class="self" data-w="' + stakePct.toFixed(1) + '"></div><div class="deleg" data-w="' + poolPct.toFixed(1) + '"></div></div>' +
+      '<div class="v-legend"><span><b>' + fmtEln(stake) + '</b> own stake</span><span><b>' + fmtEln(deleg) + '</b> delegated — one pool, both drive the tier</span></div>' +
+      offerHtml +
+      '<a href="' + (v.code ? '/validator.html?code=' + encodeURIComponent(v.code) : '/validator.html?address=' + esc(v.address)) + '" ' +
+        'style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:14px;padding:10px 14px;border:1px solid rgba(21,168,120,.3);border-radius:13px;background:rgba(21,168,120,.06);text-decoration:none;font-weight:600;font-size:.86rem;color:var(--accent2)">' +
+        '<span>🏪 ' + (Number(v.vpackageCount || 0) > 0 ? Number(v.vpackageCount) + ' package' + (Number(v.vpackageCount) > 1 ? 's' : '') + ' on offer' : 'View packages &amp; profile') + '</span><span>Visit page →</span></a>' +
+      '<div class="v-addr" title="Click to copy" onclick="copyText(\'' + esc(v.address) + '\')">' + esc(v.address) + ' ⧉</div>' +
+      actionHtml +
+    '</article>'
+  );
+}
+
+async function copyText(t) {
+  try { await navigator.clipboard.writeText(t); toast('📋 Copied ' + esc(shortAddr(t)), 'success', 2200); }
+  catch (e) { toast('Copy failed — select the text manually.', 'error'); }
+}
+
+// 3D tilt on mousemove (perspective transform; cheap, no libs).
+function attachTilt(card) {
+  card.addEventListener('mousemove', function (ev) {
+    const r = card.getBoundingClientRect();
+    const x = (ev.clientX - r.left) / r.width - 0.5;
+    const y = (ev.clientY - r.top) / r.height - 0.5;
+    card.style.transform = 'perspective(900px) rotateY(' + (x * 7).toFixed(2) + 'deg) rotateX(' + (-y * 7).toFixed(2) + 'deg) translateY(-4px)';
+  });
+  card.addEventListener('mouseleave', function () { card.style.transform = ''; });
+}
+
+/* ── delegation desk — request to delegate (compose on the card) ── */
+function toggleCompose(idx) {
+  const el = $('rq-' + idx);
+  if (!el) return;
+  const opening = el.style.display !== 'block';
+  el.style.display = opening ? 'block' : 'none';
+  if (opening) { const ta = $('rq-msg-' + idx); if (ta) ta.focus(); }
+}
+
+async function sendRequest(btn, idx) {
+  const v = ST.validators[idx];
+  if (!v) return;
+  if (!ST.addr) {
+    toast('⚠️ Connect a wallet first — your address identifies you to the validator.', 'error');
+    $('connect-card').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  const ta = $('rq-msg-' + idx);
+  const msg = (ta.value || '').trim();
+  if (msg.length < 3) { toast('⚠️ Write a short message to the validator first.', 'error'); return; }
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Sending…';
+  try {
+    const r = await fetch('/api/desk/request', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: v.code || undefined, validator: v.address, delegator: ST.addr, message: msg }),
+    }).then(function (x) { return x.json(); });
+    if (r.error) throw new Error(r.error);
+    ta.value = '';
+    toggleCompose(idx);
+    toast('🤝 Request sent to <b>' + esc(v.code || shortAddr(v.address)) + '</b> — follow the reply under “My conversations”.', 'success');
+    await loadMyThreads();
+    DESK.open = r.id;
+    renderThreads();
+    $('threads-section').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    toast('❌ ' + esc(e.message || String(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+}
+
+/* ── live code resolution (delegate preview) ───────────────────── */
+function onCodeInput() {
+  clearTimeout(ST.resolveTimer);
+  const code = $('dg-code').value.trim();
+  ST.lastResolved = null;
+  const pv = $('dg-preview');
+  if (!code) { pv.style.display = 'none'; return; }
+  ST.resolveTimer = setTimeout(function () { resolveCode(code); }, 420);
+}
+async function resolveCode(code) {
+  const pv = $('dg-preview');
+  pv.style.display = 'block'; pv.className = 'dg-preview';
+  pv.innerHTML = '<span class="spin-inline"></span> Resolving code…';
+  try {
+    const r = await fetch('/api/apos/validator-by-code/' + encodeURIComponent(code)).then(function (x) { return x.json(); });
+    if ($('dg-code').value.trim() !== code) return;   // stale response
+    if (r.error || !r.address) throw new Error(r.error || 'Unknown code');
+    ST.lastResolved = r;
+    const stNum = Number(r.status != null ? r.status : 0);
+    // TWO-TIER: delegating now means joining one of the validator's packages.
+    const vpkgs = (r.vpackages || []).filter(function (p) { return p.active; });
+    let pkgHtml;
+    if (vpkgs.length) {
+      pkgHtml = '<div style="margin-top:10px;font-weight:600;font-size:.82rem">Choose a package:</div>' +
+        vpkgs.map(function (p) {
+          // ONE PACKAGE PER DELEGATOR: only the wallet's active package (or any
+          // package when none is active) is selectable.
+          const blocked = !!onePkgGuard(r.address, p.idx);
+          return '<label style="display:flex;align-items:center;gap:9px;margin-top:7px;padding:9px 12px;border:1px solid rgba(21,168,120,.3);border-radius:11px;background:#fff;cursor:pointer;font-size:.82rem' + (blocked ? ';opacity:.5' : '') + '"' +
+            (blocked ? ' title="one package per delegator — withdraw fully to switch"' : '') + '>' +
+            '<input type="radio" name="dg-vpkg" value="' + p.idx + '"' + (blocked ? ' disabled' : '') + '>' +
+            '<span><b>' + esc(p.name) + '</b> — <b style="color:var(--accent2)">' + p.monthlyPct + '%/month</b> · ' +
+            p.lockDays + '-day lock · min ' + Number(p.minEln).toLocaleString('en-US') + ' ELN · ' +
+            p.penaltyPct + '% early-exit penalty' +
+            (blocked ? ' <span style="color:var(--amber)">(🔒 one package per delegator)</span>' : '') + '</span></label>';
+        }).join('') +
+        (ST.dstat && ST.dstat.activeValidator && String(ST.dstat.activeValidator).toLowerCase() !== String(r.address).toLowerCase()
+          ? '<div style="margin-top:8px;font-size:.8rem;color:var(--amber)">⚠ You already delegate with validator <b>' +
+            esc(ST.dstat.activeValidatorCode || shortAddr(ST.dstat.activeValidator)) +
+            '</b> — a delegator can only stake in one package. Withdraw fully there to join here.</div>'
+          : '') +
+        '<div style="margin-top:7px;font-size:.76rem;color:var(--text3)">The package terms are <b>locked at deposit</b> — later changes never affect this position. ' +
+        '<a href="' + (r.code ? '/validator.html?code=' + encodeURIComponent(r.code) : '/validator.html?address=' + esc(r.address)) + '">Full details on the validator\'s page →</a></div>';
+    } else {
+      pkgHtml = '<div style="margin-top:10px;font-size:.8rem;color:var(--amber)">⚠ This validator has not published any active packages yet — deposits are not possible until they do.</div>';
+    }
+    pv.innerHTML =
+      '<div style="margin-bottom:7px">✅ <span class="pv-code">' + esc(r.code) + '</span> → <code style="font-size:.78rem;color:var(--text2)">' + esc(shortAddr(r.address)) + '</code> ' +
+      '<span class="v-status st-' + stNum + '" style="margin-left:6px">' + esc(r.statusLabel || STATUS[stNum] || '') + '</span></div>' +
+      '<div class="pv-row">' +
+        '<span>Pool <b>' + fmtEln(BigInt(r.stakeWei != null ? r.stakeWei : (r.selfStakeWei || '0')) + BigInt(r.delegatedTotalWei || '0')) + ' ELN</b></span>' +
+        '<span>Positions <b>' + Number(r.delegatorCount || 0) + '</b></span>' +
+        '<span>Packages <b>' + vpkgs.length + '</b></span>' +
+      '</div>' + pkgHtml;
+  } catch (e) {
+    if ($('dg-code').value.trim() !== code) return;
+    pv.className = 'dg-preview err';
+    pv.innerHTML = '❌ ' + esc(e.message || 'No validator found with that code.');
+  }
+}
+
+/* ── transactions ──────────────────────────────────────────────── */
+async function mmSendTx(data, valueWei) {
+  await ensureChain();
+  const tx = { from: ST.addr, to: ST.hs.registry, data: data };
+  if (valueWei && valueWei > 0n) tx.value = '0x' + valueWei.toString(16);
+  return WALLET.request({ method: 'eth_sendTransaction', params: [tx] });
+}
+
+// Poll eth_getTransactionReceipt via the dashboard RPC until mined.
+async function pollReceipt(txHash, what) {
+  toast('🚀 ' + esc(what) + ' submitted — tx <code style="font-size:.74rem">' + esc(shortAddr(txHash)) + '</code>, waiting for confirmation…', '', 6000);
+  for (let i = 0; i < 24; i++) {
+    await sleep(2500);
+    try {
+      const r = await rpc('eth_getTransactionReceipt', [txHash]);
+      if (r) {
+        if (parseInt(r.status, 16) === 1) {
+          toast('✅ ' + esc(what) + ' confirmed in block ' + parseInt(r.blockNumber, 16).toLocaleString('en-US') + '.', 'success');
+          return true;
+        }
+        toast('❌ ' + esc(what) + ' reverted on-chain. Check the code, the amount and your balance.', 'error');
+        return false;
+      }
+    } catch (e) { /* keep polling */ }
+  }
+  toast('⌛ ' + esc(what) + ': no receipt after 60s — it may still confirm. Refresh in a moment; do NOT resend.', 'warn');
+  return null;
+}
+
+async function submitDelegate(btn) {
+  const code = $('dg-code').value.trim();
+  const amtStr = $('dg-amount').value.trim();
+  if (!code) { toast('⚠️ Enter a validator APOS code first.', 'error'); return; }
+  if (!ST.connected) {
+    toast('⚠️ Connect a wallet first (MetaMask or private key).', 'error');
+    $('connect-card').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  let valueWei;
+  try { valueWei = parseEln(amtStr); } catch (e) { toast('⚠️ ' + esc(e.message), 'error'); return; }
+  // confirm the code resolves before sending money at it
+  if (!ST.lastResolved || ST.lastResolved.code !== code) {
+    await resolveCode(code);
+    if (!ST.lastResolved || ST.lastResolved.code !== code) {
+      toast('⚠️ That code does not resolve to a validator — double-check it.', 'error');
+      return;
+    }
+  }
+  // TWO-TIER: a package must be chosen — its terms are snapshotted forever.
+  const picked = document.querySelector('input[name="dg-vpkg"]:checked');
+  if (!picked) { toast('⚠️ Choose one of the validator\'s packages first (listed under the code).', 'error'); return; }
+  const vpkgIdx = Number(picked.value);
+  const vp = (ST.lastResolved.vpackages || []).find(function (p) { return Number(p.idx) === vpkgIdx; });
+  if (!vp || !vp.active) { toast('⚠️ That package is no longer available — refresh and pick again.', 'error'); return; }
+  if (valueWei < BigInt(vp.minAmountWei || '0')) {
+    toast('⚠️ Amount is below the package minimum (' + Number(vp.minEln || 0).toLocaleString('en-US') + ' ELN per deposit).', 'error');
+    return;
+  }
+  // ONE PACKAGE PER DELEGATOR — block deposits toward other validators/packages.
+  const guard = onePkgGuard(ST.lastResolved.address, vpkgIdx);
+  if (guard) { toast('⚠️ ' + guard, 'error', 9000); return; }
+  const unlockStr = new Date(Date.now() + Number(vp.lockSeconds || 0) * 1000)
+    .toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  if (!confirm('Join "' + vp.name + '" with ' + fmtEln(valueWei) + ' ELN?\n\n' +
+      '• Rate locked forever: ' + vp.monthlyPct + '% / month (' + (vp.rateBpsAnnual / 100) + '% / year)\n' +
+      '• Lock until: ' + unlockStr + ' (' + vp.lockDays + ' days)\n' +
+      '• Early exit before then: ' + vp.penaltyPct + '% penalty on the withdrawn principal')) return;
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Delegating…';
+  try {
+    if (ST.connected === 'mm') {
+      const data = await encodeDelegateByCode(code, vpkgIdx);
+      const txHash = await mmSendTx(data, valueWei);
+      const ok = await pollReceipt(txHash, 'Delegation of ' + fmtEln(valueWei) + ' ELN to ' + code + ' (' + vp.name + ')');
+      if (ok !== false) await afterTxRefresh();
+    } else {
+      const r = await fetch('/api/apos/delegate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ privateKey: ST.pk, code: code, vpkgIdx: vpkgIdx, amountEther: weiToEtherString(valueWei) }),
+      }).then(function (x) { return x.json(); });
+      if (r.error) throw new Error(r.error);
+      toast('✅ Delegated <b>' + fmtEln(valueWei) + ' ELN</b> to <b>' + esc(code) + '</b> in package <b>' + esc(vp.name) + '</b> — tx <code style="font-size:.74rem">' + esc(shortAddr(r.txHash || '')) + '</code>', 'success');
+      await afterTxRefresh();
+    }
+  } catch (e) {
+    toast('❌ Delegation failed: ' + esc(friendlyErr(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+}
+
+/* ── my conversations (delegation desk, delegator side) ───────────
+   v9: withdrawals are SELF-SERVICE (withdrawPosition) — the chat stays
+   for introductions and for asking the validator to release a position
+   without the early penalty. */
+const DESK = { threads: [], open: null };
+
+function timeAgo(ms) {
+  const s = Math.floor((Date.now() - Number(ms || 0)) / 1000);
+  if (s < 10) return 'just now';
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+function codeForValidator(addr) {
+  const v = ST.validators.find(function (v) { return (v.address || '').toLowerCase() === String(addr || '').toLowerCase(); });
+  return v ? v.code : null;
+}
+
+async function loadMyThreads(silent) {
+  const box = $('my-threads');
+  if (!ST.addr) {
+    box.innerHTML = '<div class="empty">Connect a wallet to see your delegation requests &amp; chats.</div>';
+    return;
+  }
+  if (!silent && !DESK.threads.length) box.innerHTML = '<div class="skel" style="height:84px"></div>';
+  try {
+    const r = await fetch('/api/desk/for-delegator/' + encodeURIComponent(ST.addr)).then(function (x) { return x.json(); });
+    DESK.threads = (r && r.threads) || [];
+    renderThreads();
+  } catch (e) {
+    if (!silent) box.innerHTML = '<div class="empty">Could not load conversations: ' + esc(e.message) + '</div>';
+  }
+}
+
+function renderThreads() {
+  const box = $('my-threads');
+  if (!ST.addr) return;
+  if (!DESK.threads.length) {
+    box.innerHTML = '<div class="empty">No conversations yet — pick a validator above and send a “Request to delegate”.</div>';
+    return;
+  }
+  // preserve half-typed replies / amounts across the 8s poll re-render
+  const keep = {};
+  box.querySelectorAll('input[data-keep]').forEach(function (i) { keep[i.id] = i.value; });
+  const sorted = DESK.threads.slice().sort(function (a, b) { return Number(b.updatedAt || 0) - Number(a.updatedAt || 0); });
+  box.innerHTML = sorted.map(renderThread).join('');
+  Object.keys(keep).forEach(function (id) { const el = document.getElementById(id); if (el) el.value = keep[id]; });
+}
+
+function renderThread(t) {
+  const code = codeForValidator(t.validator);
+  const open = DESK.open === t.id;
+  const msgs = t.messages || [];
+  const last = msgs[msgs.length - 1];
+  const stCls = ['open', 'accepted', 'declined', 'closed'].indexOf(t.status) >= 0 ? t.status : 'open';
+  let chat = '';
+  if (open) {
+    chat = '<div class="th-chat">' + msgs.map(function (m) {
+      if (m.system) return '<div class="bub sys">' + esc(m.body) + ' · ' + timeAgo(m.at) + '</div>';
+      const me = m.from === 'delegator';
+      return '<div class="bub ' + (me ? 'me' : 'them') + '">' + esc(m.body) +
+        '<div class="bt">' + (me ? 'me' : 'validator') + ' · ' + timeAgo(m.at) + '</div></div>';
+    }).join('') +
+    '<div class="th-reply">' +
+      '<input id="th-in-' + t.id + '" data-keep maxlength="2000" placeholder="Write a message…" ' +
+        'onkeydown="if(event.key===\'Enter\')deskReply(this.nextElementSibling,' + t.id + ')">' +
+      '<button class="btn primary sm" onclick="deskReply(this,' + t.id + ')">Send</button>' +
+    '</div>';
+    if (t.status === 'accepted') {
+      const vp = t.vpkg || null;
+      chat +=
+        '<div class="th-deposit">' +
+          '<div style="font-family:var(--fm);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);margin-bottom:8px">✅ Accepted — deposit into ' + (vp ? 'the “' + esc(vp.name) + '” package' : 'a package') + '</div>' +
+          (vp ? '<div style="font-size:.78rem;color:var(--text2);margin-bottom:8px">📦 <b>' + esc(vp.name) + '</b> — <b style="color:var(--accent2)">' + vp.monthlyPct + '%/month</b> · ' + vp.lockDays + '-day lock · ' + vp.penaltyPct + '% early-exit penalty · min ' + fmtEln(vp.minAmountWei || vp.maxAmountWei || '0') + ' ELN</div>' : '') +
+          '<div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">' +
+            '<input id="th-amt-' + t.id + '" data-keep type="number" min="0" step="0.0001" placeholder="ELN" style="width:140px;padding:10px 12px;background:rgba(0,0,0,.32);border:1px solid var(--line);border-radius:11px;color:var(--text);font-family:var(--fm)">' +
+            '<button class="btn primary sm" onclick="deskDeposit(this,' + t.id + ')">⚡ Deposit</button>' +
+          '</div>' +
+          '<div class="hint" style="margin-top:8px">Your deposit becomes a new position with the package\'s rate, lock and penalty — <b>locked at deposit, forever</b>. Withdraw it yourself any time under “My positions” (the package\'s penalty applies before the lock ends).</div>' +
+        '</div>';
+    }
+    chat += '</div>';
+  }
+  return (
+    '<div class="th-item' + (open ? ' open' : '') + '">' +
+      '<div class="th-head" onclick="toggleThread(' + t.id + ')">' +
+        '<span class="d-code fx-badge-code" style="font-size:.84rem;padding:7px 12px" title="' + esc(t.validator) + '">' + (code ? esc(code) : esc(shortAddr(t.validator))) + '</span>' +
+        '<span class="th-badge ' + stCls + '">' + esc(t.status) + '</span>' +
+        '<span style="flex:1;color:var(--text3);font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:60px">' + (last ? esc(String(last.body).slice(0, 90)) : '') + '</span>' +
+        '<span style="font-family:var(--fm);font-size:.66rem;color:var(--text3)">' + timeAgo(t.updatedAt) + '</span>' +
+        '<span style="color:var(--accent2)">' + (open ? '▾' : '▸') + '</span>' +
+      '</div>' + chat +
+    '</div>'
+  );
+}
+
+function toggleThread(id) {
+  DESK.open = DESK.open === id ? null : id;
+  renderThreads();
+}
+
+async function deskReply(btn, id) {
+  const inp = $('th-in-' + id);
+  const body = (inp && inp.value || '').trim();
+  if (!body) return;
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/desk/' + id + '/reply', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'delegator', address: ST.addr, body: body }),
+    }).then(function (x) { return x.json(); });
+    if (r.error) throw new Error(r.error);
+    inp.value = '';
+    await loadMyThreads(true);
+  } catch (e) {
+    toast('❌ ' + esc(e.message || String(e)), 'error');
+  } finally { btn.disabled = false; }
+}
+
+// TWO-TIER: resolve which of the validator's packages a thread deposit goes
+// into. Priority: the package recorded on the thread (chosen at request
+// time) → the only active package → ask the user to pick by number.
+async function resolveThreadVpkg(t) {
+  let list = [];
+  try {
+    const r = await fetch('/api/apos/vpackages/' + encodeURIComponent(t.validator)).then(function (x) { return x.json(); });
+    list = ((r && r.vpackages) || []).filter(function (p) { return p.active; });
+  } catch (e) {}
+  if (!list.length) throw new Error('This validator has no active packages — they must publish one before deposits are possible.');
+  if (t.vpkgIdx !== undefined && t.vpkgIdx !== null) {
+    const hit = list.find(function (p) { return Number(p.idx) === Number(t.vpkgIdx); });
+    if (hit) return hit;
+  }
+  if (list.length === 1) return list[0];
+  const menu = list.map(function (p) {
+    return (p.idx + 1) + ') ' + p.name + ' — ' + p.monthlyPct + '%/mo · ' + p.lockDays + 'd lock · ' +
+      p.penaltyPct + '% early-exit penalty · min ' + Number(p.minEln).toLocaleString('en-US') + ' ELN';
+  }).join('\n');
+  const pick = prompt('Which package do you want to join?\n\n' + menu + '\n\nEnter the package number:', String(list[0].idx + 1));
+  if (pick === null) return null;
+  const hit = list.find(function (p) { return p.idx + 1 === parseInt(pick, 10); });
+  if (!hit) throw new Error('No package #' + pick + ' — pick one of the listed numbers.');
+  return hit;
+}
+
+// Deposit into the validator's pool from inside an ACCEPTED thread —
+// the existing delegate flow (MetaMask delegateByCode / PK server-signed),
+// now INTO the thread's chosen package (terms snapshotted forever).
+async function deskDeposit(btn, id) {
+  const t = DESK.threads.find(function (t) { return t.id === id; });
+  if (!t) return;
+  if (!ST.connected) { toast('⚠️ Connect a wallet first (MetaMask or private key).', 'error'); return; }
+  let valueWei;
+  try { valueWei = parseEln(($('th-amt-' + id).value || '').trim()); } catch (e) { toast('⚠️ ' + esc(e.message), 'error'); return; }
+  const code = codeForValidator(t.validator);
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Depositing…';
+  try {
+    const vp = await resolveThreadVpkg(t);
+    if (!vp) return; // user cancelled the picker
+    if (valueWei < BigInt(vp.minAmountWei || '0')) {
+      throw new Error('amount is below the package minimum (' + Number(vp.minEln || 0).toLocaleString('en-US') + ' ELN per deposit).');
+    }
+    // ONE PACKAGE PER DELEGATOR — block deposits toward other validators/packages.
+    const guard = onePkgGuard(t.validator, vp.idx);
+    if (guard) { toast('⚠️ ' + guard, 'error', 9000); return; }
+    const unlockStr = new Date(Date.now() + Number(vp.lockSeconds || 0) * 1000)
+      .toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    if (!confirm('Join "' + vp.name + '" with ' + fmtEln(valueWei) + ' ELN?\n\n' +
+        '• Rate locked forever: ' + vp.monthlyPct + '% / month (' + (vp.rateBpsAnnual / 100) + '% / year)\n' +
+        '• Lock until: ' + unlockStr + ' (' + vp.lockDays + ' days)\n' +
+        '• Early exit before then: ' + vp.penaltyPct + '% penalty on the withdrawn principal')) return;
+    if (ST.connected === 'mm') {
+      const data = code ? await encodeDelegateByCode(code, vp.idx) : await encodeDelegateAddr(t.validator, vp.idx);
+      const txHash = await mmSendTx(data, valueWei);
+      const ok = await pollReceipt(txHash, 'Deposit of ' + fmtEln(valueWei) + ' ELN into ' + (code || shortAddr(t.validator)) + '\'s "' + vp.name + '" package');
+      if (ok !== false) await afterTxRefresh();
+    } else {
+      const r = await fetch('/api/apos/delegate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ privateKey: ST.pk, code: code || undefined, validator: t.validator, vpkgIdx: vp.idx, amountEther: weiToEtherString(valueWei) }),
+      }).then(function (x) { return x.json(); });
+      if (r.error) throw new Error(r.error);
+      toast('✅ Deposited <b>' + fmtEln(valueWei) + ' ELN</b> into <b>' + esc(code || shortAddr(t.validator)) + '</b>\'s package <b>' + esc(vp.name) + '</b> — tx <code style="font-size:.74rem">' + esc(shortAddr(r.txHash || '')) + '</code>', 'success');
+      await afterTxRefresh();
+    }
+  } catch (e) {
+    toast('❌ Deposit failed: ' + esc(friendlyErr(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+}
+
+// Ask the validator (via chat) to send pool principal back. /api/desk/request
+// reuses the open thread for the pair, so this never duplicates threads.
+async function askRelease(btn, validator) {
+  if (!ST.addr) { toast('⚠️ Connect a wallet first.', 'error'); return; }
+  const amt = prompt('How much ELN should the validator release back to you?', '');
+  if (amt === null) return;
+  const t = String(amt).trim();
+  const msg = t ? 'I\'d like to withdraw ' + t + ' ELN, please release it.' : 'I\'d like to withdraw my deposit, please release it.';
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span>';
+  try {
+    const r = await fetch('/api/desk/request', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ validator: validator, delegator: ST.addr, message: msg }),
+    }).then(function (x) { return x.json(); });
+    if (r.error) throw new Error(r.error);
+    toast('💬 Release request sent — the validator sends your tokens from their panel. Track it under “My conversations”.', 'success');
+    await loadMyThreads();
+    DESK.open = r.id;
+    renderThreads();
+    $('threads-section').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    toast('❌ ' + esc(e.message || String(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+}
+
+function friendlyErr(e) {
+  const m = (e && (e.message || e.shortMessage)) || String(e);
+  if (/user rejected|user denied|action_rejected|4001/i.test(m)) return 'you rejected the transaction in your wallet.';
+  if (/insufficient funds|exceeds balance|insufficient balance/i.test(m)) return 'not enough ELN for the amount plus gas — top up via the Faucet.';
+  if (/pruned history/i.test(m)) return 'the tx was sent and most likely succeeded — the node just could not return the receipt. Refresh in a few seconds; do NOT resend.';
+  return m.replace(/^execution reverted:?\s*/i, '').replace(/^UNP:\s*/i, '');
+}
+
+async function afterTxRefresh() {
+  await Promise.all([refreshBalance(), loadMyDelegations(), loadValidators(), loadInfo(), loadMyThreads(true), loadDelegatorStatus()]);
+}
+
+/* ── my positions (v9 — self-withdraw, accrual ticks live) ──────── */
+let MY_POSITIONS = [];
+async function loadMyDelegations() {
+  const box = $('my-delegations');
+  if (!ST.addr) { box.innerHTML = '<div class="empty">Connect a wallet to see your delegations.</div>'; return; }
+  box.innerHTML = '<div class="skel" style="height:96px"></div>';
+  try {
+    const r = await fetch('/api/apos/my-delegations/' + encodeURIComponent(ST.addr)).then(function (x) { return x.json(); });
+    const ds = ((r && r.delegations) || []).filter(function (p) { return BigInt(p.amountWei || '0') > 0n; });
+    MY_POSITIONS = ds;
+    if (!ds.length) {
+      box.innerHTML = '<div class="empty">No open positions yet — pick a validator above and make a deposit. Every deposit is its own position; you can withdraw it yourself any time.</div>';
+      return;
+    }
+    box.innerHTML = ds.map(renderPosition).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">Could not load delegations: ' + esc(e.message) + '</div>';
+  }
+}
+
+// Live accrued profit of a position at the GRANDFATHERED rate:
+// amount × rateBps × elapsed / (10000 × 365d). Exact BigInt math.
+function posAccruedWei(p) {
+  try {
+    const amt = BigInt(p.amountWei || '0');
+    const rate = BigInt(Number(p.rateBps) || 0);
+    const elapsed = BigInt(Math.max(0, Math.floor(Date.now() / 1000) - Number(p.since || 0)));
+    return amt * rate * elapsed / (10000n * 31536000n);
+  } catch (e) { return 0n; }
+}
+function posIsEarly(p) {
+  // TWO-TIER: the early window = the position's snapshotted package lock.
+  const until = Number(p.earlyUntil || p.unlockAt || (Number(p.since || 0) + Number(p.lockSeconds || 0)));
+  return Number(p.penaltyBps || 0) > 0 && Date.now() / 1000 < until;
+}
+function posPenaltyPct(p) {
+  return Number(p.penaltyPct != null ? p.penaltyPct : Number(p.penaltyBps || 0) / 100);
+}
+
+function renderPosition(p, i) {
+  const sinceStr = p.since
+    ? new Date(Number(p.since) * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    : '—';
+  const code = esc(p.code || '');
+  const early = posIsEarly(p);
+  const untilStr = new Date(Number(p.earlyUntil || p.unlockAt || (Number(p.since || 0) + Number(p.lockSeconds || 0))) * 1000)
+    .toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  const pkgLine = p.vpkgName
+    ? 'Package: <b>' + esc(p.vpkgName) + '</b> <span style="color:var(--text3);font-size:.74rem">(' + Number(p.lockDays || 0) + '-day lock · ' + posPenaltyPct(p) + '% early-exit penalty)</span><br>'
+    : '';
+  return (
+    '<div class="d-item">' +
+      '<div><div class="d-code fx-badge-code">' + code + '</div>' +
+        '<div style="font-family:var(--fm);font-size:.66rem;color:var(--text3);margin-top:8px;cursor:pointer" title="Click to copy" onclick="copyText(\'' + esc(p.validator) + '\')">' + esc(shortAddr(p.validator)) + ' ⧉</div>' +
+        '<div style="font-family:var(--fm);font-size:.62rem;color:var(--text3);margin-top:5px">position #' + Number(p.posIdx) + '</div></div>' +
+      '<div class="d-meta">' +
+        pkgLine +
+        'Principal: <b>' + fmtEln(p.amountWei) + ' ELN</b> at <b style="color:var(--accent2)">' + pctOfBps(p.rateBps) + '%/yr</b> <span style="color:var(--text3);font-size:.74rem">(locked at deposit)</span><br>' +
+        'Accrued profit: <span class="green" data-accrue="' + i + '">' + fmtEln(posAccruedWei(p).toString(), 6) + '</span> <span style="color:var(--text3);font-size:.76rem">ELN — ticking daily</span>' +
+        (p.label ? ' · <span style="color:var(--text3)">' + esc(p.label) + '</span>' : '') + '<br>' +
+        '<span style="color:var(--text3);font-size:.76rem">Deposited ' + esc(sinceStr) + '</span>' +
+        (early ? '<br><span style="color:#f59e0b;font-size:.76rem">⚠ locked until ' + esc(untilStr) + ' — withdrawing before then costs a ' + posPenaltyPct(p) + '% penalty on the principal</span>' : '') +
+      '</div>' +
+      '<div class="d-act" style="display:flex;flex-direction:column;gap:8px">' +
+        '<button class="btn primary sm" onclick="withdrawPosition(this,' + i + ')">💸 Withdraw</button>' +
+        '<button class="btn sm" onclick="askRelease(this,\'' + esc(p.validator) + '\')">💬 Ask validator instead</button>' +
+      '</div>' +
+    '</div>'
+  );
+}
+
+// Tick the accrued-profit numbers every second (no refetch needed).
+setInterval(function () {
+  document.querySelectorAll('[data-accrue]').forEach(function (el) {
+    const p = MY_POSITIONS[Number(el.dataset.accrue)];
+    if (p) el.textContent = fmtEln(posAccruedWei(p).toString(), 6);
+  });
+}, 1000);
+
+// v9 SELF-WITHDRAW: principal (any part) + accrued profit, straight from the
+// contract — with the early-withdrawal warning (before the position's
+// package lock ends → the package's snapshotted penalty).
+async function withdrawPosition(btn, i) {
+  const p = MY_POSITIONS[i];
+  if (!p) return;
+  if (!ST.connected) { toast('⚠️ Connect a wallet first (MetaMask or private key).', 'error'); return; }
+  const maxStr = weiToEtherString(BigInt(p.amountWei || '0'));
+  const amt = prompt('How much ELN to withdraw from position #' + p.posIdx + '? (max ' + maxStr + ')\nYour accrued profit is paid out with it.', maxStr);
+  if (amt === null) return;
+  let valueWei;
+  try { valueWei = parseEln(String(amt).trim()); } catch (e) { toast('⚠️ ' + esc(e.message), 'error'); return; }
+  if (valueWei > BigInt(p.amountWei || '0')) { toast('⚠️ That exceeds the position principal (' + maxStr + ' ELN).', 'error'); return; }
+  if (posIsEarly(p)) {
+    const penBps = BigInt(Number(p.penaltyBps || 0));
+    const penWei = valueWei * penBps / 10000n;
+    const untilStr = new Date(Number(p.earlyUntil || p.unlockAt || 0) * 1000)
+      .toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    if (!confirm('⚠ EARLY WITHDRAWAL — this position\'s "' + (p.vpkgName || 'package') + '" lock runs until ' + untilStr + '.\n\nA ' + posPenaltyPct(p) + '% penalty (' + fmtEln(penWei.toString(), 6) + ' ELN) will be deducted from your principal and kept by the validator.\n\nWithdraw anyway?')) return;
+  }
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Withdrawing…';
+  try {
+    if (ST.connected === 'mm') {
+      const sel = await selector('withdrawPosition(address,uint256,uint256)');
+      const data = sel + pad32(p.validator) + pad32(p.posIdx) + pad32(valueWei);
+      const txHash = await mmSendTx(data, 0n);
+      const ok = await pollReceipt(txHash, 'Withdrawal of ' + fmtEln(valueWei) + ' ELN from position #' + p.posIdx);
+      if (ok !== false) await afterTxRefresh();
+    } else {
+      const r = await fetch('/api/apos/withdraw-position', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ privateKey: ST.pk, validator: p.validator, posIdx: p.posIdx, amountEther: weiToEtherString(valueWei) }),
+      }).then(function (x) { return x.json(); });
+      if (r.error) throw new Error(r.error);
+      toast('✅ Withdrew <b>' + fmtEln(valueWei) + ' ELN</b> + accrued profit' + (r.earlyPenaltyApplied ? ' (' + posPenaltyPct(p) + '% early-exit penalty deducted)' : '') + ' — tx <code style="font-size:.74rem">' + esc(shortAddr(r.txHash || '')) + '</code>', 'success');
+      await afterTxRefresh();
+    }
+  } catch (e) {
+    toast('❌ Withdrawal failed: ' + esc(friendlyErr(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+}
+
+/* ── reveal-on-scroll ──────────────────────────────────────────── */
+let _revealObs = null;
+function observeReveals() {
+  if (!('IntersectionObserver' in window)) {
+    document.querySelectorAll('.reveal').forEach(function (el) { el.classList.add('in'); });
+    return;
+  }
+  if (!_revealObs) {
+    _revealObs = new IntersectionObserver(function (entries) {
+      entries.forEach(function (en) {
+        if (en.isIntersecting) { en.target.classList.add('in'); _revealObs.unobserve(en.target); }
+      });
+    }, { threshold: 0.12 });
+  }
+  document.querySelectorAll('.reveal:not(.in)').forEach(function (el) { _revealObs.observe(el); });
+}
+
+/* ── boot ──────────────────────────────────────────────────────── */
+(async function init() {
+  observeReveals();
+  loadInfo();
+  loadValidators();
+  try { await loadHandshake(); } catch (e) { toast('⚠️ ' + esc(e.message), 'warn', 8000); }
+  setInterval(loadInfo, 30000);
+  setInterval(function () { if (ST.addr) refreshBalance(); }, 30000);
+  // delegation-desk chat: keep the thread list (and any open chat) fresh
+  setInterval(function () { if (ST.addr) loadMyThreads(true); }, 8000);
+})();
+</script>
+</body>
+</html>

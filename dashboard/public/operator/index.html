@@ -1,0 +1,1549 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Elyon Chain — Operator</title>
+<link rel="icon" href="/site-assets/icon.png" type="image/png">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+  /* v10.0 — light premium identity. */
+  :root {
+    --bg: #f6f8fa;
+    --surface: #ffffff;
+    --surface-alt: #f1f5f3;
+    --text: #1c2733;
+    --text-2: #5a6b7a;
+    --text-3: #8b9aa7;
+    --accent: #15a878;
+    --accent-2: #0e7d5a;
+    --success: #15a878;
+    --warn: #b45309;
+    --danger: #dc2626;
+    --border: rgba(20,40,60,.08);
+    --radius: 14px;
+    --radius-lg: 22px;
+    --shadow: 0 8px 32px rgba(20,40,60,.08);
+    --grad-primary: linear-gradient(135deg,#15a878 0%,#0e7d5a 100%);
+    --grad-mesh: radial-gradient(ellipse 60% 50% at 50% 0%, rgba(21,168,120,0.07), transparent 60%);
+    --font-h: 'Space Grotesk','Inter',sans-serif;
+    --font-b: 'Inter',-apple-system,BlinkMacSystemFont,sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; padding:0; }
+  html { background: var(--bg); }
+  body {
+    font-family: var(--font-b);
+    background: transparent;
+    background-image: var(--grad-mesh);
+    background-repeat:no-repeat; background-attachment:fixed;
+    color: var(--text);
+    -webkit-font-smoothing: antialiased;
+    line-height: 1.55;
+  }
+  h1,h2,h3,h4 { font-family: var(--font-h); letter-spacing:-.02em; color:var(--text); font-weight:800; }
+  h1 { background:linear-gradient(120deg,#0e7d5a 0%,#15a878 55%,#0c8f68 100%); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent; }
+  a { color: var(--accent-2); text-decoration: none; }
+  code { font-family: 'JetBrains Mono', ui-monospace, Menlo, Consolas, monospace; font-size: .9em; color:#0e7d5a; background:rgba(21,168,120,.08); border-radius:6px; padding:1px 5px; }
+  ::selection { background: var(--accent); color:#fff; }
+  ::-webkit-scrollbar { width:5px; height:5px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: rgba(21,168,120,.3); border-radius:3px; }
+  ::-webkit-scrollbar-thumb:hover { background: rgba(21,168,120,.5); }
+
+  /* ── Nav bar ── */
+  nav.top {
+    position: sticky; top: 0; z-index: 50;
+    background: rgba(255,255,255,0.82);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 28px;
+    display: flex; align-items: center; gap: 18px;
+  }
+  nav.top .brand { font-family:var(--font-h); font-size: 17px; font-weight: 700; letter-spacing: -.02em; display:flex; align-items:center; gap:10px; }
+  nav.top .brand img { height:28px; width:auto; display:block; }
+  nav.top .brand span { color: var(--accent-2); }
+  nav.top .tabs { display: flex; gap: 4px; margin-left: 16px; flex-wrap:wrap; }
+  nav.top .tab {
+    padding: 8px 16px; border-radius: 999px; font-size: 13.5px; font-weight: 600;
+    color: var(--text-2); cursor: pointer; transition: all .2s cubic-bezier(.16,1,.3,1);
+  }
+  nav.top .tab:hover { background: rgba(21,168,120,.08); color: var(--accent-2); transform:translateY(-1px); }
+  nav.top .tab.active { background: var(--grad-primary); color: white; box-shadow:0 4px 16px rgba(21,168,120,.28); }
+  nav.top .wallet { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  nav.top .wallet-addr { font-family: ui-monospace, monospace; font-size: 13px; color: var(--text-2); }
+  nav.top .pill {
+    padding: 4px 10px; border-radius: 999px; font-size: 12px; font-weight: 500;
+    background: rgba(21,168,120,.10); color: var(--accent-2); border:1px solid rgba(21,168,120,.25);
+  }
+
+  /* ── Layout ── */
+  main { max-width: 1100px; margin: 0 auto; padding: 48px 28px 80px; }
+  section { display: none; }
+  section.active { display: block; }
+  h1 { font-size: 48px; font-weight: 600; letter-spacing: -.02em; margin: 0 0 8px; }
+  h2 { font-size: 32px; font-weight: 600; letter-spacing: -.015em; margin: 48px 0 12px; }
+  h3 { font-size: 20px; font-weight: 600; margin: 24px 0 8px; }
+  p.lead { font-size: 19px; color: var(--text-2); margin: 0 0 32px; max-width: 720px; }
+
+  /* ── Welcome / wallet gate ── */
+  .gate {
+    min-height: calc(100vh - 60px);
+    display: flex; align-items: center; justify-content: center;
+    text-align: center; padding: 0 28px;
+  }
+  .gate-inner { max-width: 560px; }
+  .gate h1 { font-size: 56px; }
+  .gate p { font-size: 21px; color: var(--text-2); margin: 16px 0 40px; }
+  .btn-primary, .btn-secondary {
+    display: inline-flex; align-items: center; justify-content: center;
+    height: 44px; padding: 0 22px; border-radius: 999px;
+    font-size: 16px; font-weight: 500; cursor: pointer; border: 0;
+    transition: all .15s;
+  }
+  .btn-primary {
+    background: var(--grad-primary); color: white; box-shadow: 0 4px 20px rgba(21,168,120,.25);
+  }
+  .btn-primary:hover { box-shadow: 0 8px 32px rgba(21,168,120,.32); transform: translateY(-1px); }
+  .btn-primary:disabled { background: #c2cdd6; box-shadow: none; cursor: not-allowed; }
+  .btn-secondary {
+    background: #ffffff; color: var(--accent-2); border: 1px solid rgba(21,168,120,.40);
+  }
+  .btn-secondary:hover { background: rgba(21,168,120,.08); box-shadow: 0 4px 14px rgba(21,168,120,.14); }
+  .btn-row { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+
+  /* ── Cards ── */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    margin-bottom: 20px;
+    transition: transform .3s cubic-bezier(.16,1,.3,1), box-shadow .3s, border-color .3s;
+  }
+  .card:hover { transform: translateY(-2px); border-color: rgba(21,168,120,.25); box-shadow: 0 14px 44px rgba(20,40,60,.12), 0 0 24px rgba(21,168,120,.06); }
+  .card.hero {
+    background: linear-gradient(135deg, #ffffff 0%, #f2f8f5 100%);
+    padding: 40px;
+  }
+  .stat-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px,1fr)); gap: 16px; }
+  .stat { background: var(--surface-alt); border-radius: var(--radius); padding: 16px 20px; }
+  .stat-label { font-size: 13px; color: var(--text-3); text-transform: uppercase; letter-spacing: .05em; }
+  .stat-value { font-size: 28px; font-weight: 600; letter-spacing: -.01em; margin-top: 4px; }
+
+  /* ── Tables ── */
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th, td { padding: 14px 16px; text-align: left; border-bottom: 1px solid var(--border); }
+  th { color: var(--text-3); font-weight: 500; text-transform: uppercase; font-size: 12px; letter-spacing: .05em; background: var(--surface-alt); }
+  tr:hover td { background: rgba(21,168,120,0.05); }
+  td.mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 13px; color: var(--text-2); }
+
+  /* ── Inputs ── */
+  input.text, input.num, select.text {
+    height: 44px; padding: 0 14px; border-radius: var(--radius);
+    border: 1px solid var(--border); background: var(--surface);
+    font-size: 15px; color: var(--text); font-family: inherit;
+    width: 100%; outline: none;
+  }
+  input.text:focus, select.text:focus { border-color: var(--accent); box-shadow: 0 0 0 4px rgba(21,168,120,.14); }
+  select.text {
+    -webkit-appearance: none; appearance: none; cursor: pointer;
+    padding-right: 38px;
+    background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5' fill='none' stroke='%235b6b78' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center;
+  }
+  label.field { display: block; margin-bottom: 14px; }
+  label.field span { display:block; font-size:13px; color: var(--text-2); margin-bottom:6px; font-weight:500; }
+
+  /* ── Misc ── */
+  .empty { text-align: center; padding: 60px 20px; color: var(--text-3); }
+  .badge {
+    display: inline-block; padding: 3px 10px; border-radius: 999px;
+    font-size: 12px; font-weight: 500;
+  }
+  .badge-pending { background: rgba(245,158,11,.12); color: #b45309; border:1px solid rgba(245,158,11,.35); }
+  .badge-active  { background: rgba(21,168,120,.12); color: #0e7d5a; border:1px solid rgba(21,168,120,.35); box-shadow:0 0 12px rgba(21,168,120,.16); }
+
+  /* v7.10.4 — button loading state. The btn-spin marker spins inside any
+     button while an async action is running; the helper withLoading()
+     disables the button and swaps its label until the promise settles. */
+  .btn-spin {
+    display:inline-block; width:14px; height:14px;
+    border:2px solid rgba(255,255,255,.35);
+    border-top-color:#fff; border-radius:50%;
+    animation:btn-spin .8s linear infinite;
+    vertical-align:-2px; margin-right:8px;
+  }
+  @keyframes btn-spin { to { transform: rotate(360deg); } }
+  button[data-loading="1"] { opacity:.85; cursor:wait; }
+
+  /* v7.8.9 — responsive layout (same approach as simple-admin). */
+  nav.top .brand { white-space: nowrap; flex-shrink: 0; }
+  nav.top .tabs  { overflow-x: auto; flex-wrap: nowrap; -webkit-overflow-scrolling: touch; }
+  nav.top .tabs::-webkit-scrollbar { display: none; }
+  nav.top .tab   { white-space: nowrap; flex-shrink: 0; }
+  nav.top .wallet { flex-shrink: 0; }
+
+  @media (max-width: 820px) {
+    nav.top { flex-wrap: wrap; gap: 12px; padding: 12px 16px; }
+    nav.top .tabs { order: 3; width: 100%; margin-left: 0; padding-bottom: 2px; }
+    nav.top .wallet { margin-left: auto; gap: 8px; }
+    nav.top .wallet .wallet-addr { display: none; }
+    main { padding: 28px 16px 60px; }
+    h1 { font-size: 36px; }
+    h2 { font-size: 24px; margin: 28px 0 10px; }
+    .gate h1 { font-size: 42px; }
+    .gate p  { font-size: 17px; }
+    p.lead { font-size: 16px; margin-bottom: 24px; }
+    .card { padding: 18px; overflow-x: auto; }
+    .card.hero { padding: 24px; }
+    table { min-width: 560px; }
+    .stat-row { grid-template-columns: 1fr 1fr !important; }
+  }
+  @media (max-width: 480px) {
+    .gate h1 { font-size: 32px; }
+    .stat-row { grid-template-columns: 1fr !important; }
+    nav.top .brand { font-size: 15px; }
+    h1 { font-size: 28px; }
+  }
+
+  /* ════ v8 — VALIDATOR/DELEGATOR model visuals ════ */
+  /* Glass cards + hover lift */
+  .glass {
+    background: rgba(255,255,255,.85);
+    border: 1px solid rgba(20,40,60,.08);
+    box-shadow: 0 8px 32px rgba(20,40,60,.08);
+  }
+  .lift { transition: transform .25s cubic-bezier(.16,1,.3,1), box-shadow .25s cubic-bezier(.16,1,.3,1); }
+  .lift:hover { transform: translateY(-3px); box-shadow: 0 16px 44px rgba(20,40,60,.12), 0 0 28px rgba(21,168,120,.10); }
+
+  /* Animated state-card entrance */
+  .vcard-in { animation: vIn .5s cubic-bezier(.16,1,.3,1); }
+  @keyframes vIn { from { opacity:0; transform: translateY(14px) scale(.985); } to { opacity:1; transform:none; } }
+
+  /* Status pills */
+  .vpill {
+    display:inline-flex; align-items:center; gap:7px; padding:5px 14px;
+    border-radius:999px; font-size:12.5px; font-weight:700;
+    letter-spacing:.05em; text-transform:uppercase;
+  }
+  .vpill .dot { width:8px; height:8px; border-radius:50%; background:currentColor; flex-shrink:0; }
+  .vpill-none      { background:rgba(90,107,122,.10); color:#5a6b7a; }
+  .vpill-pending   { background:rgba(245,158,11,.12);  color:#b45309; box-shadow:0 0 0 1px rgba(245,158,11,.30); }
+  .vpill-pending .dot { animation:vpulse 1.4s ease-in-out infinite; }
+  .vpill-active    { background:rgba(21,168,120,.12);  color:var(--accent-2);
+                     box-shadow:0 0 0 1px rgba(21,168,120,.35), 0 0 18px rgba(21,168,120,.20); }
+  .vpill-rejected  { background:rgba(239,68,68,.10); color:#dc2626; box-shadow:0 0 0 1px rgba(220,38,38,.30); }
+  .vpill-suspended { background:rgba(90,107,122,.10); color:#5a6b7a; }
+  /* BELOW_MIN — pool dropped under the network minimum: amber/red alert pill */
+  .vpill-belowmin  { background:rgba(245,158,11,.14); color:#b45309; box-shadow:0 0 0 1px rgba(220,38,38,.35); }
+  .vpill-belowmin .dot { animation:vpulse 1.4s ease-in-out infinite; }
+  @keyframes vpulse {
+    0%,100% { opacity:1; box-shadow:0 0 0 0 rgba(245,158,11,.45); }
+    50%     { opacity:.55; box-shadow:0 0 0 7px rgba(245,158,11,0); }
+  }
+
+  /* APOS code badge — monospace shimmer */
+  .apos-code {
+    font-family:'JetBrains Mono', ui-monospace, Menlo, monospace;
+    font-size: clamp(28px, 6vw, 52px); font-weight:600; letter-spacing:.14em;
+    padding: 18px 32px; border-radius:18px; display:inline-block; color:#fff;
+    background: linear-gradient(120deg,#0e7d5a 0%,#15a878 38%,#5fe0b4 50%,#15a878 62%,#0e7d5a 100%);
+    background-size: 220% 100%;
+    animation: codeShimmer 3.2s linear infinite;
+    box-shadow: 0 14px 40px rgba(21,168,120,.35);
+    user-select: all; cursor: copy;
+  }
+  @keyframes codeShimmer { to { background-position: -220% 0; } }
+
+  /* Pending "awaiting approval" orb with expanding rings */
+  .pend-orb {
+    width:88px; height:88px; margin:0 auto 18px; border-radius:50%;
+    display:flex; align-items:center; justify-content:center;
+    font-size:30px; color:#b45309; background:rgba(245,158,11,.12);
+    position:relative; animation: orbFloat 3s ease-in-out infinite;
+  }
+  .pend-orb::before, .pend-orb::after {
+    content:''; position:absolute; inset:0; border-radius:50%;
+    border:2px solid rgba(245,158,11,.40); animation: orbRing 2.2s ease-out infinite;
+  }
+  .pend-orb::after { animation-delay: 1.1s; }
+  @keyframes orbRing  { from { transform:scale(1); opacity:.8; } to { transform:scale(1.9); opacity:0; } }
+  @keyframes orbFloat { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-6px); } }
+
+  /* Pool composition bar (self stake vs delegated) */
+  .pool-bar { height:14px; border-radius:999px; overflow:hidden; background:var(--surface-alt); display:flex; }
+  .pool-bar .seg-self { background: var(--grad-primary); transition: width 1s cubic-bezier(.16,1,.3,1); }
+  .pool-bar .seg-del  { background: linear-gradient(135deg,#0c95b8 0%,#22d3ee 100%); transition: width 1s cubic-bezier(.16,1,.3,1); }
+  .pool-legend { display:flex; gap:18px; flex-wrap:wrap; font-size:13px; color:var(--text-2); margin-top:8px; }
+  .pool-legend .key { display:inline-block; width:10px; height:10px; border-radius:3px; margin-right:6px; vertical-align:-1px; }
+
+  /* Earnings — giant gradient count-up number */
+  .earn-big {
+    font-family: var(--font-h); font-weight:700; letter-spacing:-.03em;
+    font-size: clamp(44px, 8vw, 76px); line-height:1.05;
+    background: var(--grad-primary);
+    -webkit-background-clip:text; background-clip:text; color:transparent;
+  }
+
+  /* Packages table */
+  tr.pkg-selected td { background: rgba(21,168,120,.07) !important; }
+  tr.pkg-selected td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+  input.pkg-amt {
+    height:36px; width:120px; padding:0 10px; border-radius:10px;
+    border:1px solid var(--border); background:var(--surface);
+    font-size:13px; font-family:inherit; outline:none;
+  }
+  input.pkg-amt:focus { border-color: var(--accent); box-shadow:0 0 0 3px rgba(21,168,120,.14); }
+
+  /* ── v10.0 light-identity extras ── */
+  /* premium key-file gate: white glass card with soft emerald halo */
+  .gate-inner { background: rgba(255,255,255,.97);
+    border: 1px solid rgba(20,40,60,.08); border-radius: 26px; padding: 48px 42px;
+    box-shadow: 0 24px 80px rgba(20,40,60,.12), 0 0 60px rgba(21,168,120,.08); }
+  /* key-file dialog inner panel carries inline background:white — keep it premium */
+  #pk-dialog > div { background: #ffffff !important; border: 1px solid rgba(20,40,60,.08);
+    box-shadow: 0 24px 80px rgba(20,40,60,.18), 0 0 50px rgba(21,168,120,.08); }
+  #pk-dialog { background: rgba(20,40,60,.45) !important; }
+  td.mono, .wallet-addr, .countdown { text-shadow: none; }
+
+  /* respect reduced motion: freeze decorative pulses/floats/shimmers */
+  @media (prefers-reduced-motion: reduce) {
+    .vpill-pending .dot, .pend-orb, .pend-orb::before, .pend-orb::after,
+    .apos-code, .vcard-in { animation: none !important; }
+    .card, .card:hover, .lift, .lift:hover, .btn-primary:hover { transform: none !important; transition: none !important; }
+  }
+</style>
+<link rel="stylesheet" href="/elyon-fx.css">
+<script defer src="/elyon-fx.js"></script>
+
+<link rel="stylesheet" href="/elyon-app.css">
+</head>
+<body class="elx-shelled" data-no-fx>
+<aside class="elx-sidebar" id="elx-sidebar">
+  <a class="elx-sb-brand" href="/"><img src="/site-assets/logo.png" alt="Elyon Chain"></a>
+  <nav class="elx-sb-nav">
+<div class="tab active" data-tab="explorer" onclick="switchTab('explorer')">Explorer</div>
+<div class="tab" data-tab="validator" onclick="switchTab('validator')">Become a Validator</div>
+<div class="tab" data-tab="earnings" onclick="switchTab('earnings')">My Earnings</div>
+<div class="tab" data-tab="packages" onclick="switchTab('packages')">Packages</div>
+<div class="tab" data-tab="node" onclick="switchTab('node')">My Node</div>
+</nav>
+  <div class="elx-sb-foot">Elyon Chain · APOS L1</div>
+</aside>
+<div class="elx-app">
+  <header class="elx-topbar">
+    <button class="elx-burger" onclick="document.getElementById('elx-sidebar').classList.toggle('open')">☰</button>
+    <h1>Validator Node</h1>
+    <span class="elx-spacer"></span>
+    <div class="wallet">
+    <span class="pill" id="net-pill">Connected</span>
+    <span class="wallet-addr" id="wallet-addr">—</span>
+    <button class="btn-secondary" style="height:32px;padding:0 14px;font-size:13px" onclick="disconnectWallet()">Disconnect</button>
+  </div>Elyon Chain</span>
+  </header>
+  <div class="elx-work">
+
+
+<!-- ── Key-file gate (v7.11.7 — wallet path removed, create-key added) ── -->
+<div id="gate" class="gate">
+  <div class="gate-inner">
+    <h1>Run a node.<br>Earn from every transaction.</h1>
+    <p>Sign in with your Elyon Chain key file to run this node and apply as a <b>validator</b>. The admin node — <code>admintestnet.elyon.network</code> — handles chain bootstrap automatically.</p>
+    <div class="btn-row">
+      <!-- v7.11.7: "Create new key file" only appears pre-configuration.
+           Once the node is configured (validatorAddress is set), the
+           button hides itself — generating a new key would replace the
+           registered identity and orphan the existing stake/registration. -->
+      <button class="btn-primary" id="btn-create-key" onclick="createKeyAndSignIn()" style="display:none">Create new key file</button>
+      <button class="btn-secondary" id="btn-open-key" onclick="showPrivateKeyDialog()">Open with key file</button>
+    </div>
+    <p style="font-size:14px;margin-top:32px;color:var(--text-3)">The private key is held in this browser tab only and forwarded to this node so it can sign relayer attestations on your behalf.</p>
+    <div id="gate-error" style="display:none;color:var(--danger);font-size:14px;margin-top:16px"></div>
+  </div>
+</div>
+
+<!-- ── Key-file fallback (replaces paste-private-key) ── -->
+<div id="pk-dialog" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;align-items:center;justify-content:center;padding:20px">
+  <div style="background:white;border-radius:18px;padding:32px;max-width:520px;width:100%">
+    <h3 style="margin-top:0">Open with key file</h3>
+    <p style="color:var(--text-2);font-size:14px">Upload the Elyon Chain key file you saved. The private key is held in this browser tab only — it's used to sign your transactions locally and never persisted.</p>
+    <label id="op-file-drop" style="display:block;border:2px dashed var(--border);border-radius:18px;padding:28px;text-align:center;background:var(--surface-alt);cursor:pointer;transition:all .15s">
+      <input type="file" id="pk-file-input" accept=".txt,text/plain" onchange="onOpKeyFileSelected(event)" style="display:none" />
+      <div style="font-size:42px;margin-bottom:8px">🔑</div>
+      <div><b>Click to choose key file</b> &nbsp;or drag &amp; drop</div>
+      <div style="font-size:13px;color:var(--text-3);margin-top:6px">Accepts the Elyon Chain key-file format (.txt) or a bare 64-hex private key.</div>
+    </label>
+    <div id="pk-error" style="display:none;color:var(--danger);font-size:14px;margin-top:14px"></div>
+    <div style="display:flex;gap:12px;justify-content:flex-end;margin-top:20px">
+      <button class="btn-secondary" onclick="hidePrivateKeyDialog()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── Connected layout ── -->
+<nav class="top" id="topnav" style="display:none"></nav>
+
+<main id="appmain" style="display:none">
+
+  <!-- ── Tab: Explorer ── -->
+  <section id="tab-explorer" class="active">
+    <h1>Block Explorer</h1>
+    <p class="lead">The last 100 blocks on Elyon Chain, updated live every few seconds.</p>
+    <div class="card">
+      <table>
+        <thead>
+          <tr><th>Block</th><th>Hash</th><th>Sealer</th><th>Txs</th><th>Time</th></tr>
+        </thead>
+        <tbody id="explorer-rows">
+          <tr><td colspan="5" class="empty">Loading blocks…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ── Tab: Become a Validator (v9 — ONE-POOL model) ──
+       The operator running THIS node applies to become a validator by
+       staking ELN (>= minValidatorStake) into the APOS registry. The
+       admin approves and issues a unique public APOS code. The tier
+       curve (admin-set) maps the ONE POOL (selfStake + delegatedTotal —
+       delegator deposits count directly) to the gas-fee share %.
+       State machine below mirrors the on-chain enum:
+       NONE=0 PENDING=1 ACTIVE=2 REJECTED=3 SUSPENDED=4 BELOW_MIN=5.
+       Applying goes THROUGH a staking package (applyAsValidator takes a
+       packageId); ONE PACKAGE AT A TIME — top-ups re-lock the same term,
+       switching needs the term to end. Package APR accrues DAILY and is
+       claimable any time. BELOW_MIN = the POOL fell under the network
+       minimum — refilling it (own stake or delegations) auto-recovers. -->
+  <section id="tab-validator">
+    <h1>Become a Validator</h1>
+    <p class="lead">Pick a staking package, stake ELN into the APOS registry and apply. Once the admin approves, you receive a unique public <b>APOS code</b> and start earning a tier-driven share of every transaction fee on Elyon Chain — plus your package APR, accrued daily.</p>
+
+    <div class="card hero">
+      <div class="stat-row">
+        <div class="stat"><div class="stat-label">Your ELN Balance</div><div class="stat-value" id="val-balance">—</div></div>
+        <div class="stat"><div class="stat-label">Validator Status</div><div class="stat-value" style="font-size:18px" id="val-status-pill">—</div></div>
+        <div class="stat"><div class="stat-label">Min. Validator Stake</div><div class="stat-value" id="val-min-stake">—</div></div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="stat-label" style="margin-bottom:6px">Your wallet address &nbsp;<span style="text-transform:none;letter-spacing:0;color:var(--text-3)">— share with admin to receive ELN</span></div>
+        <div style="display:flex;gap:8px;align-items:stretch">
+          <code id="val-addr-full" style="flex:1;padding:14px;background:var(--surface);border-radius:12px;font-size:14px;word-break:break-all;border:1px solid var(--border)">—</code>
+          <button class="btn-secondary" style="white-space:nowrap" onclick="copyToClipboard('val-addr-full', this)">Copy</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="val-loading" class="card glass" style="color:var(--text-2)">Reading your on-chain validator state…</div>
+
+    <!-- status 0 — NOT APPLIED -->
+    <div id="val-apply" class="card glass lift" style="display:none;padding:36px">
+      <div style="display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+        <div style="width:64px;height:64px;border-radius:18px;background:var(--grad-primary);display:flex;align-items:center;justify-content:center;font-size:26px;color:#fff;box-shadow:0 10px 28px rgba(21,168,120,.35)"><i class="fa-solid fa-shield-halved"></i></div>
+        <div style="flex:1;min-width:240px">
+          <h3 style="margin:0">Apply as Validator</h3>
+          <p style="color:var(--text-2);margin:6px 0 0">Applying stakes <b>through a staking package</b>: pick one below, then stake at least <b id="val-apply-min">—</b> ELN (the larger of the network minimum and the package minimum). Your <b>pool</b> — your own stake <i>plus</i> delegator deposits — drives your tier (gas-fee share %); your package APR accrues daily on your own stake.</p>
+        </div>
+      </div>
+      <label class="field" style="margin:22px 0 0">
+        <span>Staking package — your stake locks for the package term</span>
+        <select class="text" id="val-apply-pkg" onchange="onApplyPkgChange()">
+          <option value="">Loading packages…</option>
+        </select>
+      </label>
+      <div id="val-apply-pkg-hint" style="font-size:13px;color:var(--text-3);margin:6px 0 0"></div>
+      <div style="display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap;margin-top:14px">
+        <label class="field" style="margin:0;max-width:280px;flex:1;min-width:200px">
+          <span>Stake amount (ELN)</span>
+          <input class="text" id="val-apply-amt" type="number" min="0" step="any" placeholder="—" />
+        </label>
+        <button class="btn-primary" style="height:44px" onclick="withLoading(this,'Submitting…',applyAsValidator)">Apply as Validator</button>
+      </div>
+      <div id="val-apply-msg" style="margin-top:14px;font-size:14px"></div>
+      <p style="font-size:13px;color:var(--text-3);margin:18px 0 0">After you apply, the admin reviews your application and issues your unique APOS code on approval. Your stake is held by the registry contract and locked for the chosen package's term.</p>
+    </div>
+
+    <!-- status 1 — PENDING -->
+    <div id="val-pending" class="card glass" style="display:none;text-align:center;padding:54px 28px">
+      <div class="pend-orb"><i class="fa-solid fa-hourglass-half"></i></div>
+      <h3 style="margin:0 0 6px">Awaiting admin approval</h3>
+      <p style="color:var(--text-2);max-width:480px;margin:0 auto 18px">Your stake of <b id="val-pending-stake">—</b> is locked in the registry. The admin is reviewing your application — this page refreshes automatically and will light up the moment you're approved.</p>
+      <span class="vpill vpill-pending"><span class="dot"></span>Pending approval</span>
+    </div>
+
+    <!-- status 2 — ACTIVE (celebration) -->
+    <div id="val-active" class="card glass" style="display:none;padding:40px;overflow:hidden;position:relative">
+      <div style="position:absolute;inset:0 0 auto 0;height:5px;background:var(--grad-primary)"></div>
+      <div style="text-align:center">
+        <span id="val-active-pill"><span class="vpill vpill-active"><span class="dot"></span>Active validator</span></span>
+        <h3 style="font-size:26px;margin:16px 0 4px" id="val-active-title">You're validating Elyon Chain 🎉</h3>
+        <!-- BELOW_MIN (=5) — the POOL (own stake + delegations) fell under
+             the network minimum; earnings paused until it refills
+             (auto-recovers to ACTIVE). -->
+        <div id="val-belowmin-note" style="display:none;margin:0 auto 18px;max-width:560px;text-align:left;padding:14px 16px;border-radius:14px;background:rgba(245,158,11,.10);border:1px solid rgba(245,158,11,.40);color:#b45309;font-size:14px">
+          <b>Your POOL dropped below the network minimum</b> — your gas-fee share is paused and you earn nothing while below the minimum. Refill the pool: top up your package below or attract delegator deposits (they count too). The moment the pool is back above the minimum you are <b>automatically restored to ACTIVE</b> with your tier re-applied.
+        </div>
+        <p style="color:var(--text-2);margin:0 0 22px">This is your unique public APOS code:</p>
+        <div class="apos-code" id="val-code" title="Click to select, then copy">—</div>
+        <p style="font-size:14px;color:var(--text-2);margin:18px auto 0;max-width:520px">Share your code so delegators can fund your pool — manage them in <a href="/manager"><b>/manager</b></a>.</p>
+      </div>
+
+      <h3 style="margin-top:34px">Your pool <span style="font-size:13px;font-weight:400;color:var(--text-3)">— one number drives your tier: your stake + delegator deposits</span></h3>
+      <div class="stat-row">
+        <div class="stat"><div class="stat-label">Pool (drives tier)</div><div class="stat-value" style="color:var(--accent-2)"><span id="va-pool">0</span> <span style="font-size:15px;color:var(--text-3)">ELN</span></div></div>
+        <div class="stat"><div class="stat-label">Your stake (package-locked)</div><div class="stat-value"><span id="va-self">0</span> <span style="font-size:15px;color:var(--text-3)">ELN</span></div></div>
+        <div class="stat"><div class="stat-label">From delegators</div><div class="stat-value"><span id="va-del">0</span> <span style="font-size:15px;color:var(--text-3)">ELN</span></div></div>
+        <div class="stat"><div class="stat-label">Delegators</div><div class="stat-value" id="va-delcount">0</div></div>
+      </div>
+      <div style="margin-top:16px">
+        <div class="pool-bar">
+          <div class="seg-self" id="va-bar-self" style="width:100%"></div>
+          <div class="seg-del" id="va-bar-del" style="width:0%"></div>
+        </div>
+        <div class="pool-legend">
+          <span><span class="key" style="background:var(--accent)"></span><span id="va-legend-self">Your stake</span></span>
+          <span><span class="key" style="background:#5fe0b4"></span><span id="va-legend-del">Delegations</span></span>
+        </div>
+      </div>
+      <p style="font-size:13px;color:var(--text-3);margin:10px 0 0">Delegator deposits count toward your tier <b>directly</b> — every deposit creates a position that earns your published delegator rate, locked in at deposit time. Manage positions in <a href="/manager"><b>/manager</b></a>.</p>
+
+      <h3 style="margin-top:30px">Your tier <span style="font-size:13px;font-weight:400;color:var(--text-3)">— set by the admin tier curve from your POOL volume (stake + delegations)</span></h3>
+      <div class="stat-row">
+        <div class="stat"><div class="stat-label">Package APR</div><div class="stat-value" style="color:var(--accent-2)" id="va-apr">—</div></div>
+        <div class="stat"><div class="stat-label">Gas-fee share</div><div class="stat-value" style="color:var(--accent-2)" id="va-gas">—</div></div>
+      </div>
+
+      <!-- v9 — daily profit + delegator rate cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-top:26px">
+        <div class="card" style="margin:0;background:var(--surface-alt)">
+          <h3 style="margin-top:0">☀ Daily profit</h3>
+          <p style="color:var(--text-2);font-size:13.5px;margin:4px 0 12px">Your package APR accrues every second on your own stake — claim any time, no need to wait for the term to end.</p>
+          <div class="stat" style="margin-bottom:12px"><div class="stat-label">Accrued so far</div><div class="stat-value" style="color:var(--accent-2)"><span id="va-accrued">0</span> <span style="font-size:15px;color:var(--text-3)">ELN</span></div></div>
+          <button class="btn-primary" onclick="withLoading(this,'Claiming…',claimValProfit)">☀ Claim daily profit</button>
+          <div id="va-claim-msg" style="margin-top:10px;font-size:14px"></div>
+        </div>
+        <!-- v9.9 — global "Delegator rate" removed: deposits take their
+             PACKAGE's rate (manage packages + note in /manager). Hidden
+             legacy elements keep old JS references harmless. -->
+        <div style="display:none"><span id="va-rate-cap"></span><b id="va-rate-now"></b><input id="va-rate-input" type="number"><div id="va-rate-msg"></div></div>
+        <div class="card" style="margin:0;background:var(--surface-alt)">
+          <h3 style="margin-top:0">📦 Delegator offers</h3>
+          <p style="color:var(--text-2);font-size:13.5px;margin:4px 0 12px">Your delegator offers are your <b>packages</b> — each with its own rate (capped by your package APR), lock term, minimum deposit and early-exit penalty. Manage them in <b>/manager → My Packages</b>; delegators join from your public page.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- status 3 / 4 — REJECTED / SUSPENDED -->
+    <div id="val-ended" class="card glass" style="display:none;padding:36px">
+      <div id="val-ended-pill"></div>
+      <p id="val-ended-text" style="color:var(--text-2);margin:14px 0 18px"></p>
+      <div class="stat" style="max-width:280px;margin-bottom:20px">
+        <div class="stat-label">Stake held by registry</div>
+        <div class="stat-value" id="val-ended-stake">—</div>
+      </div>
+      <button class="btn-secondary" onclick="withLoading(this,'Withdrawing…',withdrawValStake)">Withdraw stake</button>
+      <div id="val-ended-msg" style="margin-top:14px;font-size:14px"></div>
+    </div>
+  </section>
+
+  <!-- ── Tab: My Earnings (v8) — tier-driven gas-fee share, withdraw anytime ── -->
+  <section id="tab-earnings">
+    <h1>My earnings</h1>
+    <p class="lead">Your accrued share of Elyon Chain transaction fees, driven by your tier's gas-fee share. Withdraw anytime — there is no withdrawal day.</p>
+
+    <div id="earn-hero" class="card glass lift" style="text-align:center;padding:54px 28px">
+      <div class="stat-label" style="margin-bottom:8px">Accrued fee share</div>
+      <div><span class="earn-big" id="earn-fees">0</span>&nbsp;<span style="font-family:var(--font-h);font-size:24px;font-weight:700;color:var(--accent-2)">ELN</span></div>
+      <div style="margin-top:14px;color:var(--text-2)">Your gas-fee share: <b id="earn-share" style="color:var(--accent-2)">—</b> of every transaction fee on chain</div>
+      <button class="btn-primary" style="margin-top:26px" onclick="withLoading(this,'Withdrawing…',withdrawValFees)">Withdraw fees</button>
+      <div id="earn-msg" style="margin-top:14px;font-size:14px"></div>
+      <p style="font-size:13px;color:var(--text-3);margin:20px 0 0">Fees accrue automatically as transactions flow through the chain and are withdrawable at any time.</p>
+    </div>
+
+    <div id="earn-not-validator" class="card" style="display:none;text-align:center;padding:48px 28px">
+      <div style="font-size:40px;margin-bottom:10px">💤</div>
+      <h3 style="margin:0 0 8px">No earnings yet</h3>
+      <p style="color:var(--text-2);margin:0 0 20px">Fee earnings start once you're an approved validator.</p>
+      <button class="btn-primary" onclick="switchTab('validator')">Become a Validator</button>
+    </div>
+  </section>
+
+  <!-- ── Tab: Packages (v8) — admin staking packages for ACTIVE validators ── -->
+  <section id="tab-packages">
+    <h1>Staking packages</h1>
+    <p class="lead">Admin-published packages let approved validators stake more ELN — growing the pool (the tier basis) and earning the package APR, accrued daily and claimable any time. <b>One package at a time</b>: top-ups re-lock the same term; switching needs the current term to end.</p>
+
+    <div id="pkg-lock-note" class="card" style="display:none;border:1px solid rgba(245,158,11,.35);background:rgba(245,158,11,.06)">
+      <div style="display:flex;gap:14px;align-items:center">
+        <div style="font-size:22px;color:var(--warn)"><i class="fa-solid fa-lock"></i></div>
+        <div style="color:var(--text-2)">Packages are shown read-only — <b>only admin-approved validators can stake into packages</b>. Apply on the <a href="javascript:switchTab('validator')">Become a Validator</a> tab first.</div>
+      </div>
+    </div>
+
+    <div class="card" style="padding:0">
+      <table>
+        <thead>
+          <tr><th>Package</th><th>Min. amount</th><th>Lock</th><th>APR</th><th>Early withdraw</th><th>Action</th></tr>
+        </thead>
+        <tbody id="pkg-rows">
+          <tr><td colspan="6" class="empty">Loading packages…</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div id="pkg-msg" style="margin-top:6px;font-size:14px"></div>
+  </section>
+
+  <!-- ── Tab: My Node ── -->
+  <section id="tab-node">
+    <h1>My node</h1>
+    <p class="lead">Your RPC endpoint and custom domain.</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">RPC endpoint</h3>
+      <p style="color:var(--text-2)">Other applications connect to your node at this URL.</p>
+      <div style="display:flex;gap:8px;align-items:stretch;margin-top:12px">
+        <code id="node-rpc-url" style="flex:1;padding:14px;background:var(--surface-alt);border-radius:12px;font-size:14px;word-break:break-all">—</code>
+        <button class="btn-secondary" style="white-space:nowrap" onclick="copyToClipboard('node-rpc-url', this)">Copy</button>
+      </div>
+    </div>
+
+    <!-- v7.11.16 — Custom-domain controls moved to the main admin
+         dashboard. ONE domain is configured per node (in /admin →
+         Settings) and serves all three views through path prefixes:
+           https://<domain>/admin    — full admin wizard
+           https://<domain>/manager  — simple admin (Nodes / Send / etc.)
+           https://<domain>/node     — this operator portal
+         The JSON-RPC keeps the same /rpc suffix as before. Setting a
+         domain in two places at once was confusing and prone to drift,
+         so the per-node domain card is removed here. -->
+    <div class="card" style="background:var(--surface-alt)">
+      <h3 style="margin-top:0">Custom domain</h3>
+      <p style="color:var(--text-2)">Custom-domain setup moved to the main admin dashboard. On this node, open <code>/admin</code> → <b>Settings</b> and set the public host there. Once Caddy provisions the certificate, this Operator Portal will also be reachable at <code>https://&lt;your-domain&gt;/node</code>, and the simple admin panel at <code>https://&lt;your-domain&gt;/manager</code>.</p>
+    </div>
+  </section>
+
+</main>
+
+<script>
+// ── State ──────────────────────────────────────────────────────────────
+const S = {
+  config: null,
+  address: null,
+  provider: null,         // EIP-1193 (window.ethereum) or 'local-pk'
+  privateKey: null,       // only when user picks pk fallback
+  pollHandles: {},
+};
+
+const $ = id => document.getElementById(id);
+
+// UX guard — true while the user is typing in a field or has text selected.
+// Poll-driven re-renders (innerHTML / input.value rewrites) MUST skip their
+// DOM writes while this is true, otherwise focus is stolen and selections
+// are wiped every tick. User-initiated refreshes still render immediately.
+function uiBusy(container) {
+  const ae = document.activeElement;
+  if (ae && (ae.tagName === 'INPUT' || ae.tagName === 'TEXTAREA' || ae.tagName === 'SELECT')
+      && (!container || container.contains(ae))) return true;
+  const sel = window.getSelection && window.getSelection();
+  if (sel && !sel.isCollapsed && String(sel).length) return true;
+  return false;
+}
+
+// ── Boot ───────────────────────────────────────────────────────────────
+// v7.11.6 — wallet auto-reconnect removed. Sign-in is key-file only so
+// the operator dashboard always has the validator private key on the
+// server, which is required to sign relayer-attestations for every
+// user tx flowing through this node's RPC.
+// v7.11.7 — show the "Create new key file" button only when the node
+// is still un-configured. Once a key has been bound to this node, the
+// only valid action is to reopen with the SAME key.
+(async function boot() {
+  try {
+    S.config = await (await fetch('/api/operator/config')).json();
+    // Hide the create-key button if this node already has a validator
+    // address on file. Reachable on the operator's own dashboard via the
+    // /api/proxy passthrough to :3000.
+    try {
+      const st = await fetch('/api/proxy/api/wizard/status').then(r => r.json());
+      const alreadyConfigured = !!(st && st.configured && st.config && st.config.validatorAddress);
+      const btn = $('btn-create-key');
+      if (btn) btn.style.display = alreadyConfigured ? 'none' : '';
+    } catch {
+      // Pre-install the proxy may 404; default to showing the button.
+      const btn = $('btn-create-key');
+      if (btn) btn.style.display = '';
+    }
+  } catch (e) {
+    showGateError('Failed to load config: ' + e.message);
+  }
+})();
+
+// v7.11.7 — Generate a new key server-side (uses /api/wizard/generate-key
+// which is auth-free pre-install), trigger a browser download of the
+// formatted .txt key file, then sign in with the new key in the same
+// step. UX: one click → file downloads + dashboard opens.
+async function createKeyAndSignIn() {
+  const btn = $('btn-create-key');
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+  try {
+    const r = await fetch('/api/proxy/api/wizard/generate-key', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}',
+    }).then(r => r.json());
+    if (!r || !r.privateKey || !r.address) throw new Error(r?.error || 'generate-key returned no key');
+    const stamp = new Date().toISOString();
+    const text = [
+      '# Elyon Chain Wallet — Keep this file SAFE. Anyone with these contents controls the wallet.',
+      '# Generated: ' + stamp,
+      '# Role: operator',
+      '#',
+      '# Use the dashboard\'s "Open with key file" login (or paste PrivateKey directly) to sign in.',
+      '',
+      'Address: '    + r.address,
+      'PublicKey: (derive from PrivateKey)',
+      'PrivateKey: ' + r.privateKey,
+    ].join('\n');
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url;
+    a.download = 'elyon-operator-' + r.address.slice(2, 10) + '.txt';
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 5000);
+    // Sign in with the freshly generated key
+    S.privateKey = r.privateKey;
+    finishConnect(r.address, 'local-pk');
+  } catch (e) {
+    showGateError('Could not create key: ' + (e.message || e));
+    if (btn) { btn.disabled = false; btn.textContent = 'Create new key file'; }
+  }
+}
+
+function showGateError(msg) {
+  const el = $('gate-error');
+  el.style.display = ''; el.textContent = msg;
+}
+
+// v7.11.6 — connectWallet() removed. Operator panel is key-file-only.
+
+function showPrivateKeyDialog() {
+  $('pk-dialog').style.display = 'flex';
+  // Wire drag-and-drop on the file-drop area, once.
+  const drop = $('op-file-drop');
+  if (drop && !drop._wired) {
+    drop._wired = true;
+    ['dragenter','dragover'].forEach(ev => drop.addEventListener(ev, e => {
+      e.preventDefault(); e.stopPropagation();
+      drop.style.borderColor = 'var(--accent)';
+      drop.style.background  = 'rgba(0,113,227,.08)';
+    }));
+    ['dragleave','drop'].forEach(ev => drop.addEventListener(ev, e => {
+      e.preventDefault(); e.stopPropagation();
+      drop.style.borderColor = 'var(--border)';
+      drop.style.background  = 'var(--surface-alt)';
+    }));
+    drop.addEventListener('drop', e => {
+      const f = e.dataTransfer.files[0];
+      if (f) readKeyFile(f);
+    });
+  }
+}
+function hidePrivateKeyDialog() { $('pk-dialog').style.display = 'none'; }
+function showPkError(msg) { const el = $('pk-error'); if (el) { el.style.display = ''; el.textContent = msg; } }
+
+function onOpKeyFileSelected(e) {
+  const f = e.target.files[0];
+  if (f) readKeyFile(f);
+}
+
+function parseKeyFileText(text) {
+  if (!text) return null;
+  const trimmed = text.trim();
+  if (/^(?:0x)?[0-9a-fA-F]{64}$/.test(trimmed)) {
+    return { privateKey: trimmed.startsWith('0x') ? trimmed : '0x' + trimmed };
+  }
+  const out = {};
+  for (const line of text.split(/\r?\n/)) {
+    const m = line.match(/^\s*([A-Za-z]+)\s*:\s*(.+?)\s*$/);
+    if (!m) continue;
+    const k = m[1].toLowerCase(), v = m[2].trim();
+    if (k === 'privatekey') out.privateKey = v.startsWith('0x') ? v : '0x' + v;
+    else if (k === 'address') out.address = v;
+  }
+  return out.privateKey ? out : null;
+}
+
+function readKeyFile(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    const parsed = parseKeyFileText(reader.result);
+    if (!parsed?.privateKey) {
+      showPkError('Could not parse a private key from that file.');
+      return;
+    }
+    S.privateKey = parsed.privateKey;
+    S.provider   = 'local-pk';
+    if (parsed.address) {
+      hidePrivateKeyDialog();
+      finishConnect(parsed.address, 'local-pk');
+      return;
+    }
+    // No address in file — derive it via backend.
+    fetch('/api/proxy/api/wizard/derive-address', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: S.privateKey }),
+    }).then(r => r.json()).then(j => {
+      if (j.address) { hidePrivateKeyDialog(); finishConnect(j.address, 'local-pk'); }
+      else showPkError('Address derivation failed: ' + (j.error || 'unknown'));
+    }).catch(e => showPkError('Network error: ' + e.message));
+  };
+  reader.onerror = () => showPkError('Failed to read file.');
+  reader.readAsText(file);
+}
+
+async function finishConnect(address, provider) {
+  const addr = address.toLowerCase();
+  // v7.9.2 — node identity check. Once the node has been configured to an
+  // address, only that address may sign in. Without this, a second user
+  // could upload their own key file on the same VM and operate a node
+  // that's not theirs.
+  try {
+    const st = await fetch('/api/proxy/api/wizard/status').then(r => r.json()).catch(() => null);
+    const cfgAddr = (st?.config?.validatorAddress || '').toLowerCase();
+    if (st?.configured && cfgAddr && cfgAddr !== addr) {
+      // Reset state — sign in refused.
+      S.address = null; S.provider = null; S.privateKey = null;
+      $('gate').style.display = '';
+      $('topnav').style.display = 'none';
+      $('appmain').style.display = 'none';
+      showGateError('This node is bound to ' + cfgAddr.slice(0,10) + '…' + cfgAddr.slice(-4)
+        + '. Use that account\'s key file or wallet to sign in.');
+      return;
+    }
+  } catch {}
+  S.address  = addr;
+  S.provider = provider;
+  $('gate').style.display = 'none';
+  $('topnav').style.display = '';
+  $('appmain').style.display = '';
+  $('wallet-addr').textContent = address.slice(0,6) + '…' + address.slice(-4);
+  // v8 — the full address lives in the copyable card inside the
+  // Become-a-Validator hero, populated by bootValidator().
+  bootExplorer();
+  bootValidator();
+  // My Node tab — show the right RPC URL depending on how the user
+  // reached this page. v7.11.16+ Caddy fronts a single domain at
+  // https://<domain>/{admin,manager,node} + https://<domain>/rpc; only
+  // plain-HTTP / direct-IP access uses the raw :8545 port.
+  if ($('node-rpc-url')) {
+    const usesCaddy = location.protocol === 'https:' || location.port === '' || location.port === '80' || location.port === '443';
+    $('node-rpc-url').textContent = usesCaddy
+      ? (location.protocol + '//' + location.hostname + '/rpc')
+      : (location.protocol + '//' + location.hostname + ':8545');
+  }
+  // v7.9.1 — after login, spin up the local node automatically. The
+  // sync runs in the background; the dashboard is usable immediately
+  // (Explorer + Balance query the admin RPC until our own node catches
+  // up). Once /api/proxy/api/wizard/status reports nodeRunning, our
+  // RPC at http://<this-host>:8545 starts serving the user's own
+  // private endpoint.
+  setupLocalNode().catch(e => console.warn('[operator] node setup failed:', e.message));
+}
+
+let _localNodeBootStarted = false;
+async function setupLocalNode() {
+  if (_localNodeBootStarted) return;
+  _localNodeBootStarted = true;
+  setNodeStatus('checking');
+  try {
+    const st = await fetch('/api/proxy/api/wizard/status').then(r => r.json()).catch(() => null);
+    if (st?.configured && st?.nodeRunning) {
+      // v7.9.6 — refresh-from-admin requires auth (the node is in
+      // protected mode once it has a validatorAddress). Sign in first
+      // via the operator's private key, then call refresh with the
+      // returned bearer token. Without this the backfill 401'd
+      // silently and aposRegistry stayed null, breaking stake.
+      const cfg = st.config || {};
+      if ((!cfg.aposRegistry || !cfg.stakingContract) && S.privateKey) {
+        try {
+          const login = await fetch('/api/proxy/api/auth/key-login', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ privateKey: S.privateKey }),
+          }).then(r => r.json());
+          if (login.token) {
+            S.localToken = login.token;
+            await fetch('/api/proxy/api/wizard/operator/refresh-from-admin', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + login.token },
+              body: JSON.stringify({
+                adminBootstrapUrl: (await fetch('/api/operator/config').then(r => r.json())).adminUrl,
+              }),
+            });
+          }
+        } catch (e) { console.warn('[operator] APOS backfill failed:', e.message); }
+      }
+      setNodeStatus('running');
+      return;
+    }
+    // Pull chainspec + admin enode from upstream admin.
+    setNodeStatus('fetching');
+    const boot = await fetch('/api/admin-proxy/api/wizard/bootstrap').then(r => r.json());
+    if (!boot?.chainspec || !boot?.adminEnode) {
+      setNodeStatus('admin offline');
+      return;
+    }
+    // Trigger local connect. Body matches /api/wizard/connect:
+    //   enodeUrl, chainspecJson, privateKey (optional), adminBootstrapUrl
+    setNodeStatus('starting');
+    const body = {
+      enodeUrl: boot.adminEnode,
+      chainspecJson: JSON.stringify(boot.chainspec),
+      adminBootstrapUrl: (await fetch('/api/operator/config').then(r => r.json())).adminUrl,
+      // v7.9.5 — inherit APOS addresses so the operator can later call
+      // applyAsValidator / stake into packages without a separate refresh.
+      stakingContract: boot.stakingContract || undefined,
+      aposRegistry:    boot.aposRegistry    || undefined,
+      minGasPriceWei:  boot.minGasPriceWei  || undefined,
+      privateKey: S.privateKey || undefined,
+      startNode: true,
+    };
+    const r = await fetch('/api/proxy/api/wizard/connect', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    }).then(r => r.json());
+    if (r.error) { setNodeStatus('error: ' + r.error); return; }
+    setNodeStatus('syncing');
+    // Poll for sync progress
+    pollNodeProgress();
+  } catch (e) {
+    setNodeStatus('error: ' + e.message);
+  }
+}
+
+async function pollNodeProgress() {
+  for (let i = 0; i < 600; i++) { // up to ~30 min
+    await new Promise(r => setTimeout(r, 3000));
+    try {
+      const s = await fetch('/api/proxy/api/wizard/sync-status').then(r => r.json()).catch(() => null);
+      if (!s) continue;
+      if (s.isSynced) { setNodeStatus('running'); return; }
+      if (s.syncing && s.knownTarget) {
+        const pct = s.progress != null ? s.progress + '%' : (s.currentBlock + '/' + s.highestBlock);
+        setNodeStatus('syncing ' + pct);
+      }
+    } catch {}
+  }
+}
+
+function setNodeStatus(text) {
+  const el = $('net-pill');
+  if (!el) return;
+  el.textContent = text === 'running' ? 'Node: live' : 'Node: ' + text;
+  el.style.background = text === 'running' ? 'rgba(52,199,89,.15)' : 'rgba(255,159,10,.15)';
+  el.style.color      = text === 'running' ? 'var(--success)'      : 'var(--warn)';
+}
+
+function disconnectWallet() {
+  S.address = null; S.provider = null; S.privateKey = null;
+  $('gate').style.display = '';
+  $('topnav').style.display = 'none';
+  $('appmain').style.display = 'none';
+  Object.values(S.pollHandles).forEach(h => clearInterval(h));
+  S.pollHandles = {};
+}
+
+// ── Tabs ───────────────────────────────────────────────────────────────
+function switchTab(t) {
+  document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === t));
+  document.querySelectorAll('section').forEach(el => el.classList.toggle('active', el.id === 'tab-' + t));
+  // v8 — validator + earnings render off the same validator-info read;
+  // packages re-read the admin package list. All are safe pre-sign-in
+  // (they short-circuit without S.address).
+  if (t === 'validator' || t === 'earnings') refreshValidator();
+  if (t === 'packages') { refreshPackages(); refreshValidator(); }
+}
+
+// ── Explorer ───────────────────────────────────────────────────────────
+async function bootExplorer() {
+  if (S.pollHandles.explorer) return;
+  await refreshExplorer();
+  // v8 — every poll tick refreshes blocks AND the validator state /
+  // balance / package list, so admin approval (PENDING → ACTIVE), fresh
+  // delegations and accrued fees all surface live without a reload.
+  S.pollHandles.explorer = setInterval(async () => {
+    if (uiBusy()) return; // don't steal focus / wipe selection mid-edit
+    await refreshExplorer();
+    if (S.address) {
+      refreshBalance().catch(() => {});
+      refreshValidator().catch(() => {});
+      refreshPackages().catch(() => {});
+    }
+  }, 5000);
+}
+async function refreshExplorer() {
+  try {
+    // The local main dashboard exposes /api/blocks/recent? Falls back to RPC.
+    const r = await fetch('/api/proxy/api/blocks/latest?limit=100');
+    if (r.ok) {
+      const j = await r.json();
+      renderBlocks(j.blocks || []);
+      return;
+    }
+  } catch {}
+  // RPC fallback: ask current block, fetch last 100 sequentially (slower).
+  try {
+    const tip = await rpc('eth_blockNumber', []);
+    const tipN = parseInt(tip, 16);
+    const rows = [];
+    for (let i = 0; i < 25 && tipN - i >= 0; i++) {
+      const b = await rpc('eth_getBlockByNumber', ['0x' + (tipN - i).toString(16), false]);
+      if (b) rows.push({
+        number: parseInt(b.number, 16),
+        hash: b.hash,
+        miner: b.miner,
+        txCount: (b.transactions || []).length,
+        timestamp: parseInt(b.timestamp, 16),
+      });
+    }
+    renderBlocks(rows);
+  } catch (e) {
+    $('explorer-rows').innerHTML = '<tr><td colspan="5" class="empty">RPC error: ' + e.message + '</td></tr>';
+  }
+}
+function renderBlocks(blocks) {
+  if (!blocks.length) {
+    $('explorer-rows').innerHTML = '<tr><td colspan="5" class="empty">No blocks yet.</td></tr>';
+    return;
+  }
+  // Memoize on the block data — skip the rewrite when nothing changed so
+  // text selections in the table survive idle polls.
+  const sig = JSON.stringify(blocks.map(b => [b.number, b.hash, b.txCount]));
+  if ($('explorer-rows').dataset.sig === sig) return;
+  $('explorer-rows').dataset.sig = sig;
+  $('explorer-rows').innerHTML = blocks.map(b => `
+    <tr>
+      <td><b>#${b.number}</b></td>
+      <td class="mono">${(b.hash || '').slice(0,12)}…${(b.hash || '').slice(-6)}</td>
+      <td class="mono">${(b.miner || '').slice(0,10)}…${(b.miner || '').slice(-4)}</td>
+      <td>${b.txCount}</td>
+      <td style="color:var(--text-3)">${timeAgo(b.timestamp)}</td>
+    </tr>
+  `).join('');
+}
+function timeAgo(ts) {
+  const s = Math.floor(Date.now()/1000 - ts);
+  if (s < 60)  return s + 's ago';
+  if (s < 3600) return Math.floor(s/60) + 'm ago';
+  return Math.floor(s/3600) + 'h ago';
+}
+async function rpc(method, params) {
+  // v7.9.0 — query the admin node, NOT the local node. The local node may
+  // not be configured yet (operator hasn't joined the network); the admin
+  // is the source of truth for chain state, balances, blocks.
+  const r = await fetch('/api/admin-proxy/api/rpc', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({ jsonrpc:'2.0', method, params, id:1 }),
+  }).then(r => r.json());
+  if (r.error) throw new Error(r.error.message || JSON.stringify(r.error));
+  return r.result;
+}
+
+// v7.10.4 — generic button-loading helper. Disables the button, replaces
+// its label with a spinner + custom text, runs the action, restores the
+// original label whether it succeeds or throws.
+async function withLoading(btn, label, fn) {
+  if (!btn) return fn();
+  const orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.dataset.loading = '1';
+  btn.innerHTML = '<span class="btn-spin"></span>' + label;
+  try { return await fn(); }
+  finally {
+    btn.disabled = false;
+    btn.dataset.loading = '0';
+    btn.innerHTML = orig;
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════
+// v9 — ONE-POOL model.
+//   The operator running this node applies as a VALIDATOR by staking ELN
+//   (>= minValidatorStake) into the APOS registry. The admin approves and
+//   issues a unique public APOS code. The admin-set tier curve maps the
+//   ONE POOL (selfStake + delegatedTotal — delegator deposits count
+//   directly) → gas-fee share %. Package APR accrues DAILY on the
+//   validator's own stake and is claimable any time. The validator
+//   publishes an on-chain DELEGATOR RATE (capped at the package APR);
+//   each deposit creates a position that grandfathers that rate.
+// Endpoints (same /api/proxy + /api/admin-proxy conventions as the rest
+// of this panel — local node first for writes, admin fallback for reads):
+//   GET  /api/apos/validator/:addr                → status/code/pool/tier/rate/accrued
+//   POST /api/apos/validator/apply                {privateKey, packageId, stakeEther}
+//   POST /api/apos/validator/withdraw-stake       {privateKey}
+//   POST /api/apos/validator/withdraw-fees        {privateKey}
+//   POST /api/apos/validator/claim-profit         {privateKey}
+//   POST /api/apos/validator/set-rate             {privateKey, ratePct}
+//   GET  /api/apos/packages
+//   POST /api/apos/validator/stake-package        {privateKey, packageId, amountEther}  (top-up: same package only)
+//   POST /api/apos/validator/select-package       {privateKey, packageId}               (only after the term ends)
+// ═══════════════════════════════════════════════════════════════════════
+
+// Index 5 = BELOW_MIN: the POOL fell under the network minimum — earnings
+// paused until it refills (then the contract auto-restores ACTIVE).
+const VAL_PILL_CLS   = ['vpill-none','vpill-pending','vpill-active','vpill-rejected','vpill-suspended','vpill-belowmin'];
+const VAL_PILL_LABEL = ['Not applied','Pending','Active','Rejected','Suspended','Below min'];
+
+// Wei → ELN display: /1e18, ≤4 decimals, thousands separators.
+function elnNum(w) {
+  try { return Number(BigInt(String(w ?? '0')) / 10n**14n) / 1e4; } catch { return 0; }
+}
+function fmtEln(w) {
+  return elnNum(w).toLocaleString('en-US', { maximumFractionDigits: 4 });
+}
+function fmtBps(b) {
+  return (Number(b || 0) / 100).toLocaleString('en-US', { maximumFractionDigits: 2 }) + '%';
+}
+const escHtml = s => String(s).replace(/[&<>"']/g, c =>
+  ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+
+// Count-up animation. Skips when the value is unchanged so the 5s poll
+// doesn't re-trigger; eases out over ~0.9s when it does change.
+function animateCount(el, target, maxDec) {
+  if (!el) return;
+  const fmt = v => v.toLocaleString('en-US', { maximumFractionDigits: maxDec });
+  if (el._cuVal === target) return;
+  const from = el._cuVal || 0;
+  el._cuVal = target;
+  cancelAnimationFrame(el._cuRaf || 0);
+  const t0 = performance.now(), dur = 900;
+  const step = t => {
+    const k = Math.min(1, (t - t0) / dur);
+    const e = 1 - Math.pow(1 - k, 3);
+    el.textContent = fmt(k < 1 ? from + (target - from) * e : target);
+    if (k < 1) el._cuRaf = requestAnimationFrame(step);
+  };
+  el._cuRaf = requestAnimationFrame(step);
+}
+const countUpEln = (el, wei) => animateCount(el, elnNum(wei), 4);
+const countUpNum = (el, n)   => animateCount(el, Number(n || 0), 0);
+
+// GET helper — prefer this node's own backend; fall back to the admin
+// (the local node may not have the APOS registry configured yet).
+async function aposGet(path) {
+  try {
+    const r = await fetch('/api/proxy' + path);
+    if (r.ok) {
+      const j = await r.json();
+      const emptyLocal = Array.isArray(j) && j.length === 0; // local "no registry" → []
+      if (j && !j.error && j.deployed !== false && !emptyLocal) return j;
+    }
+  } catch {}
+  return fetch('/api/admin-proxy' + path).then(r => r.json());
+}
+
+// POST helper — the local node signs + broadcasts (key-file flow, same as
+// every other signed action on this panel). Retry via the admin proxy
+// only when the local node clearly couldn't take the tx at all.
+async function aposPost(path, body) {
+  const opts = {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body),
+  };
+  let r = await fetch('/api/proxy' + path, opts)
+    .then(r => r.json())
+    .catch(e => ({ error: 'local node unavailable: ' + (e.message || e) }));
+  if (r && r.error && /no registry deployed|local node unavailable|unexpected token|not found/i.test(String(r.error))) {
+    try { r = await fetch('/api/admin-proxy' + path, opts).then(r => r.json()); }
+    catch (e) { r = { error: e.message || String(e) }; }
+  }
+  return r || { error: 'empty response' };
+}
+
+function actionMsg(id, html, ok) {
+  const el = $(id);
+  if (el) el.innerHTML = '<span style="color:' + (ok ? 'var(--success)' : 'var(--danger)') + '">' + html + '</span>';
+}
+
+// ── Become a Validator ─────────────────────────────────────────────────
+async function bootValidator() {
+  if ($('val-addr-full')) $('val-addr-full').textContent = S.address;
+  await refreshBalance();
+  await refreshValidator();
+  await refreshPackages();
+}
+
+async function refreshBalance() {
+  try {
+    const bal = await rpc('eth_getBalance', [S.address, 'latest']);
+    $('val-balance').textContent = fmtEln(BigInt(bal).toString()) + ' ELN';
+  } catch {
+    $('val-balance').textContent = 'error';
+  }
+}
+
+async function refreshValidator() {
+  if (!S.address) return;
+  let v = null;
+  try { v = await aposGet('/api/apos/validator/' + S.address); } catch (e) { v = { error: e.message }; }
+  if (!v || v.error || v.deployed === false) {
+    const el = $('val-loading');
+    if (el) {
+      el.style.display = '';
+      el.textContent = (v && v.error)
+        ? 'Could not read validator state: ' + v.error
+        : 'The APOS registry is not deployed on this chain yet — check back soon.';
+    }
+    ['val-apply','val-pending','val-active','val-ended'].forEach(id => { const e = $(id); if (e) e.style.display = 'none'; });
+    return;
+  }
+  S.validator = v;
+  renderValidatorState(v);
+  renderEarnings(v);
+  if (window._lastPackages) renderPackages(window._lastPackages);
+}
+
+function statusPillHtml(st) {
+  const cls   = VAL_PILL_CLS[st]   || VAL_PILL_CLS[0];
+  const label = VAL_PILL_LABEL[st] || '—';
+  return '<span class="vpill ' + cls + '"><span class="dot"></span>' + label + '</span>';
+}
+
+let _valStatusPrev = null;
+function renderValidatorState(v) {
+  const st = Number(v.status || 0);
+  if ($('val-loading')) $('val-loading').style.display = 'none';
+  $('val-status-pill').innerHTML = statusPillHtml(st);
+  $('val-min-stake').textContent = fmtEln(v.minValidatorStakeWei) + ' ELN';
+
+  // Animate the state card in only when the status actually changes —
+  // PENDING → ACTIVE gets its entrance moment, polls stay quiet.
+  const changed = _valStatusPrev !== st;
+  _valStatusPrev = st;
+  // BELOW_MIN (5) reuses the active card: the pool view + package staking
+  // stay visible so the operator can refill and auto-recover.
+  const cardFor = { 0: 'val-apply', 1: 'val-pending', 2: 'val-active', 3: 'val-ended', 4: 'val-ended', 5: 'val-active' };
+  ['val-apply','val-pending','val-active','val-ended'].forEach(id => {
+    const el = $(id); if (!el) return;
+    const on = cardFor[st] === id;
+    el.style.display = on ? '' : 'none';
+    if (on && changed) { el.classList.remove('vcard-in'); void el.offsetWidth; el.classList.add('vcard-in'); }
+  });
+
+  if (st === 0) {            // NOT APPLIED
+    $('val-apply-min').textContent = fmtEln(applyFloorWei().toString());
+    const amt = $('val-apply-amt');
+    if (amt && !amt.value) amt.value = elnNum(applyFloorWei().toString()) || '';
+  } else if (st === 1) {     // PENDING
+    $('val-pending-stake').textContent = fmtEln(v.selfStakeWei) + ' ELN';
+  } else if (st === 2 || st === 5) { // ACTIVE / BELOW_MIN (shared card)
+    $('val-active-pill').innerHTML = statusPillHtml(st);
+    if ($('val-active-title')) $('val-active-title').textContent = st === 5
+      ? 'Stake below the network minimum ⚠️'
+      : "You're validating Elyon Chain 🎉";
+    if ($('val-belowmin-note')) $('val-belowmin-note').style.display = st === 5 ? '' : 'none';
+    $('val-code').textContent = v.code || '—';
+    // v9 ONE POOL: pool = your stake + delegator deposits (drives the tier).
+    const stakeWei = v.stakeWei != null ? v.stakeWei : (v.selfStakeWei || '0');
+    const delWei   = v.delegatedTotalWei || '0';
+    let totalWei = v.poolWei || '0';
+    try { totalWei = (BigInt(stakeWei) + BigInt(delWei)).toString(); } catch {}
+    countUpEln($('va-self'), stakeWei);
+    countUpEln($('va-del'),  delWei);
+    countUpEln($('va-pool'), totalWei);
+    countUpNum($('va-delcount'), v.delegatorCount);
+    $('va-apr').textContent = fmtBps(v.aprBps);
+    $('va-gas').textContent = fmtBps(v.gasShareBps);
+    // v9 — daily profit accrual + delegator rate cards.
+    countUpEln($('va-accrued'), v.accruedProfitWei || '0');
+    if ($('va-rate-now')) $('va-rate-now').textContent = fmtBps(v.delegatorRateBps || 0) + ' per year';
+    if ($('va-rate-cap')) {
+      const pk = (window._lastPackages || []).find(x => Number(x.id) === Number(v.selectedPackageId));
+      $('va-rate-cap').textContent = pk ? fmtBps(pk.aprBps) : '—';
+    }
+    // Animated composition bar — your stake vs delegations inside the pool.
+    let stakePct = 100;
+    try {
+      const total = BigInt(totalWei);
+      if (total > 0n) stakePct = Number(BigInt(stakeWei) * 1000n / total) / 10;
+    } catch {}
+    $('va-bar-self').style.width = stakePct + '%';
+    $('va-bar-del').style.width  = (100 - stakePct).toFixed(1) + '%';
+    $('va-legend-self').textContent = 'Your stake — ' + fmtEln(stakeWei) + ' ELN (' + stakePct.toFixed(1) + '%)';
+    $('va-legend-del').textContent  = 'Delegations — ' + fmtEln(delWei) + ' ELN (' + (100 - stakePct).toFixed(1) + '%)';
+  } else {                   // REJECTED / SUSPENDED
+    $('val-ended-pill').innerHTML = statusPillHtml(st);
+    $('val-ended-text').textContent = st === 3
+      ? 'Your validator application was rejected by the admin. Withdraw your stake below — you can apply again later.'
+      : 'Your validator has been suspended by the admin. You can withdraw your remaining stake below.';
+    $('val-ended-stake').textContent = fmtEln(v.selfStakeWei) + ' ELN';
+  }
+}
+
+// v8.1 — applying goes THROUGH a staking package. The picker lists the
+// admin's active packages; the stake floor is max(minValidatorStake,
+// package.minAmount) and the stake locks for the package term.
+function applyFloorWei() {
+  const sel = $('val-apply-pkg');
+  const p = (window._lastPackages || []).find(x => String(x.id) === String(sel && sel.value));
+  let floor = 0n;
+  try { floor = BigInt(S.validator?.minValidatorStakeWei || '0'); } catch {}
+  try { const pm = BigInt((p && p.minAmountWei) || '0'); if (pm > floor) floor = pm; } catch {}
+  return floor;
+}
+
+function onApplyPkgChange() {
+  const floor = applyFloorWei();
+  const floorEln = elnNum(floor.toString());
+  const amt = $('val-apply-amt');
+  if (amt) {
+    amt.min = floorEln || 0;
+    if (!amt.value || parseFloat(amt.value) < floorEln) amt.value = floorEln || '';
+  }
+  if ($('val-apply-min')) $('val-apply-min').textContent = fmtEln(floor.toString());
+  const hint = $('val-apply-pkg-hint');
+  if (!hint) return;
+  const sel = $('val-apply-pkg');
+  const p = (window._lastPackages || []).find(x => String(x.id) === String(sel && sel.value));
+  hint.textContent = p
+    ? 'Minimum stake for "' + (p.name || ('Package ' + p.id)) + '": ' + fmtEln(floor.toString()) +
+      ' ELN — locks ' + Math.round(Number(p.lockSeconds || 0) / 86400) + ' days at ' + fmtBps(p.aprBps) + ' APR.'
+    : '';
+}
+
+// Rebuild the apply-card package picker only when the package list actually
+// changes (the 5s poll must not wipe the user's selection).
+function updateApplyPkgPicker(pkgs) {
+  const sel = $('val-apply-pkg');
+  if (!sel) return;
+  const live = (pkgs || []).filter(p => p.active !== false);
+  const sig = JSON.stringify(live.map(p => [p.id, p.name, p.minAmountWei, p.lockSeconds, p.aprBps]));
+  if (sel._sig === sig) return;
+  sel._sig = sig;
+  const prev = sel.value;
+  if (!live.length) {
+    sel.innerHTML = '<option value="">No active packages yet — the admin must publish one first</option>';
+    onApplyPkgChange();
+    return;
+  }
+  sel.innerHTML = live.map(p => {
+    const lockDays = Math.round(Number(p.lockSeconds || 0) / 86400);
+    return '<option value="' + Number(p.id) + '">' + escHtml(p.name || ('Package ' + p.id)) +
+           ' — min ' + fmtEln(p.minAmountWei) + ' ELN · ' + lockDays + 'd lock · ' + fmtBps(p.aprBps) + ' APR</option>';
+  }).join('');
+  if (prev && live.some(p => String(p.id) === String(prev))) sel.value = prev;
+  onApplyPkgChange();
+}
+
+async function applyAsValidator() {
+  if (!S.privateKey) {
+    actionMsg('val-apply-msg', 'Applying requires the key-file login. Sign out and reopen with "Open with key file".', false);
+    return;
+  }
+  const sel = $('val-apply-pkg');
+  const pkgId = parseInt((sel && sel.value) || '0');
+  if (!pkgId) { actionMsg('val-apply-msg', 'Pick a staking package first — applying stakes through a package.', false); return; }
+  const amt = parseFloat($('val-apply-amt').value || '0');
+  if (!(amt > 0)) { actionMsg('val-apply-msg', 'Enter a stake amount greater than 0.', false); return; }
+  const floorWei = applyFloorWei();
+  const min = elnNum(floorWei.toString());
+  if (min && amt < min) {
+    actionMsg('val-apply-msg', 'Minimum stake for this package is ' + fmtEln(floorWei.toString()) + ' ELN (max of network minimum and package minimum).', false);
+    return;
+  }
+  const p = (window._lastPackages || []).find(x => Number(x.id) === pkgId) || {};
+  const lockDays = Math.round(Number(p.lockSeconds || 0) / 86400);
+  if (!confirm('Stake ' + amt + ' ELN into "' + (p.name || ('Package ' + pkgId)) + '" and apply as a validator? Your stake locks for ' + lockDays + ' days and is held by the registry until you withdraw.')) return;
+  const r = await aposPost('/api/apos/validator/apply', { privateKey: S.privateKey, stakeEther: amt, packageId: pkgId });
+  if (r.error) { actionMsg('val-apply-msg', 'Apply failed: ' + escHtml(r.error), false); return; }
+  actionMsg('val-apply-msg', '✅ Application submitted — tx ' + escHtml((r.txHash || '').slice(0, 18)) + '… Now awaiting admin approval.', true);
+  setTimeout(() => { refreshValidator(); refreshBalance(); }, 2500);
+}
+
+async function withdrawValStake() {
+  if (!S.privateKey) { actionMsg('val-ended-msg', 'Requires the key-file login.', false); return; }
+  if (!confirm('Withdraw your validator stake back to your wallet?')) return;
+  const r = await aposPost('/api/apos/validator/withdraw-stake', { privateKey: S.privateKey });
+  if (r.error) { actionMsg('val-ended-msg', 'Withdraw failed: ' + escHtml(r.error), false); return; }
+  actionMsg('val-ended-msg', '✅ Stake withdrawn — tx ' + escHtml((r.txHash || '').slice(0, 18)) + '…', true);
+  setTimeout(() => { refreshValidator(); refreshBalance(); }, 2500);
+}
+
+// v9 — claim the daily-accrued package-APR profit (any time).
+async function claimValProfit() {
+  if (!S.privateKey) { actionMsg('va-claim-msg', 'Requires the key-file login.', false); return; }
+  try {
+    if (BigInt(S.validator?.accruedProfitWei || '0') === 0n) {
+      actionMsg('va-claim-msg', 'Nothing accrued yet — profit grows every second on your staked balance.', false);
+      return;
+    }
+  } catch {}
+  const r = await aposPost('/api/apos/validator/claim-profit', { privateKey: S.privateKey });
+  if (r.error) { actionMsg('va-claim-msg', 'Claim failed: ' + escHtml(r.error), false); return; }
+  actionMsg('va-claim-msg', '✅ Profit claimed' + (r.claimedWei ? ' (' + fmtEln(r.claimedWei) + ' ELN)' : '') + ' — tx ' + escHtml((r.txHash || '').slice(0, 18)) + '…', true);
+  setTimeout(() => { refreshValidator(); refreshBalance(); }, 2500);
+}
+
+// v9 — publish the on-chain delegator rate (capped at the package APR;
+// existing positions keep their deposit-time rate).
+async function setDelegatorRate() {
+  if (!S.privateKey) { actionMsg('va-rate-msg', 'Requires the key-file login.', false); return; }
+  const pct = parseFloat(($('va-rate-input') || {}).value);
+  if (!isFinite(pct) || pct < 0) { actionMsg('va-rate-msg', 'Enter the yearly rate (%) you pay delegators.', false); return; }
+  const pk = (window._lastPackages || []).find(x => Number(x.id) === Number(S.validator?.selectedPackageId));
+  if (pk && pct * 100 > Number(pk.aprBps)) {
+    actionMsg('va-rate-msg', 'Rate exceeds your package APR cap (max ' + fmtBps(pk.aprBps) + ').', false);
+    return;
+  }
+  const r = await aposPost('/api/apos/validator/set-rate', { privateKey: S.privateKey, ratePct: pct });
+  if (r.error) { actionMsg('va-rate-msg', 'Set rate failed: ' + escHtml(r.error), false); return; }
+  actionMsg('va-rate-msg', '✅ Rate set to ' + pct + '% — new deposits lock this in. tx ' + escHtml((r.txHash || '').slice(0, 18)) + '…', true);
+  setTimeout(refreshValidator, 2500);
+}
+
+// ── My Earnings ────────────────────────────────────────────────────────
+function renderEarnings(v) {
+  const isVal = Number(v?.status || 0) > 0;
+  if ($('earn-hero'))          $('earn-hero').style.display          = isVal ? '' : 'none';
+  if ($('earn-not-validator')) $('earn-not-validator').style.display = isVal ? 'none' : '';
+  if (!isVal) return;
+  countUpEln($('earn-fees'), v.accumulatedFeesWei);
+  $('earn-share').textContent = Number(v.gasShareBps || 0) ? fmtBps(v.gasShareBps) : '— (set on approval)';
+}
+
+async function withdrawValFees() {
+  if (!S.privateKey) { actionMsg('earn-msg', 'Requires the key-file login.', false); return; }
+  try {
+    if (BigInt(S.validator?.accumulatedFeesWei || '0') === 0n) {
+      actionMsg('earn-msg', 'Nothing to withdraw yet — fees accrue as transactions flow through the chain.', false);
+      return;
+    }
+  } catch {}
+  const r = await aposPost('/api/apos/validator/withdraw-fees', { privateKey: S.privateKey });
+  if (r.error) { actionMsg('earn-msg', 'Withdraw failed: ' + escHtml(r.error), false); return; }
+  actionMsg('earn-msg', '✅ Fees withdrawn to your wallet — tx ' + escHtml((r.txHash || '').slice(0, 18)) + '…', true);
+  setTimeout(() => { refreshValidator(); refreshBalance(); }, 2500);
+}
+
+// ── Packages ───────────────────────────────────────────────────────────
+async function refreshPackages() {
+  try {
+    const j = await aposGet('/api/apos/packages');
+    const pkgs = Array.isArray(j) ? j : (j.packages || []);
+    window._lastPackages = pkgs;
+    renderPackages(pkgs);
+    updateApplyPkgPicker(pkgs);
+  } catch (e) {
+    const el = $('pkg-rows');
+    if (el && !window._lastPackages) {
+      el.innerHTML = '<tr><td colspan="6" class="empty">Could not load packages: ' + escHtml(e.message || e) + '</td></tr>';
+    }
+  }
+}
+
+function renderPackages(pkgs) {
+  const rowsEl = $('pkg-rows');
+  if (!rowsEl) return;
+  // ACTIVE (2) and BELOW_MIN (5) may both stake — staking again is exactly
+  // how a below-min validator recovers its ACTIVE status.
+  const stNow = Number(S.validator?.status || 0);
+  const isActive = stNow === 2 || stNow === 5;
+  const selId = isActive ? Number(S.validator?.selectedPackageId ?? -1) : -1;
+  const note = $('pkg-lock-note');
+  if (note) note.style.display = isActive ? 'none' : '';
+  const live = (pkgs || []).filter(p => p.active !== false);
+  // Re-render only when something changed — otherwise the 5s poll would
+  // wipe whatever amount the validator is typing into a row input.
+  const sig = JSON.stringify([live, isActive, selId]);
+  if (rowsEl._sig === sig) return;
+  rowsEl._sig = sig;
+  if (!live.length) {
+    rowsEl.innerHTML = '<tr><td colspan="6" class="empty">No staking packages published yet. The admin will publish them shortly.</td></tr>';
+    return;
+  }
+  rowsEl.innerHTML = live.map(p => {
+    const id = Number(p.id);
+    const lockDays = Math.round(Number(p.lockSeconds || 0) / 86400);
+    const minEln = fmtEln(p.minAmountWei);
+    const isSel = id === selId;
+    // ONE PACKAGE AT A TIME: top-up only into the selected package (re-locks
+    // the same term); switching to another package needs the term to end.
+    let action;
+    if (!isActive) {
+      action = '<span style="color:var(--text-3)" title="Only admin-approved validators can stake into packages"><i class="fa-solid fa-lock"></i></span>';
+    } else if (isSel || selId <= 0) {
+      action = `<div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+           <input class="pkg-amt" id="pkg-amt-${id}" type="number" min="0" step="any" placeholder="${minEln}" />
+           <button class="btn-primary" style="height:36px;font-size:13px;padding:0 14px;white-space:nowrap" onclick="withLoading(this,'Staking…',()=>stakeIntoPackage(${id}))">${isSel ? 'Top up' : 'Stake'}</button>
+         </div>`;
+    } else {
+      action = `<button class="btn-secondary" style="height:36px;font-size:13px;padding:0 14px;white-space:nowrap" title="One package at a time — switching is possible once your current term has ended" onclick="withLoading(this,'Switching…',()=>selectPackageById(${id}))">Switch (term must end)</button>`;
+    }
+    return `
+      <tr class="${isSel ? 'pkg-selected' : ''}">
+        <td><b>${escHtml(p.name || ('Package ' + id))}</b>${isSel ? ' <span class="badge badge-active">Selected</span>' : ''}</td>
+        <td>${minEln} ELN</td>
+        <td>${lockDays}d</td>
+        <td style="color:var(--accent-2);font-weight:600">${fmtBps(p.aprBps)}</td>
+        <td style="color:var(--text-2);font-size:13px">Locked full term</td>
+        <td>${action}</td>
+      </tr>`;
+  }).join('');
+}
+
+async function stakeIntoPackage(id) {
+  if (!S.privateKey) { actionMsg('pkg-msg', 'Staking requires the key-file login.', false); return; }
+  const p = (window._lastPackages || []).find(x => Number(x.id) === Number(id)) || {};
+  const minEln = elnNum(p.minAmountWei || '0');
+  const inp = $('pkg-amt-' + id);
+  const amt = parseFloat((inp && inp.value) || '') || minEln;
+  if (!(amt > 0)) { actionMsg('pkg-msg', 'Enter an amount greater than 0.', false); return; }
+  if (minEln && amt < minEln) { actionMsg('pkg-msg', 'Minimum for "' + escHtml(p.name || id) + '" is ' + fmtEln(p.minAmountWei) + ' ELN.', false); return; }
+  const lockDays = Math.round(Number(p.lockSeconds || 0) / 86400);
+  if (!confirm('Stake ' + amt + ' ELN into "' + (p.name || id) + '"? Your whole stake re-locks for ' + lockDays + ' days and grows your pool (tier basis). Your package APR keeps accruing daily.')) return;
+  const r = await aposPost('/api/apos/validator/stake-package', { privateKey: S.privateKey, packageId: Number(id), amountEther: amt });
+  if (r.error) { actionMsg('pkg-msg', 'Stake failed: ' + escHtml(r.error), false); return; }
+  if (inp) inp.value = '';
+  actionMsg('pkg-msg', '✅ Staked ' + amt + ' ELN — tx ' + escHtml((r.txHash || '').slice(0, 18)) + '…', true);
+  setTimeout(() => { refreshValidator(); refreshBalance(); refreshPackages(); }, 2500);
+}
+
+async function selectPackageById(id) {
+  if (!S.privateKey) { actionMsg('pkg-msg', 'Switching packages requires the key-file login.', false); return; }
+  const p = (window._lastPackages || []).find(x => Number(x.id) === Number(id)) || {};
+  if (!confirm('Switch your selected package to "' + (p.name || id) + '"? Only possible once your current term has ended — your stake then re-locks for the new term.')) return;
+  const r = await aposPost('/api/apos/validator/select-package', { privateKey: S.privateKey, packageId: Number(id) });
+  if (r.error) { actionMsg('pkg-msg', 'Switch failed: ' + escHtml(r.error), false); return; }
+  actionMsg('pkg-msg', '✅ Package switched — tx ' + escHtml((r.txHash || '').slice(0, 18)) + '…', true);
+  setTimeout(() => { refreshValidator(); refreshPackages(); }, 2500);
+}
+
+// v7.9.3 — generic copy-to-clipboard helper. The target's textContent is
+// copied; the button briefly flashes "Copied" so the user knows it worked.
+async function copyToClipboard(targetId, btn) {
+  const el = document.getElementById(targetId);
+  if (!el) return;
+  const text = el.textContent.trim();
+  if (!text || text === '—') return;
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // Fallback for older Safari without clipboard API.
+    const ta = document.createElement('textarea');
+    ta.value = text; document.body.appendChild(ta); ta.select();
+    document.execCommand('copy'); document.body.removeChild(ta);
+  }
+  if (btn) {
+    const old = btn.textContent;
+    btn.textContent = 'Copied';
+    setTimeout(() => { btn.textContent = old; }, 1400);
+  }
+}
+
+// v8: saveDomain() removed — custom-domain setup lives in /admin →
+// Settings (v7.11.16) and the form it targeted no longer exists here.
+</script>
+
+  </div>
+</div>
+</body>
+</html>

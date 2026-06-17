@@ -1,0 +1,1074 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Elyon Chain — Validator Page</title>
+<link rel="icon" href="site-assets/icon.png" type="image/png">
+<link rel="stylesheet" href="/elyon-theme.css">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+/* ════════════════════════════════════════════════════════════════════
+   ELYON VALIDATOR PAGE — the validator's public "site".
+   Two-tier marketing model: the hero renders the validator's PROFILE
+   ({company, about, contact, address, website}); the pricing cards are
+   its TIER-2 PACKAGES; the join flow is desk-request → validator accept
+   → deposit into THAT package (terms snapshotted forever).
+   Light premium identity — same tokens as owner.html.
+   ════════════════════════════════════════════════════════════════════ */
+:root{
+  --bg:#f6f8fa; --bg2:#ffffff; --glass:#ffffff; --glass2:#f4f8f6;
+  --line:rgba(20,40,60,.08); --line2:rgba(21,168,120,.38);
+  --text:#1c2733; --text2:#5a6b7a; --text3:#5a6b7a;
+  --accent:#15a878; --accent2:#0e7d5a; --accent3:#0c8f68; --accent-deep:#0e7d5a;
+  --red:#dc2626; --amber:#b45309;
+  --grad:linear-gradient(120deg,#15a878,#0e7d5a);
+  --grad-bright:linear-gradient(120deg,#0c8f68,#0e7d5a);
+  --fh:'Space Grotesk','Inter',sans-serif;
+  --fb:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --fm:'JetBrains Mono','Fira Code',Consolas,monospace;
+  --ease:cubic-bezier(.34,1.56,.64,1);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{background:var(--bg)}
+body{font-family:var(--fb);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased}
+h1,h2,h3{font-family:var(--fh);letter-spacing:-.02em}
+code{font-family:var(--fm)}
+a{color:var(--accent2)}
+.wrap{max-width:1100px;margin:0 auto}
+
+/* hero — the validator's storefront */
+.vp-hero{position:relative;text-align:center;padding:56px 20px 34px;border-radius:28px;overflow:hidden;
+  border:1px solid transparent;isolation:isolate;margin-bottom:26px;
+  box-shadow:0 8px 32px rgba(20,40,60,.08);
+  background:
+    linear-gradient(170deg,#ffffff,#fcfdfd) padding-box,
+    linear-gradient(135deg,rgba(21,168,120,.45),rgba(20,40,60,.08) 40%,rgba(20,40,60,.06) 65%,rgba(14,125,90,.35)) border-box}
+.vp-aurora{position:absolute;inset:0;z-index:-2;opacity:.6;pointer-events:none;
+  background:
+    radial-gradient(38% 34% at 24% 36%,rgba(21,168,120,.10),transparent 70%),
+    radial-gradient(34% 36% at 74% 30%,rgba(14,125,90,.07),transparent 70%),
+    radial-gradient(40% 38% at 56% 76%,rgba(21,168,120,.08),transparent 70%)}
+.vp-code{display:inline-block;font-family:var(--fm);font-size:1.05rem;font-weight:700;letter-spacing:.1em;
+  color:#0e7d5a;background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.35);padding:8px 18px;border-radius:12px;margin-bottom:16px}
+.vp-status{font-family:var(--fm);font-size:.62rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;
+  padding:5px 12px;border-radius:999px;vertical-align:middle;margin-left:10px}
+.st-2{background:rgba(21,168,120,.12);color:var(--accent2);border:1px solid rgba(21,168,120,.35)}
+.st-1{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.35)}
+.st-3,.st-4{background:rgba(220,38,38,.08);color:var(--red);border:1px solid rgba(220,38,38,.30)}
+.st-5{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(220,38,38,.30)}
+.st-0{background:#f4f8f6;color:var(--text3);border:1px solid var(--line)}
+.vp-hero h1{font-size:clamp(2rem,5vw,3.3rem);font-weight:800;line-height:1.08;margin-bottom:12px}
+.vp-hero h1 .grad{background:var(--grad-bright);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+.vp-about{max-width:680px;margin:0 auto;color:var(--text2);font-size:1rem;line-height:1.65}
+.vp-contact{display:flex;justify-content:center;gap:8px 22px;flex-wrap:wrap;margin-top:16px;font-size:.85rem;color:var(--text2)}
+.vp-contact b{color:var(--text)}
+.vp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;max-width:940px;margin:30px auto 4px;text-align:left}
+.vp-stat{position:relative;background:#ffffff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;overflow:hidden;
+  box-shadow:0 2px 10px rgba(20,40,60,.05)}
+.vp-stat::before{content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--grad-bright);opacity:.85}
+.vp-stat .lbl{font-family:var(--fm);font-size:10px;font-weight:600;letter-spacing:.1em;text-transform:uppercase;color:var(--text3)}
+.vp-stat .val{font-family:var(--fh);font-size:1.2rem;font-weight:800;margin-top:6px;color:var(--text);word-break:break-word}
+.vp-stat .val.green{color:var(--accent2)}
+
+/* cards / sections */
+.vp-card{background:var(--glass);border:1px solid var(--line);border-radius:22px;padding:26px;margin-bottom:22px;
+  box-shadow:0 8px 32px rgba(20,40,60,.08)}
+.vp-card h2{font-size:1.25rem;font-weight:800;margin-bottom:6px;display:flex;align-items:center;gap:11px}
+.vp-card h2 .dot{width:9px;height:9px;border-radius:50%;background:var(--grad);box-shadow:0 0 10px rgba(21,168,120,.5);flex:0 0 auto}
+.vp-card .sub{color:var(--text2);font-size:.88rem;line-height:1.6;margin-bottom:18px}
+.section-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:34px 0 16px;flex-wrap:wrap}
+.section-title h2{font-size:1.45rem;font-weight:800}
+.section-title h2 .grad{background:var(--grad-bright);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent}
+
+/* PACKAGE PRICING CARDS */
+.pk-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.pk-card{position:relative;background:linear-gradient(165deg,#ffffff,#fcfdfd);border:1px solid var(--line);border-radius:20px;
+  padding:24px;overflow:hidden;box-shadow:0 8px 32px rgba(20,40,60,.08);transition:border-color .3s,box-shadow .3s,transform .25s var(--ease)}
+.pk-card:hover{border-color:rgba(21,168,120,.45);box-shadow:0 16px 48px rgba(21,168,120,.14);transform:translateY(-4px)}
+.pk-name{font-family:var(--fh);font-size:1.15rem;font-weight:800;margin-bottom:4px}
+.pk-rate{font-family:var(--fh);font-size:2.2rem;font-weight:800;letter-spacing:-.02em;color:var(--accent2);line-height:1.1;margin:12px 0 2px}
+.pk-rate small{font-size:.9rem;font-weight:600;color:var(--text3)}
+.pk-sub{font-family:var(--fm);font-size:.66rem;letter-spacing:.08em;text-transform:uppercase;color:var(--text3);margin-bottom:16px}
+.pk-rows{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.pk-row{display:flex;justify-content:space-between;gap:10px;font-size:.84rem;color:var(--text2);border-bottom:1px dashed rgba(20,40,60,.10);padding-bottom:7px}
+.pk-row b{color:var(--text)}
+.pk-card .btn{width:100%}
+.pk-off{position:absolute;top:14px;right:14px;font-family:var(--fm);font-size:.58rem;font-weight:700;letter-spacing:.1em;
+  text-transform:uppercase;background:rgba(220,38,38,.08);color:var(--red);border:1px solid rgba(220,38,38,.3);padding:4px 10px;border-radius:999px}
+
+/* buttons / fields / tabs (shared identity) */
+.btn{position:relative;overflow:hidden;display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 22px;border-radius:999px;
+  border:1px solid transparent;color:#0e7d5a;font-family:var(--fh);
+  background:linear-gradient(160deg,#ffffff,#fcfdfd) padding-box,linear-gradient(120deg,#15a878,#0e7d5a) border-box;
+  font-weight:600;font-size:.9rem;cursor:pointer;transition:all .22s var(--ease)}
+.btn:hover{transform:translateY(-2px);box-shadow:0 8px 26px rgba(21,168,120,.20);color:#0a5c43}
+.btn.primary{background:var(--grad);border:0;color:#ffffff;box-shadow:0 8px 24px rgba(21,168,120,.28)}
+.btn.primary:hover{box-shadow:0 14px 38px rgba(21,168,120,.38);transform:translateY(-3px)}
+.btn.danger{border-color:rgba(220,38,38,.40);color:var(--red);background:#ffffff}
+.btn.sm{padding:8px 16px;font-size:.8rem}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:none}
+.btn .spin,.spin-inline{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .8s linear infinite}
+.spin-inline{width:12px;height:12px;border-color:rgba(21,168,120,.3);border-top-color:#15a878;vertical-align:-1px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.field label{display:block;font-family:var(--fm);font-size:.66rem;font-weight:600;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--text2);margin-bottom:7px}
+.field input{width:100%;padding:13px 15px;background:#ffffff;border:1px solid rgba(20,40,60,.14);border-radius:13px;
+  color:var(--text);font-size:.95rem;font-family:var(--fb)}
+.field input.mono{font-family:var(--fm)}
+.field input:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px rgba(21,168,120,.14)}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+@media(max-width:620px){.row2{grid-template-columns:1fr}}
+.hint{font-size:.78rem;color:var(--text3);line-height:1.55}
+.mode-tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.mode-tab{padding:9px 18px;border-radius:999px;border:1px solid var(--line);background:transparent;color:var(--text2);
+  font-family:var(--fh);font-weight:600;font-size:.84rem;cursor:pointer;transition:all .2s}
+.mode-tab.active{background:var(--grad);border-color:transparent;color:#fff;box-shadow:0 6px 20px rgba(21,168,120,.3)}
+.conn-banner{display:none;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(21,168,120,.07);
+  border:1px solid rgba(21,168,120,.30);border-radius:14px;padding:13px 16px;font-size:.86rem}
+.conn-banner code{color:var(--accent2);font-size:.82rem;word-break:break-all}
+.conn-banner .tag{font-family:var(--fm);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;
+  background:rgba(21,168,120,.18);color:var(--accent2);padding:4px 10px;border-radius:999px}
+
+/* join steps */
+.steps{display:flex;flex-direction:column;gap:10px;margin-bottom:18px}
+.step{display:flex;gap:12px;align-items:flex-start;background:#f4f8f6;border:1px solid var(--line);border-radius:13px;padding:12px 14px;font-size:.86rem;color:var(--text2)}
+.step .n{flex:0 0 26px;height:26px;border-radius:50%;background:var(--grad);color:#fff;font-family:var(--fh);font-weight:800;font-size:.82rem;display:flex;align-items:center;justify-content:center}
+.step b{color:var(--text)}
+
+/* threads + chat */
+.th-item{background:#ffffff;border:1px solid var(--line);border-radius:17px;overflow:hidden;box-shadow:0 2px 10px rgba(20,40,60,.05);margin-bottom:12px}
+.th-head{display:flex;align-items:center;gap:12px;padding:15px 18px;cursor:pointer;flex-wrap:wrap}
+.th-head:hover{background:rgba(21,168,120,.04)}
+.th-badge{font-family:var(--fm);font-size:.6rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;padding:4px 11px;border-radius:999px}
+.th-badge.open{background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.35)}
+.th-badge.accepted{background:rgba(21,168,120,.12);color:var(--accent2);border:1px solid rgba(21,168,120,.35)}
+.th-badge.declined,.th-badge.closed{background:rgba(220,38,38,.08);color:var(--red);border:1px solid rgba(220,38,38,.30)}
+.th-chat{padding:4px 18px 16px;display:flex;flex-direction:column;gap:8px}
+.bub{max-width:78%;padding:9px 13px;border-radius:14px;font-size:.85rem;line-height:1.5;word-break:break-word}
+.bub.me{align-self:flex-end;border:1px solid rgba(21,168,120,.4);border-bottom-right-radius:4px;background:rgba(21,168,120,.10)}
+.bub.them{align-self:flex-start;border:1px solid var(--line);border-bottom-left-radius:4px;background:#f4f8f6}
+.bub.sys{align-self:center;background:transparent;border:0;color:var(--text3);font-family:var(--fm);font-size:.68rem;padding:2px 0}
+.bub .bt{font-family:var(--fm);font-size:.6rem;color:var(--text3);margin-top:4px}
+.th-reply{display:flex;gap:8px;margin-top:6px}
+.th-reply input{flex:1;padding:11px 15px;background:#ffffff;border:1px solid rgba(20,40,60,.14);border-radius:999px;color:var(--text);font-size:.86rem}
+.th-reply input:focus{outline:none;border-color:var(--accent)}
+.th-deposit{margin-top:10px;border:1px solid rgba(21,168,120,.30);background:rgba(21,168,120,.06);border-radius:13px;padding:13px 15px}
+.th-deposit input{width:140px;padding:10px 12px;background:#ffffff;border:1px solid rgba(20,40,60,.14);border-radius:11px;color:var(--text);font-family:var(--fm)}
+
+/* my positions */
+.d-list{display:flex;flex-direction:column;gap:14px}
+.d-item{display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center;background:#ffffff;
+  border:1px solid var(--line);border-radius:17px;padding:17px 19px;box-shadow:0 2px 10px rgba(20,40,60,.05)}
+@media(max-width:760px){.d-item{grid-template-columns:1fr}}
+.d-meta{font-size:.84rem;color:var(--text2);line-height:1.75}
+.d-meta b{color:var(--text)}
+.d-meta .green{color:var(--accent2);font-weight:700}
+.empty{text-align:center;color:var(--text3);padding:34px 16px;font-size:.9rem;border:1px dashed rgba(20,40,60,.16);border-radius:16px;background:#ffffff}
+.skel{height:200px;border-radius:20px;border:1px solid var(--line);
+  background:linear-gradient(100deg,#eef2f5 38%,#e3eae6 50%,#eef2f5 62%);
+  background-size:220% 100%;animation:shimmer 1.5s linear infinite}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-120% 0}}
+
+/* toasts */
+#toasts{position:fixed;bottom:22px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:9px;align-items:center;width:min(94vw,560px)}
+.toast{background:#ffffff;border:1px solid var(--line2);color:var(--text);border-radius:14px;padding:13px 19px;
+  font-size:.86rem;line-height:1.5;box-shadow:0 16px 48px rgba(20,40,60,.18);width:100%;word-break:break-word}
+.toast.success{border-color:rgba(21,168,120,.55);background:#f2faf7}
+.toast.error{border-color:rgba(220,38,38,.50);background:#fdf3f3}
+.toast.warn{border-color:rgba(245,158,11,.50);background:#fdf8ee}
+.toast.out{opacity:0;transition:opacity .4s}
+</style>
+<link rel="stylesheet" href="/elyon-fx.css">
+<script defer src="/elyon-fx.js"></script>
+<link rel="stylesheet" href="/elyon-app.css">
+</head>
+<body class="elx-shelled" data-no-canvas>
+<aside class="elx-sidebar" id="elx-sidebar">
+  <a class="elx-sb-brand" href="/"><img src="/site-assets/logo.png" alt="Elyon Chain"></a>
+  <nav class="elx-sb-nav">
+    <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg><span>Home</span></a>
+    <a href="/owner.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v6c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7z"/><path d="M9 12l2 2 4-4"/></svg><span>Delegate</span></a>
+    <a href="/docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span>Docs</span></a>
+    <a href="/faucet.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg><span>Faucet</span></a>
+    <a href="/leaderboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 1-3 3"/></svg><span>Leaderboard</span></a>
+  </nav>
+  <div class="elx-sb-foot">Elyon Chain · APOS L1</div>
+</aside>
+<div class="elx-app">
+  <header class="elx-topbar">
+    <button class="elx-burger" onclick="document.getElementById('elx-sidebar').classList.toggle('open')">☰</button>
+    <h1>Validator Page</h1>
+    <span class="elx-spacer"></span>
+    <span class="elx-net"><span class="dot"></span>Elyon Chain</span>
+  </header>
+  <div class="elx-work">
+
+<div class="wrap">
+
+  <!-- ═══ HERO — the validator's storefront ═══ -->
+  <section class="vp-hero" id="hero">
+    <div class="vp-aurora"></div>
+    <div><span class="vp-code fx-badge-code" id="vp-code">…</span><span class="vp-status st-0" id="vp-status">LOADING</span></div>
+    <h1 id="vp-company">Loading <span class="grad">validator</span>…</h1>
+    <p class="vp-about" id="vp-about"></p>
+    <div class="vp-contact" id="vp-contact"></div>
+    <div class="vp-stats">
+      <div class="vp-stat"><div class="lbl">Pool</div><div class="val green" id="vs-pool">—</div></div>
+      <div class="vp-stat"><div class="lbl">Own stake</div><div class="val" id="vs-stake">—</div></div>
+      <div class="vp-stat"><div class="lbl">Delegated</div><div class="val" id="vs-deleg">—</div></div>
+      <div class="vp-stat"><div class="lbl">Positions</div><div class="val" id="vs-positions">—</div></div>
+      <div class="vp-stat"><div class="lbl">Packages</div><div class="val" id="vs-packages">—</div></div>
+    </div>
+  </section>
+
+  <!-- ═══ HOW IT WORKS — 3 numbered steps ═══ -->
+  <section class="vp-card fx-card-neo">
+    <h2><span class="dot"></span> Join in 3 steps</h2>
+    <div class="steps" style="margin-top:14px;margin-bottom:0">
+      <div class="step"><span class="n">1</span><span><b>Pick a package below</b> and send the validator a short join request (connect your wallet first).</span></div>
+      <div class="step"><span class="n">2</span><span><b>Chat &amp; wait for the validator to accept</b> — your conversation appears on this page.</span></div>
+      <div class="step"><span class="n">3</span><span><b>Deposit into the package.</b> Its rate, lock and early-exit penalty are locked into your position <b>forever</b>. Withdraw yourself any time (the penalty applies only before the lock ends).</span></div>
+    </div>
+  </section>
+
+  <!-- ═══ ONE PACKAGE PER DELEGATOR — wallet status (filled after connect) ═══ -->
+  <div id="one-pkg-banner" style="display:none"></div>
+  <div id="active-pkg" style="display:none"></div>
+
+  <!-- ═══ PACKAGES ═══ -->
+  <div class="section-title">
+    <h2>Choose a <span class="grad">package</span></h2>
+    <a class="hint" href="#" onclick="event.preventDefault();loadAll();return false" style="text-decoration:none;border:1px solid rgba(21,168,120,.3);padding:7px 14px;border-radius:999px;background:rgba(21,168,120,.07);color:var(--accent2)">↻ refresh</a>
+  </div>
+  <div class="pk-grid" id="pk-grid">
+    <div class="skel"></div><div class="skel"></div><div class="skel"></div>
+  </div>
+
+  <!-- ═══ CONNECT ═══ -->
+  <section class="vp-card fx-card-neo" id="connect-card" style="margin-top:34px">
+    <h2><span class="dot"></span> Connect your wallet</h2>
+    <p class="sub">Connect MetaMask (recommended — keys never leave your wallet), or paste a private key as a fallback. A pasted key is kept <b>only in this page's memory</b> and is never stored.</p>
+    <div class="mode-tabs">
+      <button class="mode-tab active" id="tab-mm" onclick="setMode('mm')">🦊 MetaMask</button>
+      <button class="mode-tab" id="tab-pk" onclick="setMode('pk')">🔑 Private key</button>
+    </div>
+    <div id="mode-mm">
+      <button class="btn primary" id="btn-connect" onclick="connectMetaMask()">Connect MetaMask</button>
+      <div class="hint" style="margin-top:10px">Adds the Elyon Chain network to your wallet automatically if it's missing.</div>
+    </div>
+    <div id="mode-pk" style="display:none">
+      <div class="row2">
+        <div class="field" style="grid-column:1/-1"><label>Private key (0x + 64 hex chars)</label>
+          <input id="pk-input" class="mono" type="password" placeholder="0x…" autocomplete="off"></div>
+      </div>
+      <button class="btn primary" onclick="usePrivateKey(this)">Use this key</button>
+      <div class="hint" style="margin-top:10px">The dashboard node signs your transactions server-side with this key. Use a testnet / throwaway wallet.</div>
+    </div>
+    <!-- "My wallet" strip — full address + live ELN balance (10s refresh) -->
+    <div class="conn-banner" id="conn-banner" style="margin-top:16px">
+      <span class="tag" id="conn-mode">—</span>
+      <code id="conn-addr">—</code>
+      <span style="color:var(--text2)">·</span>
+      <span title="Live wallet balance — refreshes every 10 seconds"><b id="conn-bal" style="color:var(--accent2)">—</b> <span style="color:var(--text3);font-size:.78rem">ELN</span></span>
+      <span style="flex:1"></span>
+      <button class="btn sm danger" onclick="disconnect()">Disconnect</button>
+    </div>
+  </section>
+
+  <!-- ═══ MY REQUEST / CONVERSATION with this validator ═══ -->
+  <div class="section-title" id="threads-section">
+    <h2>My <span class="grad">request &amp; chat</span></h2>
+    <a class="hint" href="#" onclick="event.preventDefault();loadMyThreads();return false" style="text-decoration:none;border:1px solid rgba(21,168,120,.3);padding:7px 14px;border-radius:999px;background:rgba(21,168,120,.07);color:var(--accent2)">↻ refresh</a>
+  </div>
+  <div id="my-threads">
+    <div class="empty">Connect a wallet, then send a join request from one of the package cards above.</div>
+  </div>
+
+  <!-- ═══ MY POSITIONS with this validator ═══ -->
+  <div class="section-title" style="margin-top:34px">
+    <h2>My <span class="grad">positions here</span></h2>
+    <a class="hint" href="#" onclick="event.preventDefault();loadMyPositions();return false" style="text-decoration:none;border:1px solid rgba(21,168,120,.3);padding:7px 14px;border-radius:999px;background:rgba(21,168,120,.07);color:var(--accent2)">↻ refresh</a>
+  </div>
+  <div class="d-list" id="my-positions">
+    <div class="empty">Connect a wallet to see your positions with this validator.</div>
+  </div>
+
+</div>
+
+  </div>
+</div>
+
+<div id="toasts"></div>
+
+<script>
+'use strict';
+/* ═══════════════════════════════════════════════════════════════════
+   ELYON VALIDATOR PAGE — the validator's public storefront.
+   Loads ?code=XXX or ?address=0x…; renders the on-chain PROFILE +
+   TIER-2 PACKAGES; the join flow is: desk request (with vpkgIdx) →
+   validator accepts → deposit form unlocks for THAT package.
+   Wallet patterns are the same as owner.html: MetaMask signs
+   delegateByCode(string,uint256) / delegate(address,uint256) directly;
+   PK mode uses the server-signed /api/apos endpoints (key in page
+   memory only). Selectors are computed at runtime via web3_sha3.
+   ═══════════════════════════════════════════════════════════════════ */
+
+const ST = {
+  mode: 'mm', connected: null, addr: null, pk: null,
+  hs: null, sel: {},
+  val: null,          // the validator this page is about (incl. vpackages)
+  vpkgs: [],          // active tier-2 packages
+  threads: [], open: null,
+  positions: [],
+  dstat: null,        // /api/apos/delegator-status — ONE package per delegator
+};
+const STATUS = ['NONE', 'PENDING', 'ACTIVE', 'REJECTED', 'SUSPENDED', 'BELOW MIN'];
+let WALLET = null;
+
+/* ── helpers (same identity as owner.html) ─────────────────────── */
+function $(id) { return document.getElementById(id); }
+function esc(s) {
+  return String(s == null ? '' : s).replace(/[&<>"']/g, function (c) {
+    return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c];
+  });
+}
+function sleep(ms) { return new Promise(function (r) { setTimeout(r, ms); }); }
+function shortAddr(a) { a = String(a || ''); return a.length > 12 ? a.slice(0, 6) + '…' + a.slice(-4) : a; }
+function fmtEln(wei, maxFrac) {
+  if (maxFrac == null) maxFrac = 4;
+  let w; try { w = BigInt(String(wei == null ? '0' : wei)); } catch (e) { return '0'; }
+  const neg = w < 0n; if (neg) w = -w;
+  const ONE = 10n ** 18n;
+  const frac = (w % ONE).toString().padStart(18, '0').slice(0, maxFrac).replace(/0+$/, '');
+  return (neg ? '-' : '') + (w / ONE).toLocaleString('en-US') + (frac ? '.' + frac : '');
+}
+function parseEln(s) {
+  s = String(s == null ? '' : s).trim();
+  if (!/^\d+(\.\d*)?$|^\.\d+$/.test(s)) throw new Error('Enter a valid ELN amount (e.g. 100 or 12.5)');
+  const parts = s.split('.');
+  const wei = BigInt(parts[0] || '0') * 10n ** 18n + BigInt(((parts[1] || '') + '0'.repeat(18)).slice(0, 18));
+  if (wei <= 0n) throw new Error('Amount must be greater than 0');
+  return wei;
+}
+function weiToEtherString(wei) {
+  const ONE = 10n ** 18n;
+  const f = (wei % ONE).toString().padStart(18, '0').replace(/0+$/, '');
+  return (wei / ONE).toString() + (f ? '.' + f : '');
+}
+function timeAgo(ms) {
+  const s = Math.floor((Date.now() - Number(ms || 0)) / 1000);
+  if (s < 10) return 'just now';
+  if (s < 60) return s + 's ago';
+  if (s < 3600) return Math.floor(s / 60) + 'm ago';
+  if (s < 86400) return Math.floor(s / 3600) + 'h ago';
+  return Math.floor(s / 86400) + 'd ago';
+}
+function toast(msg, type, ms) {
+  const box = document.createElement('div');
+  box.className = 'toast ' + (type || '');
+  box.innerHTML = msg;
+  $('toasts').appendChild(box);
+  setTimeout(function () { box.classList.add('out'); setTimeout(function () { box.remove(); }, 450); }, ms || 5200);
+}
+function friendlyErr(e) {
+  const m = (e && (e.message || e.shortMessage)) || String(e);
+  if (/user rejected|user denied|action_rejected|4001/i.test(m)) return 'you rejected the transaction in your wallet.';
+  if (/insufficient funds|exceeds balance|insufficient balance/i.test(m)) return 'not enough ELN for the amount plus gas — top up via the Faucet.';
+  return m.replace(/^execution reverted:?\s*/i, '').replace(/^UNP:\s*/i, '');
+}
+
+/* ── JSON-RPC + runtime ABI encoding (no external libs) ────────── */
+async function rpc(method, params) {
+  const r = await fetch('/api/rpc', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ jsonrpc: '2.0', id: Date.now(), method: method, params: params || [] }),
+  });
+  const j = await r.json();
+  if (j.error) throw new Error(j.error.message || ('RPC error on ' + method));
+  return j.result;
+}
+async function selector(sig) {
+  if (ST.sel[sig]) return ST.sel[sig];
+  const hex = '0x' + Array.from(new TextEncoder().encode(sig))
+    .map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  const h = await rpc('web3_sha3', [hex]);
+  if (!/^0x[0-9a-fA-F]{64}$/.test(h || '')) throw new Error('selector hash failed for ' + sig);
+  ST.sel[sig] = h.slice(0, 10);
+  return ST.sel[sig];
+}
+function pad32(v) { return BigInt(v).toString(16).padStart(64, '0'); }
+// delegateByCode(string,uint256): head = [offset(0x40), vpkgIdx], tail = string.
+async function encodeDelegateByCode(code, vpkgIdx) {
+  const sel = await selector('delegateByCode(string,uint256)');
+  const bytes = new TextEncoder().encode(code);
+  let hex = Array.from(bytes).map(function (b) { return b.toString(16).padStart(2, '0'); }).join('');
+  const padded = hex.padEnd(Math.max(64, Math.ceil(hex.length / 64) * 64), '0');
+  return sel + pad32(64) + pad32(vpkgIdx) + pad32(bytes.length) + padded;
+}
+async function encodeDelegateAddr(validator, vpkgIdx) {
+  const sel = await selector('delegate(address,uint256)');
+  return sel + pad32(validator) + pad32(vpkgIdx);
+}
+
+/* ── handshake + wallet (owner.html patterns) ──────────────────── */
+async function loadHandshake() {
+  if (ST.hs && ST.hs.registry) return ST.hs;
+  const r = await fetch('/api/apos/handshake').then(function (x) { return x.json(); });
+  if (!r || !r.registry) throw new Error('APOS registry is not deployed yet — ask the chain admin.');
+  ST.hs = r;
+  return r;
+}
+function fallbackRpcUrl() {
+  return (location.protocol === 'https:' && (!location.port || location.port === '443'))
+    ? location.origin + '/rpc'
+    : location.protocol + '//' + location.hostname + ':8545';
+}
+const __eip6963 = [];
+try {
+  window.addEventListener('eip6963:announceProvider', function (e) {
+    if (e && e.detail && e.detail.provider) __eip6963.push(e.detail);
+  });
+  window.dispatchEvent(new Event('eip6963:requestProvider'));
+} catch (e) {}
+function pickProvider() {
+  if (__eip6963.length) {
+    const mm = __eip6963.find(function (p) { return /metamask/i.test((p.info && (p.info.rdns || p.info.name)) || ''); });
+    return (mm || __eip6963[0]).provider;
+  }
+  const eth = window.ethereum;
+  if (eth && Array.isArray(eth.providers) && eth.providers.length) {
+    return eth.providers.find(function (p) { return p && p.isMetaMask; }) || eth.providers[0];
+  }
+  return eth || null;
+}
+async function ensureChain() {
+  const hs = await loadHandshake();
+  const cur = await WALLET.request({ method: 'eth_chainId' });
+  if (parseInt(cur, 16) === Number(hs.chainId)) return;
+  const hexId = hs.chainIdHex || ('0x' + Number(hs.chainId).toString(16));
+  try {
+    await WALLET.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hexId }] });
+  } catch (e) {
+    if (e && (e.code === 4902 || /4902|unrecognized chain/i.test(e.message || ''))) {
+      await WALLET.request({
+        method: 'wallet_addEthereumChain',
+        params: [{
+          chainId: hexId, chainName: hs.chainName || 'Elyon Chain',
+          nativeCurrency: { name: 'ELN', symbol: 'ELN', decimals: 18 },
+          rpcUrls: [hs.rpcUrl || fallbackRpcUrl()],
+        }],
+      });
+    } else { throw e; }
+  }
+}
+function setMode(m) {
+  ST.mode = m;
+  $('tab-mm').classList.toggle('active', m === 'mm');
+  $('tab-pk').classList.toggle('active', m === 'pk');
+  $('mode-mm').style.display = m === 'mm' ? '' : 'none';
+  $('mode-pk').style.display = m === 'pk' ? '' : 'none';
+}
+async function connectMetaMask() {
+  const btn = $('btn-connect');
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Connecting…';
+  try {
+    const inj = pickProvider();
+    if (!inj) throw new Error('No MetaMask / injected wallet detected. Install MetaMask and reload.');
+    WALLET = inj;
+    await loadHandshake();
+    let accounts = await inj.request({ method: 'eth_requestAccounts' });
+    if (!accounts || !accounts.length) accounts = await inj.request({ method: 'eth_accounts' });
+    if (!accounts || !accounts.length) throw new Error('Wallet is locked or has no account selected — unlock it and retry.');
+    await ensureChain();
+    ST.addr = accounts[0];
+    ST.connected = 'mm'; ST.pk = null;
+    if (inj.on && !inj.__elyonHooked) {
+      inj.__elyonHooked = true;
+      try {
+        inj.on('accountsChanged', function () { if (ST.connected === 'mm') location.reload(); });
+        inj.on('chainChanged', function () { if (ST.connected === 'mm') location.reload(); });
+      } catch (e) {}
+    }
+    onConnected('MetaMask');
+  } catch (e) {
+    toast('⚠️ ' + esc(e.message || String(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = 'Connect MetaMask';
+  }
+}
+async function usePrivateKey(btn) {
+  const raw = $('pk-input').value.trim();
+  const clean = raw.replace(/^0x/i, '');
+  if (!/^[0-9a-fA-F]{64}$/.test(clean)) { toast('⚠️ Private key must be 0x + 64 hex characters.', 'error'); return; }
+  const orig = btn.textContent;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Deriving address…';
+  try {
+    await loadHandshake();
+    const r = await fetch('/api/apos/pk/derive', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ privateKey: '0x' + clean }),
+    }).then(function (x) { return x.json(); });
+    if (!r.address) throw new Error(r.error || 'Could not derive an address from that key');
+    ST.pk = '0x' + clean;
+    ST.addr = r.address;
+    ST.connected = 'pk';
+    $('pk-input').value = '';
+    onConnected('Private key');
+  } catch (e) {
+    toast('⚠️ ' + esc(e.message || String(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.textContent = orig;
+  }
+}
+function onConnected(label) {
+  $('conn-banner').style.display = 'flex';
+  $('conn-mode').textContent = label;
+  $('conn-addr').textContent = ST.addr;
+  toast('🔗 Connected as <b>' + esc(shortAddr(ST.addr)) + '</b> via ' + esc(label), 'success');
+  refreshBalance();
+  loadMyThreads();
+  loadMyPositions();
+  loadDelegatorStatus();
+}
+function disconnect() {
+  ST.connected = null; ST.addr = null; ST.pk = null; WALLET = null;
+  $('conn-banner').style.display = 'none';
+  $('conn-bal').textContent = '—';
+  ST.threads = []; ST.open = null;
+  ST.positions = []; ST.dstat = null;
+  $('my-threads').innerHTML = '<div class="empty">Connect a wallet, then send a join request from one of the package cards above.</div>';
+  $('my-positions').innerHTML = '<div class="empty">Connect a wallet to see your positions with this validator.</div>';
+  renderOnePkgUi();
+  if (ST.val) renderPackages();
+  toast('Wallet disconnected. The pasted key (if any) was wiped from memory.', 'warn');
+}
+
+/* ── live ELN balance (My wallet strip) — refreshes every 10s ──── */
+async function refreshBalance() {
+  if (!ST.addr) return;
+  try {
+    const bal = await rpc('eth_getBalance', [ST.addr, 'latest']);
+    $('conn-bal').textContent = fmtEln(BigInt(bal));
+  } catch (e) { /* non-fatal */ }
+}
+
+/* ── ONE PACKAGE PER DELEGATOR — wallet status ─────────────────── */
+async function loadDelegatorStatus() {
+  if (!ST.addr) { ST.dstat = null; renderOnePkgUi(); return; }
+  try {
+    const r = await fetch('/api/apos/delegator-status/' + encodeURIComponent(ST.addr)).then(function (x) { return x.json(); });
+    ST.dstat = (r && !r.error) ? r : null;
+  } catch (e) { ST.dstat = null; }
+  renderOnePkgUi();
+  if (ST.val) renderPackages();
+}
+// Where does this wallet's single allowed package live?
+//   {state:'none'} | {state:'here', idx} (this validator) | {state:'other', ...}
+function onePkg() {
+  const d = ST.dstat;
+  if (!d || !d.activeValidator || !ST.val) return { state: 'none' };
+  const here = String(d.activeValidator).toLowerCase() === String(ST.val.address).toLowerCase();
+  return {
+    state: here ? 'here' : 'other',
+    idx: d.activeVpkgIdx, name: d.activeVpkgName,
+    code: d.activeValidatorCode, validator: d.activeValidator,
+  };
+}
+function renderOnePkgUi() {
+  const banner = $('one-pkg-banner');
+  const card = $('active-pkg');
+  if (!banner || !card) return;
+  const op = onePkg();
+  if (op.state === 'other') {
+    card.style.display = 'none';
+    banner.style.display = 'block';
+    banner.innerHTML =
+      '<section class="vp-card" style="border-color:rgba(245,158,11,.5);background:#fdf8ee;padding:18px 22px">' +
+        '⚠️ You already delegate with validator <b>' + esc(op.code || shortAddr(op.validator)) + '</b>' +
+        (op.name ? ' (package “' + esc(op.name) + '”)' : '') +
+        ' — a delegator can only stake in <b>one package</b>. Withdraw fully there to join here.' +
+        (op.code ? ' <a href="/validator.html?code=' + encodeURIComponent(op.code) + '">Go to that validator →</a>' : '') +
+      '</section>';
+    return;
+  }
+  banner.style.display = 'none';
+  if (op.state !== 'here') { card.style.display = 'none'; return; }
+  // Your active package IS one of this validator's — summarize your stake in it.
+  const p = ST.vpkgs.find(function (x) { return Number(x.idx) === Number(op.idx); }) || null;
+  let dep = 0n, acc = 0n, unlock = 0, rateBps = 0;
+  ST.positions.forEach(function (q) {           // already filtered to THIS validator
+    dep += BigInt(q.amountWei || '0');
+    acc += posAccruedWei(q);
+    const u = Number(q.earlyUntil || q.unlockAt || 0);
+    if (u > unlock) unlock = u;
+    if (!rateBps) rateBps = Number(q.rateBps || 0);
+  });
+  if (!rateBps && p) rateBps = Number(p.rateBpsAnnual || 0);
+  const unlockStr = unlock
+    ? new Date(unlock * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' })
+    : (p ? new Date(Date.now() + Number(p.lockDays || 0) * 86400000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—');
+  card.style.display = 'block';
+  card.innerHTML =
+    '<section class="vp-card fx-card-neo" style="border-color:rgba(21,168,120,.5)">' +
+      '<h2><span class="dot"></span> 📦 Your active package</h2>' +
+      '<p class="sub">One package per delegator: you can <b>top this package up</b> any time, but joining a different package (here or with another validator) requires withdrawing it fully first.</p>' +
+      '<div class="pk-rows" style="margin-bottom:14px">' +
+        '<div class="pk-row"><span>Package</span><b>' + esc((p && p.name) || op.name || ('#' + (Number(op.idx) + 1))) + '</b></div>' +
+        '<div class="pk-row"><span>Your deposit</span><b>' + fmtEln(dep.toString()) + ' ELN</b></div>' +
+        '<div class="pk-row"><span>Rate</span><b style="color:var(--accent2)">' + (rateBps / 100).toFixed(2) + '% / year' + (p ? ' (' + p.monthlyPct + '%/month)' : '') + '</b></div>' +
+        '<div class="pk-row"><span>Accrued profit</span><b class="green" id="ap-accrued">' + fmtEln(acc.toString(), 6) + ' ELN</b></div>' +
+        '<div class="pk-row"><span>Unlock date</span><b>' + esc(unlockStr) + '</b></div>' +
+      '</div>' +
+      '<button class="btn primary sm" onclick="document.getElementById(\'my-positions\').scrollIntoView({behavior:\'smooth\'})">💸 Withdraw</button>' +
+    '</section>';
+}
+async function mmSendTx(data, valueWei) {
+  await ensureChain();
+  const tx = { from: ST.addr, to: ST.hs.registry, data: data };
+  if (valueWei && valueWei > 0n) tx.value = '0x' + valueWei.toString(16);
+  return WALLET.request({ method: 'eth_sendTransaction', params: [tx] });
+}
+async function pollReceipt(txHash, what) {
+  toast('🚀 ' + esc(what) + ' submitted — tx <code style="font-size:.74rem">' + esc(shortAddr(txHash)) + '</code>, waiting for confirmation…', '', 6000);
+  for (let i = 0; i < 24; i++) {
+    await sleep(2500);
+    try {
+      const r = await rpc('eth_getTransactionReceipt', [txHash]);
+      if (r) {
+        if (parseInt(r.status, 16) === 1) {
+          toast('✅ ' + esc(what) + ' confirmed in block ' + parseInt(r.blockNumber, 16).toLocaleString('en-US') + '.', 'success');
+          return true;
+        }
+        toast('❌ ' + esc(what) + ' reverted on-chain. Check the amount and your balance.', 'error');
+        return false;
+      }
+    } catch (e) { /* keep polling */ }
+  }
+  toast('⌛ ' + esc(what) + ': no receipt after 60s — it may still confirm. Refresh in a moment; do NOT resend.', 'warn');
+  return null;
+}
+
+/* ── load the validator + render the storefront ────────────────── */
+function pageParams() {
+  const u = new URLSearchParams(location.search);
+  return { code: (u.get('code') || '').trim(), address: (u.get('address') || '').trim() };
+}
+async function loadAll() {
+  const p = pageParams();
+  let r = null;
+  try {
+    if (p.code) r = await fetch('/api/apos/validator-by-code/' + encodeURIComponent(p.code)).then(function (x) { return x.json(); });
+    else if (/^0x[0-9a-fA-F]{40}$/.test(p.address)) r = await fetch('/api/apos/validator/' + p.address).then(function (x) { return x.json(); });
+    else throw new Error('Open this page with ?code=APOSCODE or ?address=0x… of a validator.');
+    if (!r || r.error || !r.address) throw new Error((r && r.error) || 'Validator not found.');
+  } catch (e) {
+    $('vp-company').textContent = 'Validator not found';
+    $('vp-about').textContent = e.message || String(e);
+    $('pk-grid').innerHTML = '<div class="empty" style="grid-column:1/-1">' + esc(e.message || 'Not found') + '</div>';
+    return;
+  }
+  ST.val = r;
+  ST.vpkgs = (r.vpackages || []);
+  renderHero(r);
+  renderPackages();
+  if (ST.addr) { loadMyThreads(); loadMyPositions(); loadDelegatorStatus(); }
+}
+function renderHero(v) {
+  const prof = v.profileData || {};
+  const stNum = Number(v.status != null ? v.status : 0);
+  $('vp-code').textContent = v.code || shortAddr(v.address);
+  const stEl = $('vp-status');
+  stEl.textContent = v.statusLabel || STATUS[stNum] || '—';
+  stEl.className = 'vp-status st-' + stNum;
+  const company = prof.company || v.code || shortAddr(v.address);
+  $('vp-company').innerHTML = esc(company) + ' <span class="grad">on Elyon</span>';
+  $('vp-about').textContent = prof.about || v.offer || 'This validator has not published a profile yet.';
+  const bits = [];
+  if (prof.contact) bits.push('<span>📮 <b>' + esc(prof.contact) + '</b></span>');
+  if (prof.address) bits.push('<span>📍 <b>' + esc(prof.address) + '</b></span>');
+  if (prof.website) {
+    const url = /^https?:\/\//i.test(prof.website) ? prof.website : 'https://' + prof.website;
+    bits.push('<span>🔗 <a href="' + esc(url) + '" target="_blank" rel="noopener nofollow"><b>' + esc(prof.website) + '</b></a></span>');
+  }
+  bits.push('<span title="' + esc(v.address) + '">🪪 <b style="font-family:var(--fm);font-size:.8rem">' + esc(shortAddr(v.address)) + '</b></span>');
+  $('vp-contact').innerHTML = bits.join('');
+  const stake = BigInt(v.stakeWei != null ? v.stakeWei : (v.selfStakeWei || '0'));
+  const deleg = BigInt(v.delegatedTotalWei || '0');
+  $('vs-pool').textContent = fmtEln(stake + deleg) + ' ELN';
+  $('vs-stake').textContent = fmtEln(stake) + ' ELN';
+  $('vs-deleg').textContent = fmtEln(deleg) + ' ELN';
+  $('vs-positions').textContent = Number(v.delegatorCount || 0).toLocaleString('en-US');
+  $('vs-packages').textContent = ST.vpkgs.filter(function (p) { return p.active; }).length;
+}
+function renderPackages() {
+  const grid = $('pk-grid');
+  const list = ST.vpkgs;
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty" style="grid-column:1/-1">This validator has not published any packages yet — check back soon.</div>';
+    return;
+  }
+  const op = onePkg();   // ONE PACKAGE PER DELEGATOR — constrains the Join buttons
+  grid.innerHTML = list.map(function (p) {
+    const isMine = op.state === 'here' && Number(op.idx) === Number(p.idx);
+    const blocked = !isMine && (op.state === 'here' || op.state === 'other');
+    let action;
+    if (!p.active) {
+      action = '<button class="btn" disabled>Not accepting new joins</button>';
+    } else if (blocked) {
+      action = '<button class="btn primary" disabled title="one package per delegator — withdraw fully to switch">⚡ Join this package</button>' +
+        '<div class="hint" style="margin-top:8px">🔒 one package per delegator — withdraw fully to switch</div>';
+    } else {
+      action = '<button class="btn primary" onclick="joinPackage(this,' + p.idx + ')">' + (isMine ? '⚡ Top up your package' : '⚡ Join this package') + '</button>' +
+        '<div class="req-compose" id="jq-' + p.idx + '" style="display:none;margin-top:12px">' +
+          '<textarea id="jq-msg-' + p.idx + '" maxlength="2000" placeholder="Hi! I&#39;d like to join this package…" style="width:100%;min-height:70px;padding:11px 13px;background:#fff;border:1px solid rgba(20,40,60,.14);border-radius:13px;font-family:var(--fb);font-size:.86rem;resize:vertical"></textarea>' +
+          '<div style="display:flex;gap:8px;margin-top:8px">' +
+            '<button class="btn primary sm" onclick="sendJoinRequest(this,' + p.idx + ')">📨 Send join request</button>' +
+            '<button class="btn sm" onclick="joinPackage(this,' + p.idx + ')">Cancel</button>' +
+          '</div></div>';
+    }
+    return (
+      '<article class="pk-card fx-card-neo"' + (isMine ? ' style="border-color:rgba(21,168,120,.55);box-shadow:0 12px 40px rgba(21,168,120,.16)"' : '') + '>' +
+        (isMine
+          ? '<span class="pk-off" style="background:rgba(21,168,120,.12);color:var(--accent2);border-color:rgba(21,168,120,.4)">★ Your package</span>'
+          : (p.active ? '' : '<span class="pk-off">closed</span>')) +
+        '<div class="pk-name">' + esc(p.name) + '</div>' +
+        '<div class="pk-rate">' + p.monthlyPct + '%<small> / month</small></div>' +
+        '<div class="pk-sub">' + (p.rateBpsAnnual / 100).toFixed(2) + '% per year · locked in at deposit, forever</div>' +
+        '<div class="pk-rows">' +
+          '<div class="pk-row"><span>Lock term</span><b>' + p.lockDays + ' days</b></div>' +
+          '<div class="pk-row"><span>Min deposit</span><b>' + Number(p.minEln).toLocaleString('en-US') + ' ELN</b></div>' +
+          '<div class="pk-row"><span>Early-exit penalty</span><b>' + p.penaltyPct + '%</b></div>' +
+        '</div>' +
+        action +
+      '</article>'
+    );
+  }).join('');
+}
+
+/* ── join flow: package card → desk request with vpkgIdx ───────── */
+function joinPackage(btn, idx) {
+  if (!ST.addr) {
+    toast('⚠️ Connect your wallet first (step below the packages) — your address identifies you to the validator.', 'error');
+    $('connect-card').scrollIntoView({ behavior: 'smooth' });
+    return;
+  }
+  const el = $('jq-' + idx);
+  if (!el) return;
+  const opening = el.style.display !== 'block';
+  el.style.display = opening ? 'block' : 'none';
+  if (opening) { const ta = $('jq-msg-' + idx); if (ta) ta.focus(); }
+}
+async function sendJoinRequest(btn, idx) {
+  const v = ST.val;
+  const p = ST.vpkgs.find(function (x) { return Number(x.idx) === Number(idx); });
+  if (!v || !p) return;
+  const ta = $('jq-msg-' + idx);
+  const msg = ((ta && ta.value) || '').trim() || ('Hi! I\'d like to join your "' + p.name + '" package.');
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Sending…';
+  try {
+    const r = await fetch('/api/desk/request', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ code: v.code || undefined, validator: v.address, delegator: ST.addr, message: msg, vpkgIdx: p.idx }),
+    }).then(function (x) { return x.json(); });
+    if (r.error) throw new Error(r.error);
+    toast('🤝 Join request for <b>' + esc(p.name) + '</b> sent — the deposit unlocks here as soon as the validator accepts.', 'success');
+    const box = $('jq-' + idx); if (box) box.style.display = 'none';
+    await loadMyThreads();
+    ST.open = r.id;
+    renderThreads();
+    $('threads-section').scrollIntoView({ behavior: 'smooth' });
+  } catch (e) {
+    toast('❌ ' + esc(e.message || String(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+}
+
+/* ── my conversation with THIS validator ───────────────────────── */
+async function loadMyThreads(silent) {
+  const box = $('my-threads');
+  if (!ST.addr || !ST.val) return;
+  try {
+    const r = await fetch('/api/desk/for-delegator/' + encodeURIComponent(ST.addr)).then(function (x) { return x.json(); });
+    ST.threads = ((r && r.threads) || []).filter(function (t) {
+      return String(t.validator).toLowerCase() === String(ST.val.address).toLowerCase();
+    });
+    renderThreads();
+  } catch (e) {
+    if (!silent) box.innerHTML = '<div class="empty">Could not load your requests: ' + esc(e.message) + '</div>';
+  }
+}
+function vpkgOfThread(t) {
+  if (t.vpkg) return t.vpkg;
+  if (t.vpkgIdx !== undefined && t.vpkgIdx !== null) {
+    const p = ST.vpkgs.find(function (x) { return Number(x.idx) === Number(t.vpkgIdx); });
+    if (p) return { idx: p.idx, name: p.name, lockDays: p.lockDays, monthlyPct: p.monthlyPct, rateBpsAnnual: p.rateBpsAnnual, penaltyPct: p.penaltyPct, minAmountWei: p.minAmountWei };
+  }
+  return null;
+}
+function renderThreads() {
+  const box = $('my-threads');
+  if (!ST.addr) return;
+  if (!ST.threads.length) {
+    box.innerHTML = '<div class="empty">No request yet — pick a package above and send a join request.</div>';
+    return;
+  }
+  const keep = {};
+  box.querySelectorAll('input[data-keep]').forEach(function (i) { keep[i.id] = i.value; });
+  const sorted = ST.threads.slice().sort(function (a, b) { return Number(b.updatedAt || 0) - Number(a.updatedAt || 0); });
+  box.innerHTML = sorted.map(renderThread).join('');
+  Object.keys(keep).forEach(function (id) { const el = document.getElementById(id); if (el) el.value = keep[id]; });
+}
+function renderThread(t) {
+  const open = ST.open === t.id;
+  const msgs = t.messages || [];
+  const last = msgs[msgs.length - 1];
+  const stCls = ['open', 'accepted', 'declined', 'closed'].indexOf(t.status) >= 0 ? t.status : 'open';
+  const vp = vpkgOfThread(t);
+  let chat = '';
+  if (open) {
+    chat = '<div class="th-chat">' + msgs.map(function (m) {
+      if (m.system) return '<div class="bub sys">' + esc(m.body) + ' · ' + timeAgo(m.at) + '</div>';
+      const me = m.from === 'delegator';
+      return '<div class="bub ' + (me ? 'me' : 'them') + '">' + esc(m.body) +
+        '<div class="bt">' + (me ? 'me' : 'validator') + ' · ' + timeAgo(m.at) + '</div></div>';
+    }).join('') +
+    '<div class="th-reply">' +
+      '<input id="th-in-' + t.id + '" data-keep maxlength="2000" placeholder="Write a message…" ' +
+        'onkeydown="if(event.key===\'Enter\')deskReply(this.nextElementSibling,' + t.id + ')">' +
+      '<button class="btn primary sm" onclick="deskReply(this,' + t.id + ')">Send</button>' +
+    '</div>';
+    if (t.status === 'accepted') {
+      chat +=
+        '<div class="th-deposit">' +
+          '<div style="font-family:var(--fm);font-size:.62rem;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--accent2);margin-bottom:8px">✅ Accepted — deposit into ' + (vp ? 'the “' + esc(vp.name) + '” package' : 'the package') + '</div>' +
+          (vp ? '<div style="font-size:.78rem;color:var(--text2);margin-bottom:8px">📦 <b>' + esc(vp.name) + '</b> — <b style="color:var(--accent2)">' + vp.monthlyPct + '%/month</b> · ' + vp.lockDays + '-day lock · ' + vp.penaltyPct + '% early-exit penalty · min ' + fmtEln(vp.minAmountWei || '0') + ' ELN per deposit</div>' : '') +
+          '<div style="display:flex;gap:9px;flex-wrap:wrap;align-items:center">' +
+            '<input id="th-amt-' + t.id + '" data-keep type="number" min="0" step="0.0001" placeholder="ELN">' +
+            '<button class="btn primary sm" onclick="deskDeposit(this,' + t.id + ')">⚡ Deposit</button>' +
+          '</div>' +
+          '<div class="hint" style="margin-top:8px">Your deposit becomes a position with the package\'s rate, lock and penalty — <b>locked at deposit, forever</b>. Withdraw it yourself any time under “My positions here”.</div>' +
+        '</div>';
+    } else if (t.status === 'open') {
+      chat += '<div class="hint" style="padding:4px 2px 0">⏳ Waiting for the validator to accept — the deposit form unlocks here once they do.</div>';
+    }
+    chat += '</div>';
+  }
+  return (
+    '<div class="th-item">' +
+      '<div class="th-head" onclick="toggleThread(' + t.id + ')">' +
+        '<span class="th-badge ' + stCls + '">' + esc(t.status) + '</span>' +
+        (vp ? '<span style="font-family:var(--fm);font-size:.68rem;font-weight:700;color:var(--accent2);background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.3);border-radius:999px;padding:4px 11px">📦 ' + esc(vp.name) + '</span>' : '') +
+        '<span style="flex:1;color:var(--text3);font-size:.78rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;min-width:60px">' + (last ? esc(String(last.body).slice(0, 90)) : '') + '</span>' +
+        '<span style="font-family:var(--fm);font-size:.66rem;color:var(--text3)">' + timeAgo(t.updatedAt) + '</span>' +
+        '<span style="color:var(--accent2)">' + (open ? '▾' : '▸') + '</span>' +
+      '</div>' + chat +
+    '</div>'
+  );
+}
+function toggleThread(id) {
+  ST.open = ST.open === id ? null : id;
+  renderThreads();
+}
+async function deskReply(btn, id) {
+  const inp = $('th-in-' + id);
+  const body = ((inp && inp.value) || '').trim();
+  if (!body) return;
+  btn.disabled = true;
+  try {
+    const r = await fetch('/api/desk/' + id + '/reply', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ from: 'delegator', address: ST.addr, body: body }),
+    }).then(function (x) { return x.json(); });
+    if (r.error) throw new Error(r.error);
+    inp.value = '';
+    await loadMyThreads(true);
+  } catch (e) {
+    toast('❌ ' + esc(e.message || String(e)), 'error');
+  } finally { btn.disabled = false; }
+}
+
+/* ── deposit (after ACCEPT) into the thread's package ──────────── */
+async function deskDeposit(btn, id) {
+  const t = ST.threads.find(function (t) { return t.id === id; });
+  if (!t || !ST.val) return;
+  if (!ST.connected) { toast('⚠️ Connect a wallet first (MetaMask or private key).', 'error'); return; }
+  const vp = vpkgOfThread(t) || (ST.vpkgs.filter(function (p) { return p.active; }).length === 1 ? ST.vpkgs.filter(function (p) { return p.active; })[0] : null);
+  if (!vp) { toast('⚠️ This request has no package attached — send a new join request from a package card above.', 'error'); return; }
+  // ONE PACKAGE PER DELEGATOR — block mismatching deposits before any money moves.
+  const op1 = onePkg();
+  if (op1.state === 'other') {
+    toast('⚠️ You already delegate with validator <b>' + esc(op1.code || shortAddr(op1.validator)) + '</b> — a delegator can only stake in one package. Withdraw fully there to join here.', 'error', 9000);
+    return;
+  }
+  if (op1.state === 'here' && Number(op1.idx) !== Number(vp.idx)) {
+    toast('⚠️ one package per delegator — you already hold “' + esc(op1.name || ('package #' + (Number(op1.idx) + 1))) + '” with this validator. Withdraw it fully to switch packages.', 'error', 9000);
+    return;
+  }
+  let valueWei;
+  try { valueWei = parseEln(($('th-amt-' + id).value || '').trim()); } catch (e) { toast('⚠️ ' + esc(e.message), 'error'); return; }
+  if (valueWei < BigInt(vp.minAmountWei || '0')) {
+    toast('⚠️ Amount is below the package minimum (' + fmtEln(vp.minAmountWei || '0') + ' ELN per deposit).', 'error');
+    return;
+  }
+  // Final terms check — rate, penalty and the unlock date, before any money moves.
+  const lockSecs = Number(vp.lockDays || 0) * 86400;
+  const unlockStr = new Date(Date.now() + lockSecs * 1000)
+    .toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  if (!confirm('Join "' + vp.name + '" with ' + fmtEln(valueWei) + ' ELN?\n\n' +
+      '• Rate locked forever: ' + vp.monthlyPct + '% / month (' + ((vp.rateBpsAnnual || 0) / 100) + '% / year)\n' +
+      '• Lock until: ' + unlockStr + ' (' + vp.lockDays + ' days)\n' +
+      '• Early exit before then: ' + vp.penaltyPct + '% penalty on the withdrawn principal')) return;
+  const code = ST.val.code;
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Depositing…';
+  try {
+    if (ST.connected === 'mm') {
+      const data = code ? await encodeDelegateByCode(code, vp.idx) : await encodeDelegateAddr(ST.val.address, vp.idx);
+      const txHash = await mmSendTx(data, valueWei);
+      const ok = await pollReceipt(txHash, 'Deposit of ' + fmtEln(valueWei) + ' ELN into "' + vp.name + '"');
+      if (ok !== false) await afterTxRefresh();
+    } else {
+      const r = await fetch('/api/apos/delegate', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ privateKey: ST.pk, code: code || undefined, validator: ST.val.address, vpkgIdx: vp.idx, amountEther: weiToEtherString(valueWei) }),
+      }).then(function (x) { return x.json(); });
+      if (r.error) throw new Error(r.error);
+      toast('✅ Deposited <b>' + fmtEln(valueWei) + ' ELN</b> into <b>' + esc(vp.name) + '</b> — tx <code style="font-size:.74rem">' + esc(shortAddr(r.txHash || '')) + '</code>', 'success');
+      await afterTxRefresh();
+    }
+  } catch (e) {
+    toast('❌ Deposit failed: ' + esc(friendlyErr(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+}
+async function afterTxRefresh() {
+  await Promise.all([loadAll(), loadMyPositions(), loadMyThreads(true)]);
+  refreshBalance();
+  loadDelegatorStatus();
+}
+
+/* ── my positions with THIS validator ──────────────────────────── */
+function posAccruedWei(p) {
+  try {
+    const amt = BigInt(p.amountWei || '0');
+    const rate = BigInt(Number(p.rateBps) || 0);
+    const elapsed = BigInt(Math.max(0, Math.floor(Date.now() / 1000) - Number(p.since || 0)));
+    return amt * rate * elapsed / (10000n * 31536000n);
+  } catch (e) { return 0n; }
+}
+function posPenaltyPct(p) { return Number(p.penaltyPct != null ? p.penaltyPct : Number(p.penaltyBps || 0) / 100); }
+function posIsEarly(p) {
+  const until = Number(p.earlyUntil || p.unlockAt || (Number(p.since || 0) + Number(p.lockSeconds || 0)));
+  return Number(p.penaltyBps || 0) > 0 && Date.now() / 1000 < until;
+}
+async function loadMyPositions() {
+  const box = $('my-positions');
+  if (!ST.addr || !ST.val) return;
+  box.innerHTML = '<div class="skel" style="height:96px"></div>';
+  try {
+    const r = await fetch('/api/apos/my-delegations/' + encodeURIComponent(ST.addr)).then(function (x) { return x.json(); });
+    const ds = ((r && r.delegations) || []).filter(function (p) {
+      return String(p.validator).toLowerCase() === String(ST.val.address).toLowerCase() && BigInt(p.amountWei || '0') > 0n;
+    });
+    ST.positions = ds;
+    renderOnePkgUi();   // "Your active package" card sums these positions
+    if (!ds.length) {
+      box.innerHTML = '<div class="empty">No open positions with this validator yet — join a package above.</div>';
+      return;
+    }
+    box.innerHTML = ds.map(renderPosition).join('');
+  } catch (e) {
+    box.innerHTML = '<div class="empty">Could not load positions: ' + esc(e.message) + '</div>';
+  }
+}
+function renderPosition(p, i) {
+  const sinceStr = p.since
+    ? new Date(Number(p.since) * 1000).toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+  const early = posIsEarly(p);
+  const untilStr = new Date(Number(p.earlyUntil || p.unlockAt || 0) * 1000)
+    .toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+  return (
+    '<div class="d-item">' +
+      '<div><div style="font-family:var(--fm);font-weight:700;color:#0e7d5a;background:rgba(21,168,120,.10);border:1px solid rgba(21,168,120,.35);padding:8px 13px;border-radius:11px;width:max-content">📦 ' + esc(p.vpkgName || 'position') + '</div>' +
+        '<div style="font-family:var(--fm);font-size:.62rem;color:var(--text3);margin-top:6px">position #' + Number(p.posIdx) + '</div></div>' +
+      '<div class="d-meta">' +
+        'Principal: <b>' + fmtEln(p.amountWei) + ' ELN</b> at <b style="color:var(--accent2)">' + ((Number(p.rateBps) || 0) / 100).toFixed(2) + '%/yr</b> <span style="color:var(--text3);font-size:.74rem">(locked at deposit)</span><br>' +
+        'Accrued profit: <span class="green" data-accrue="' + i + '">' + fmtEln(posAccruedWei(p).toString(), 6) + '</span> <span style="color:var(--text3);font-size:.76rem">ELN — ticking daily</span><br>' +
+        '<span style="color:var(--text3);font-size:.76rem">Deposited ' + esc(sinceStr) + ' · ' + Number(p.lockDays || 0) + '-day lock · ' + posPenaltyPct(p) + '% early-exit penalty</span>' +
+        (early ? '<br><span style="color:#f59e0b;font-size:.76rem">⚠ locked until ' + esc(untilStr) + ' — withdrawing before then costs the ' + posPenaltyPct(p) + '% penalty</span>' : '') +
+      '</div>' +
+      '<div style="display:flex;flex-direction:column;gap:8px">' +
+        '<button class="btn primary sm" onclick="withdrawPosition(this,' + i + ')">💸 Withdraw</button>' +
+      '</div>' +
+    '</div>'
+  );
+}
+setInterval(function () {
+  document.querySelectorAll('[data-accrue]').forEach(function (el) {
+    const p = ST.positions[Number(el.dataset.accrue)];
+    if (p) el.textContent = fmtEln(posAccruedWei(p).toString(), 6);
+  });
+  // "Your active package" card: keep its accrued-profit total ticking too.
+  const apEl = document.getElementById('ap-accrued');
+  if (apEl && ST.positions.length) {
+    let acc = 0n;
+    ST.positions.forEach(function (p) { acc += posAccruedWei(p); });
+    apEl.textContent = fmtEln(acc.toString(), 6) + ' ELN';
+  }
+}, 1000);
+async function withdrawPosition(btn, i) {
+  const p = ST.positions[i];
+  if (!p) return;
+  if (!ST.connected) { toast('⚠️ Connect a wallet first (MetaMask or private key).', 'error'); return; }
+  const maxStr = weiToEtherString(BigInt(p.amountWei || '0'));
+  const amt = prompt('How much ELN to withdraw from position #' + p.posIdx + '? (max ' + maxStr + ')\nYour accrued profit is paid out with it.', maxStr);
+  if (amt === null) return;
+  let valueWei;
+  try { valueWei = parseEln(String(amt).trim()); } catch (e) { toast('⚠️ ' + esc(e.message), 'error'); return; }
+  if (valueWei > BigInt(p.amountWei || '0')) { toast('⚠️ That exceeds the position principal (' + maxStr + ' ELN).', 'error'); return; }
+  if (posIsEarly(p)) {
+    const penWei = valueWei * BigInt(Number(p.penaltyBps || 0)) / 10000n;
+    const untilStr = new Date(Number(p.earlyUntil || p.unlockAt || 0) * 1000)
+      .toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    if (!confirm('⚠ EARLY WITHDRAWAL — this position\'s "' + (p.vpkgName || 'package') + '" lock runs until ' + untilStr + '.\n\nA ' + posPenaltyPct(p) + '% penalty (' + fmtEln(penWei.toString(), 6) + ' ELN) will be deducted from your principal and kept by the validator.\n\nWithdraw anyway?')) return;
+  }
+  const orig = btn.innerHTML;
+  btn.disabled = true; btn.innerHTML = '<span class="spin"></span> Withdrawing…';
+  try {
+    if (ST.connected === 'mm') {
+      const sel = await selector('withdrawPosition(address,uint256,uint256)');
+      const data = sel + pad32(p.validator) + pad32(p.posIdx) + pad32(valueWei);
+      const txHash = await mmSendTx(data, 0n);
+      const ok = await pollReceipt(txHash, 'Withdrawal of ' + fmtEln(valueWei) + ' ELN from position #' + p.posIdx);
+      if (ok !== false) await afterTxRefresh();
+    } else {
+      const r = await fetch('/api/apos/withdraw-position', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ privateKey: ST.pk, validator: p.validator, posIdx: p.posIdx, amountEther: weiToEtherString(valueWei) }),
+      }).then(function (x) { return x.json(); });
+      if (r.error) throw new Error(r.error);
+      toast('✅ Withdrew <b>' + fmtEln(valueWei) + ' ELN</b> + accrued profit' + (r.earlyPenaltyApplied ? ' (' + posPenaltyPct(p) + '% early-exit penalty deducted)' : '') + ' — tx <code style="font-size:.74rem">' + esc(shortAddr(r.txHash || '')) + '</code>', 'success');
+      await afterTxRefresh();
+    }
+  } catch (e) {
+    toast('❌ Withdrawal failed: ' + esc(friendlyErr(e)), 'error');
+  } finally {
+    btn.disabled = false; btn.innerHTML = orig;
+  }
+}
+
+/* ── boot ──────────────────────────────────────────────────────── */
+(async function init() {
+  await loadAll();
+  try { await loadHandshake(); } catch (e) { toast('⚠️ ' + esc(e.message), 'warn', 8000); }
+  setInterval(function () { if (ST.addr) loadMyThreads(true); }, 8000);
+  setInterval(function () { if (ST.addr) refreshBalance(); }, 10000);   // live ELN balance
+  setInterval(loadAll, 60000);
+})();
+</script>
+</body>
+</html>

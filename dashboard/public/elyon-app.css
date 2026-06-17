@@ -1,0 +1,118 @@
+/* ════════════════════════════════════════════════════════════════════
+   ELYON APP SHELL — shared application-shell chrome (v10.0 · light premium)
+   Sidebar navigation + top app-bar + workspace frame. Loaded by every
+   dashboard page so they share the exact same structure/look approved on
+   all pages. Scoped to shell classes only (.elx-sidebar/.elx-app/
+   .elx-topbar/.elx-work) so it never fights a page's own component CSS.
+   v10.1: LIGHT premium identity — #f6f8fa base, #ffffff surfaces, soft
+   shadows, emerald #15a878→#0e7d5a accents, dark readable text. ALL pages
+   (incl. site.html and owner.html) use this light shell. Perf pass: no
+   backdrop-filter (solid surfaces), no infinite box-shadow animations.
+   Layout metrics (widths/heights/breakpoints) are byte-identical to v9 —
+   colors and effects only, so nothing shifts.
+   ════════════════════════════════════════════════════════════════════ */
+:root{
+  --elx-sbw:252px;
+  --elx-sb:#ffffff;--elx-sb2:#ffffff;--elx-sb-text:#5a6b7a;
+  --elx-accent:#15a878;--elx-accent2:#0e7d5a;--elx-accent3:#15a878;--elx-teal:#0e7d5a;
+  --elx-bg:#f6f8fa;--elx-line:rgba(20,40,60,.08);
+  --elx-ink:#1c2733;--elx-ink2:#5a6b7a;
+  --elx-fh:'Space Grotesk','Inter',sans-serif;
+  --elx-fm:'JetBrains Mono',ui-monospace,Menlo,Consolas,monospace;
+  --elx-ease:cubic-bezier(.34,1.56,.64,1);
+  --elx-glow:0 8px 32px rgba(20,40,60,.08);
+}
+body.elx-shelled{margin:0!important;background:var(--elx-bg)!important;min-height:100vh}
+
+/* ── site-wide scrollbars: thin, emerald, invisible-until-hover (WebKit) ──
+   Applied to every scrollable area (body, .elx-work, tables, panels). */
+body.elx-shelled{scrollbar-width:thin;scrollbar-color:rgba(21,168,120,.35) transparent}
+.elx-shelled *{scrollbar-width:thin;scrollbar-color:rgba(21,168,120,.35) transparent}
+body.elx-shelled::-webkit-scrollbar,.elx-shelled ::-webkit-scrollbar{width:5px;height:5px}
+body.elx-shelled::-webkit-scrollbar-track,.elx-shelled ::-webkit-scrollbar-track{background:transparent}
+body.elx-shelled::-webkit-scrollbar-thumb,.elx-shelled ::-webkit-scrollbar-thumb{background:rgba(21,168,120,.3);border-radius:3px}
+body.elx-shelled::-webkit-scrollbar-thumb:hover,.elx-shelled ::-webkit-scrollbar-thumb:hover{background:rgba(21,168,120,.5)}
+
+/* sidebar — white surface, soft layered shadow, hairline divider */
+.elx-sidebar{position:fixed;top:0;left:0;bottom:0;width:var(--elx-sbw);background:linear-gradient(180deg,var(--elx-sb2),var(--elx-sb));color:var(--elx-sb-text);display:flex;flex-direction:column;padding:22px 16px;z-index:1000;overflow:hidden;border-right:1px solid var(--elx-line);box-shadow:0 8px 32px rgba(20,40,60,.08)}
+.elx-sidebar::before{content:"";position:absolute;top:-120px;right:-120px;width:300px;height:300px;border-radius:50%;background:radial-gradient(circle,rgba(21,168,120,.07),transparent 70%);pointer-events:none}
+.elx-sidebar::after{content:"";position:absolute;bottom:-140px;left:-140px;width:320px;height:320px;border-radius:50%;background:radial-gradient(circle,rgba(14,125,90,.05),transparent 70%);pointer-events:none}
+.elx-sb-brand{display:flex;align-items:center;gap:10px;padding:6px 10px 22px;flex-shrink:0}
+.elx-sb-brand img{height:30px;width:auto;filter:none}
+.elx-sb-nav{display:flex;flex-direction:column;gap:4px;position:relative;z-index:1}
+.elx-sb-nav a{display:flex;align-items:center;gap:12px;padding:11px 13px;border-radius:12px;color:var(--elx-sb-text);font-family:var(--elx-fh);font-weight:600;font-size:.9rem;text-decoration:none;transition:background .2s,color .2s,box-shadow .25s}
+.elx-sb-nav a svg{width:19px;height:19px;flex:0 0 auto;opacity:.9}
+.elx-sb-nav a:hover{background:rgba(21,168,120,.07);color:var(--elx-ink)}
+.elx-sb-nav a.active{background:linear-gradient(135deg,rgba(21,168,120,.14),rgba(21,168,120,.05));color:var(--elx-accent2);box-shadow:inset 3px 0 0 var(--elx-accent)}
+.elx-sb-foot{margin-top:auto;position:relative;z-index:1;flex-shrink:0;font-family:var(--elx-fm);font-size:10.5px;letter-spacing:.04em;color:var(--elx-sb-text);opacity:.75;padding:14px 10px 2px;background:var(--elx-sb)}
+
+/* app frame + top bar — light, solid surface (no blur filters: perf), hairline border */
+.elx-app{margin-left:var(--elx-sbw);min-height:100vh;display:flex;flex-direction:column}
+.elx-topbar{position:sticky;top:0;z-index:900;display:flex;align-items:center;gap:14px;padding:15px 30px;background:rgba(255,255,255,.96);border-bottom:1px solid var(--elx-line)}
+.elx-topbar h1{font-family:var(--elx-fh);font-size:1.4rem;font-weight:800;letter-spacing:-.02em;color:var(--elx-ink);margin:0}
+.elx-topbar .elx-spacer{flex:1}
+.elx-net{display:inline-flex;align-items:center;gap:8px;background:rgba(21,168,120,.10);color:var(--elx-accent2);border:1px solid rgba(21,168,120,.25);padding:8px 13px;border-radius:999px;font-size:.8rem;font-weight:600;font-family:var(--elx-fm)}
+.elx-net .dot{width:7px;height:7px;border-radius:50%;background:var(--elx-accent);animation:elxPulse 1.8s infinite}
+@keyframes elxPulse{0%{box-shadow:0 0 0 0 rgba(21,168,120,.35)}70%,100%{box-shadow:0 0 0 7px rgba(21,168,120,0)}}
+.elx-work{padding:26px 30px 70px;width:100%;max-width:none;animation:elxRise .5s var(--elx-ease) both}
+@keyframes elxRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.elx-burger{display:none;height:38px;width:42px;border:1px solid var(--elx-line);background:#ffffff;color:var(--elx-ink);border-radius:10px;cursor:pointer;align-items:center;justify-content:center}
+
+@media(max-width:860px){
+  .elx-sidebar{transform:translateX(-100%);transition:transform .3s var(--elx-ease);box-shadow:0 24px 60px rgba(20,40,60,.18)}
+  .elx-sidebar.open{transform:none}
+  .elx-app{margin-left:0}
+  .elx-burger{display:inline-flex}
+  .elx-work{padding:18px}
+}
+
+/* ── dashboard-compat: neutralize the dashboards' own top chrome inside the
+   shell (elements stay in the DOM so their JS keeps working; we only hide the
+   now-redundant admin logo bar and stop their old navbars double-sticking). */
+.elx-shelled #app-header{display:none!important}
+.elx-shelled nav.top{display:none!important}
+.elx-topbar .right,.elx-topbar .wallet{display:flex;align-items:center;gap:10px}
+.elx-topbar .right .pill,.elx-topbar .wallet .pill{background:rgba(21,168,120,.10);color:var(--elx-accent2);border:1px solid rgba(21,168,120,.22);padding:6px 12px;border-radius:999px;font-size:.78rem;font-weight:600;font-family:var(--elx-fm)}
+.elx-shelled #progress-bar{position:static!important}
+.elx-shelled .elx-work{max-width:none}
+
+/* ── dashboard menus inside the sidebar: the admin/manager/operator move their
+   own section buttons (.nav-btn) into the sidebar; render them as vertical
+   sidebar items. switchTab()/role-filtering keep working (we only relocated
+   the buttons; their onclick + classes are untouched). */
+.elx-sb-nav .nav-btn{display:flex;align-items:center;gap:10px;width:100%;justify-content:flex-start;text-align:left;background:transparent;border:0;color:var(--elx-sb-text);font-family:var(--elx-fh);font-weight:600;font-size:.875rem;padding:10px 13px;border-radius:12px;cursor:pointer;transition:background .2s,color .2s,box-shadow .25s;margin:0;line-height:1.2}
+.elx-sb-nav .nav-btn:hover{background:rgba(21,168,120,.07);color:var(--elx-ink);transform:none}
+.elx-sb-nav .nav-btn.active{background:linear-gradient(135deg,rgba(21,168,120,.14),rgba(21,168,120,.05));color:var(--elx-accent2);box-shadow:inset 3px 0 0 var(--elx-accent)}
+/* ── CRITICAL FIX: the sidebar menu scrolls cleanly when it overflows.
+   Custom invisible-until-hover scrollbar (thumb only shows while hovering
+   the nav); overscroll contained so the page never rubber-bands behind it;
+   the footer label sits outside the scroll area so it can't be overlapped. */
+.elx-sb-nav{gap:3px;flex:1 1 auto;min-height:0;overflow-y:auto;overscroll-behavior:contain;scrollbar-width:thin;scrollbar-color:rgba(21,168,120,.35) transparent}
+.elx-sb-nav::-webkit-scrollbar{width:5px}
+.elx-sb-nav::-webkit-scrollbar-track{background:transparent}
+.elx-sb-nav::-webkit-scrollbar-thumb{background:transparent;border-radius:3px}
+.elx-sb-nav:hover::-webkit-scrollbar-thumb{background:rgba(21,168,120,.3)}
+/* owner asked for a clean, icon-free menu identical across all pages:
+   hide every menu icon (SVG site-nav icons AND emoji are stripped from the
+   admin buttons separately) and drop the VALIDATOR ADMIN badge. */
+.elx-sb-nav svg{display:none!important}
+.elx-sb-nav a,.elx-sb-nav .nav-btn,.elx-sb-nav .tab{gap:0}
+.elx-sb-nav #role-badge{display:none!important}
+/* manager/operator section tabs (.tab) as sidebar items, same as .nav-btn */
+.elx-sb-nav .tab{display:flex;align-items:center;width:100%;justify-content:flex-start;text-align:left;background:transparent;border:0;color:var(--elx-sb-text);font-family:var(--elx-fh);font-weight:600;font-size:.875rem;padding:10px 13px;border-radius:12px;cursor:pointer;transition:background .2s,color .2s,box-shadow .25s;margin:0;line-height:1.2}
+.elx-sb-nav .tab:hover{background:rgba(21,168,120,.07);color:var(--elx-ink)}
+.elx-sb-nav .tab.active{background:linear-gradient(135deg,rgba(21,168,120,.14),rgba(21,168,120,.05));color:var(--elx-accent2);box-shadow:inset 3px 0 0 var(--elx-accent)}
+/* force the dashboard menus to the EXACT public-sidebar colors (the admin page
+   sets .nav-btn color:var(--text2)!important, which we must out-rank so the
+   menu matches the light identity: slate text, dark ink on hover, emerald
+   tinted active pill with animated left bar). */
+.elx-sb-nav .nav-btn,.elx-sb-nav .tab{background:transparent!important;color:var(--elx-sb-text)!important;border:0!important}
+.elx-sb-nav .nav-btn:hover,.elx-sb-nav .tab:hover{background:rgba(21,168,120,.07)!important;color:var(--elx-ink)!important;transform:none!important}
+.elx-sb-nav .nav-btn.active,.elx-sb-nav .tab.active{background:linear-gradient(135deg,rgba(21,168,120,.14),rgba(21,168,120,.05))!important;color:var(--elx-accent2)!important;box-shadow:inset 3px 0 0 var(--elx-accent)!important}
+
+/* respect reduced-motion: freeze decorative shell animation */
+@media(prefers-reduced-motion:reduce){
+  .elx-sb-nav a.active,.elx-sb-nav .nav-btn.active,.elx-sb-nav .tab.active{animation:none!important}
+  .elx-net .dot{animation:none}
+  .elx-work{animation:none}
+}

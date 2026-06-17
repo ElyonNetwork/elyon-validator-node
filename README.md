@@ -253,7 +253,7 @@ docker run --rm -v elyon-validator-data:/data -v "$PWD":/backup alpine \
 ## Build from source
 
 ```bash
-git clone https://github.com/Elyon/elyon-validator-node.git
+git clone https://github.com/ElyonNetwork/elyon-validator-node.git
 cd elyon-validator-node
 docker build -t elyonchain/node:latest .
 ```

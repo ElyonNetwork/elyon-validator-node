@@ -68,7 +68,7 @@ Every transaction pays `gasUsed × effectiveGasPrice`, made of two parts:
 
 - ✅ One‑command Docker deployment; joins an existing chain via a single `ADMIN_URL`.
 - ✅ Clean web panel at **`/manager`**: My Validator, Delegators, Staking Packages, Send ELN, Fee Earnings, PoS Staking, and a live block Explorer.
-- ✅ Key stays in your browser tab — signed per‑transaction, never uploaded.
+- ✅ Your key signs your transactions on your **own node** — it is never stored on disk and never sent to Elyon or any third party.
 - ✅ Publishes your own delegator packages (rate, lock, minimum, early‑exit penalty).
 - ✅ Runs as a non‑root user inside the container; data persisted to a Docker volume.
 
@@ -118,7 +118,7 @@ docker logs -f elyon-validator # watch it boot + start syncing
 
 Browse to `http://<your-server-ip>:3000`. You'll see the **sign‑in gate**:
 
-- **Have a key file?** Drop your `.txt` key file (or paste a bare 64‑hex private key). This is your validator wallet — it's held in the browser tab only.
+- **Have a key file?** Drop your `.txt` key file (or paste a bare 64‑hex private key). This is your validator wallet — it is sent to your own node only to sign your transactions, and is never stored.
 - **New operator?** Click **"Create a key for me & set up this node"** — it generates a fresh key, downloads the backup `.txt` (⚠️ **save it immediately**), joins the chain, and signs you in.
 
 ### 3. Join the chain
@@ -278,7 +278,7 @@ The image builds **on top of the published chain engine** (`FROM elyonchain/admi
 
 ## Security
 
-- 🔑 **Your key never leaves the browser tab** — it's used to sign each transaction client‑side and is never persisted server‑side.
+- 🔑 **Your key is used only by your own node.** When you act, your key is sent to *this* node’s dashboard (which you run) to sign the transaction, and is **never written to disk or logged** and **never sent to Elyon or any third party**. Run the node on a host only you control, and treat the key file like cash.
 - 👤 The container runs the dashboard as a **non‑root** user; code under `/dashboard` and `/nethermind` is read‑only.
 - 🌐 Don't expose port `3000` directly to the internet without a reverse proxy + access control. Expose `30303` for P2P.
 - 💾 Treat your key file like cash. Anyone with it controls your validator wallet.

@@ -17,28 +17,63 @@ BigInt.prototype.toJSON = function () { return this.toString(); };
 const app = express();
 
 // ─────────────────────────────────────────────────────────────────────
-// VALIDATOR NODE — admin capabilities are not part of this distribution.
-// This guard hard-disables every chain-administration API path so a
-// validator node can NEVER administer the chain (approve validators, set
-// tiers, create/convert a chain, manage the registry/pointer, run a faucet,
-// withdraw admin fees, etc.). Validator + delegator endpoints are untouched.
+// VALIDATOR NODE — default-DENY security guard (whitelist).
+//
+// This image is validator-only and must NEVER expose chain administration.
+// A blacklist is fail-OPEN: any admin route someone forgets to list stays
+// reachable. Instead we ALLOW only the validator / delegator / read / join /
+// infrastructure endpoints this node legitimately needs and return 404 for
+// everything else. The posture is fail-SAFE: a newly added admin route is
+// denied automatically until it is explicitly and deliberately permitted, so
+// a single omission can never silently expose chain-administration capability.
+//
+// This runs BEFORE requireAuth, so admin paths are blocked even during the
+// pre-setup window when auth is not yet enforced (isProtectedMode() === false).
 // ─────────────────────────────────────────────────────────────────────
-const ADMIN_ONLY_PATHS = [
-  /^\/api\/apos\/admin\//i,                 // approve/reject/suspend/set-code/set-tiers/add-package/withdraw-admin-fees/set-min-stake/fund-reward-pool/...
-  /^\/api\/apos\/deploy(-pointer)?\b/i,     // deploy registry / pointer (admin)
-  /^\/api\/apos\/(apply|repair)-pointer\b/i,
-  /^\/api\/apos\/cancel-pointer-proposal\b/i,
-  // NOTE: discover-pointer / sync-from-pointer / use-pointer / pointer-info
-  // stay enabled — an operator needs them to locate the chain's registry.
-  /^\/api\/wizard\/create-chain\b/i,        // creating a brand-new chain = admin
-  /^\/api\/wizard\/(sync-convert-pos|force-activate-pos|sync-disconnect)\b/i,
-  /^\/api\/faucet\//i,                       // faucet is an admin-node service
+const VALIDATOR_ALLOW = [
+  // auth · status · RPC proxy · node infra
+  /^\/api\/auth\//i,
+  /^\/api\/rpc(\/|$)/i,
+  /^\/api\/(status|role-info)(\/|$)/i,
+  /^\/api\/operator\/config(\/|$)/i,
+  /^\/api\/simple-admin\/config(\/|$)/i,
+  /^\/api\/blocks\//i,
+  /^\/api\/wallet\/send-native(\/|$)/i,
+  // wizard: JOIN + READ only — NOT create-chain / convert-pos / sync-convert-pos /
+  // force-activate-pos / sync-disconnect / deploy-staking / staking/*
+  /^\/api\/wizard\/(status|sync-status|connect|bootstrap|generate-key|derive-address)(\/|$)/i,
+  /^\/api\/wizard\/operator\//i,
+  // apos: read endpoints
+  /^\/api\/apos\/(info|mode|packages|tiers|validators|validator-by-code|vpackages|credits|handshake)(\/|$)/i,
+  // apos: validator actions + per-validator read (/validator/:addr, /validator/apply, ...)
+  /^\/api\/apos\/validator(\/|$)/i,
+  // apos: delegator actions
+  /^\/api\/apos\/(delegate|delegator-status|delegators|my-delegations|withdraw-position)(\/|$)/i,
+  // apos: registry-pointer DISCOVERY only — NEVER deploy/apply/repair/cancel a pointer
+  /^\/api\/apos\/(discover-pointer|use-pointer|sync-from-pointer|pointer-info|pointer-build)(\/|$)/i,
+  // delegation desk · leaderboard reads · PoS block-producer staking (validator-side)
+  /^\/api\/desk\//i,
+  /^\/api\/lb\/(state|heartbeat)(\/|$)/i,
+  /^\/api\/staking\/(status|active-validators|stake-producer|request-unstake|withdraw)(\/|$)/i,
 ];
+const _deny = (res) => res.status(404).json({ error: 'not available on a validator node' });
 app.use((req, res, next) => {
-  if (ADMIN_ONLY_PATHS.some((re) => re.test(req.path))) {
-    return res.status(404).json({ error: 'admin endpoints are not available on a validator node' });
+  let p = req.path;
+  if (p === '/rpc') p = '/api/rpc';
+  // Non-API requests (static assets, /manager, /node, pages) are not gated.
+  if (!p.startsWith('/api/')) return next();
+  // /api/admin-proxy/* forwards to the chain's ADMIN node — permit only the
+  // read/bootstrap calls the join flow needs; never proxy an admin action.
+  if (p.startsWith('/api/admin-proxy/')) {
+    const inner = p.slice('/api/admin-proxy'.length);
+    if (/^\/api\/(rpc|wizard\/(bootstrap|status)|apos\/(info|mode|packages|tiers|validators))(\/|$)/i.test(inner)) return next();
+    return _deny(res);
   }
-  next();
+  // /api/proxy/* re-enters the LOCAL API — evaluate the effective inner path so
+  // an admin route can't be tunnelled through the proxy.
+  const eff = p.startsWith('/api/proxy/') ? p.slice('/api/proxy'.length) : p;
+  if (VALIDATOR_ALLOW.some((re) => re.test(eff))) return next();
+  return _deny(res);
 });
 
 // v7.0.3 SECURITY (audit I7): trust the loopback proxy so req.ip resolves

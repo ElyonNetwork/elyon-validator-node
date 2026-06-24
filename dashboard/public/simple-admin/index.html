@@ -308,7 +308,7 @@ window.trackBtn = window.trackBtn || async function(b, f, t){ if (typeof f !== '
 <div id="gate" class="gate">
   <div class="gate-inner">
     <h1 id="gate-title">Admin sign in</h1>
-    <p id="gate-sub">Upload the key file you saved during chain install. The private key is held in this browser tab only — it's sent with each transaction below and never persisted.</p>
+    <p id="gate-sub">Upload the key file you saved during chain install. Your private key is sent to this node only — used to sign each transaction and never stored.</p>
 
     <label class="file-drop fx-lift" id="file-drop">
       <input type="file" id="key-input" accept=".txt,text/plain" onchange="onKeyFileSelected(event)" />
@@ -807,7 +807,7 @@ async function detectGateMode() {
         fl = $('filedrop-label'), fh = $('filedrop-help');
   if (configured) {
     title.textContent = 'Admin sign in';
-    sub.textContent = "Upload the key file you saved during install. The private key stays in this browser tab — it's sent with each transaction and never persisted.";
+    sub.textContent = "Upload the key file you saved during install. Your private key is sent to this node only — used to sign each transaction and never stored.";
     if (setup) setup.style.display = 'none';
     if (fl) fl.textContent = 'Click to choose key file';
   } else {
@@ -990,7 +990,7 @@ function promptForKey() {
     ov.innerHTML =
       '<div style="background:#fff;max-width:440px;width:100%;border-radius:18px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.35);font-family:inherit">'
       + '<h3 style="margin:0 0 8px;font-size:22px;color:#0a0a14">Sign in to continue</h3>'
-      + '<p style="margin:0 0 18px;color:#5a6172;font-size:14px;line-height:1.5">Your session needs to be refreshed. Upload your key file to authorize this action — your key stays in this browser tab only.</p>'
+      + '<p style="margin:0 0 18px;color:#5a6172;font-size:14px;line-height:1.5">Your session needs to be refreshed. Upload your key file to authorize this action — your key is used by this node to sign and is never stored.</p>'
       + '<label style="display:block;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;cursor:pointer;color:#5a6172;font-size:14px">'
       + '<input type="file" accept=".txt,text/plain" style="display:none" id="__reauth_file"/>🔑 <b>Click to choose your key file</b><br><span style="font-size:12px">or a bare 64-hex private key (.txt)</span></label>'
       + '<div id="__reauth_err" style="color:#ef4444;font-size:13px;margin-top:10px;display:none"></div>'

@@ -4,7 +4,8 @@ This document records the security review carried out on Elyon Chain in November
 reviewed, what was found, what was fixed and what remains open. It is the Elyon team's own review, not
 an audit by an independent firm. An independent audit is still recommended.
 
-To report a vulnerability privately, use GitHub's **Security → Report a vulnerability** on this repository.
+To report a vulnerability, please do not post technical details publicly. Open an issue titled
+"Security contact request", without details, and the team will arrange a private channel.
 
 ## Scope
 

@@ -102,8 +102,8 @@ The team's November 2026 review covered the consensus engine, fee settlement, no
 infrastructure. [SECURITY.md](SECURITY.md) lists every finding, what was fixed and deployed, and what is still open.
 It was an internal review; an independent audit is still recommended.
 
-Report vulnerabilities privately through GitHub: **Security → Report a vulnerability** on this repository. Please do
-not open a public issue.
+To report a vulnerability, please do not post technical details publicly. Open an issue titled "Security contact
+request", without details, and the team will arrange a private channel.
 
 ## How decentralized is it?
 

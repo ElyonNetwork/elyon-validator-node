@@ -147,13 +147,11 @@
     <h2 id="validator">Become a Validator</h2>
     <p>Validators are the backbone of Elyon Chain: each one runs their own node, stakes into the <b>APOS registry</b>, and — once admin-approved — seals blocks and earns a share of the network’s transaction fees.</p>
     <h3>1. Run your own node</h3>
-    <pre><code>docker run -d --name elyonchain --restart unless-stopped \
-  -p 3000:3000 -p 30303:30303 -p 8545:8545 \
-  -v aposunp-data:/data \
-  -e NODE_ROLE=operator \
-  -e ADMIN_URL=https://testnet.elyon.network \
-  elyonchain/node:latest</code></pre>
-    <p>The node auto-syncs from the admin bootstrap URL. Open <code>http://&lt;your-server&gt;:3000/manager</code> — the node panel — to manage it.</p>
+    <pre><code>git clone https://github.com/ElyonNetwork/elyon-validator-node.git
+cd elyon-validator-node
+docker build -f Dockerfile.aposunpchain -t elyon-node:local .
+sudo bash scripts/setup-node.sh --image elyon-node:local --public-ip YOUR_VM_IP</code></pre>
+    <p>The node verifies the chain from genesis, which takes several hours. RPC and the panel stay on localhost. Reach the node panel with <code>ssh -L 3000:127.0.0.1:3000 root@&lt;your-server&gt;</code>, then open <code>http://127.0.0.1:3000/manager</code>. Full guide: <a href="https://github.com/ElyonNetwork/elyon-validator-node/blob/master/docs/NODE-SETUP.md" target="_blank" rel="noopener">docs/NODE-SETUP.md</a>.</p>
     <h3>2. Apply as a validator — through a staking package</h3>
     <p>From the node panel, <b>pick one of the admin's staking packages</b> and click <b>Apply as Validator</b>. Applying stakes <b>at least the larger of the network minimum and the package minimum</b> into the APOS registry from your validator wallet, selects that package for you and <b>locks the stake for the package term</b>. Your status shows as <b>PENDING</b>.</p>
     <div class="note"><b>One package at a time.</b> You can <b>top up</b> your selected package any time (your whole stake re-locks for the same term), but <b>switching to a different package is only possible once the current term has ended</b>. There is no early exit from a package term.</div>

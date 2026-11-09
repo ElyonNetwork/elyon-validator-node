@@ -412,23 +412,22 @@ img.logo,.logo img,.brand img,.nav img{filter:brightness(0) invert(1) opacity(.9
 <!-- ════ RUN YOUR OWN NODE (admin image only) ════ -->
 <section class="product show-when-admin" id="run-node" style="display:none">
   <span class="fx-badge" data-reveal><span class="dot"></span> Operators</span>
-  <h2 data-reveal>Run an Elyon Chain node <span class="gx">in 5 minutes.</span></h2>
-  <p class="lede" data-reveal data-delay="100">The operator image — <code>elyonchain/node</code> — is pre-wired to this admin chain. Pull it, run one container, open port 3000, create or import a key. The node syncs itself, you apply as a validator with a stake, the admin approves, and your pool starts earning APR plus a share of transaction fees.</p>
+  <h2 data-reveal>Run an Elyon Chain node <span class="gx">from the public source.</span></h2>
+  <p class="lede" data-reveal data-delay="100">Build the node from the public source and run one script, and it joins this chain. The node verifies the chain from genesis, you apply as a validator with a stake, the admin approves, and your pool starts earning a share of transaction fees.</p>
   <div class="node-steps">
     <div class="fx-card-neo" data-reveal>
-      <h3><i class="fa-solid fa-1"></i> &nbsp;Pull and run the operator image</h3>
-      <p style="margin-top:8px">Any host with Docker. Open TCP <code>3000</code> + <code>8545</code> + <code>30303</code> and UDP <code>30303</code> first.</p>
-      <pre class="code">docker pull elyonchain/node:latest
+      <h3><i class="fa-solid fa-1"></i> &nbsp;Build and start the node</h3>
+      <p style="margin-top:8px">Any Linux host with Docker. Open TCP and UDP <code>30303</code>. RPC and the panel stay on localhost.</p>
+      <pre class="code">git clone https://github.com/ElyonNetwork/elyon-validator-node.git
+cd elyon-validator-node
+docker build -f Dockerfile.aposunpchain -t elyon-node:local .
 
-docker run -d --name elyonchain --restart unless-stopped \
-  -p 3000:3000 -p 8545:8545 \
-  -p 30303:30303 -p 30303:30303/udp \
-  -v elyon-data:/data \
-  elyonchain/node:latest</pre>
+sudo bash scripts/setup-node.sh --image elyon-node:local \
+  --public-ip YOUR_VM_IP</pre>
     </div>
     <div class="fx-card-neo" data-reveal data-delay="100">
-      <h3><i class="fa-solid fa-2"></i> &nbsp;Open port 3000 — create or import your key</h3>
-      <p style="margin-top:8px">Browse to <code>http://YOUR_VM_IP:3000/</code> — the operator image lands you on the manager page, pre-wired to <code id="snippet-admin-url">https://admintestnet.elyon.network</code>. Create a new validator key (download the <code>.txt</code> and back it up) or import an existing one. The node starts, syncs, and the panel takes you to your dashboard.</p>
+      <h3><i class="fa-solid fa-2"></i> &nbsp;Open the node panel over SSH</h3>
+      <p style="margin-top:8px">Run <code>ssh -L 3000:127.0.0.1:3000 root@YOUR_VM_IP</code>, then browse to <code>http://127.0.0.1:3000/manager</code>. The node is pre-wired to <code id="snippet-admin-url">https://admintestnet.elyon.network</code>. Sign in with your wallet's key file; the key stays in your browser tab. The first sync takes several hours. <a href="https://github.com/ElyonNetwork/elyon-validator-node/blob/master/docs/NODE-SETUP.md" target="_blank" rel="noopener">Full guide</a>.</p>
     </div>
     <div class="fx-card-neo" data-reveal data-delay="200">
       <h3><i class="fa-solid fa-3"></i> &nbsp;Apply as a validator, wait for admin approval</h3>
@@ -582,7 +581,11 @@ async function loadValidators(){
       const pkgs = Array.isArray(pr)?pr:((pr&&pr.packages)||[]);
       pkgs.forEach(p=>{ pkgMap[Number(p.id)]=Number(p.aprBps)||0; });
     }catch{}
-    countUp(document.getElementById('stat-validators'), vals.length);
+    // Block producers come from the staking contract; the registry above lists fee-earning operators.
+    fetch('/api/staking/active-validators').then(r=>r.json()).then(j=>{
+      const n = Array.isArray(j.validators) ? j.validators.length : Number(j.count)||0;
+      countUp(document.getElementById('stat-validators'), n || vals.length);
+    }).catch(()=>countUp(document.getElementById('stat-validators'), vals.length));
     // total ELN held by validators (one pool: own stake + delegations) → hero live widget
     try{
       let tot=0n; vals.forEach(v=>{

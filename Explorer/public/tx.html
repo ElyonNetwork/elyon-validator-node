@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transaction · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container" id="content"><div class="card card-body padded"><span class="spin"></span> Loading…</div></div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { api, esc, fmtNative, fmtGwei, fmtToken, addrLink, txLink, blockLink, timeAgo, timeFull, statusBadge, methodLabel, short } from '/js/common.js';
+
+await renderLayout();
+
+const hash = decodeURIComponent(location.pathname.split('/')[2] || '');
+const content = document.getElementById('content');
+
+function pct(num, total) {
+  if (!total || total === '0') return '0%';
+  const a = BigInt(num); const b = BigInt(total);
+  if (b === 0n) return '0%';
+  const bp = (a * 10000n) / b;
+  return (Number(bp) / 100).toFixed(2) + '%';
+}
+
+try {
+  const { tx: t, transfers, logs, indexed } = await api('/api/tx/' + hash);
+
+  const totalFee = t.gasFee;
+  const showSplit = BigInt(totalFee || '0') > 0n;
+
+  content.innerHTML = `
+    <div class="page-title">
+      <h1>Transaction</h1>
+      <div class="meta">${timeAgo(t.timestamp)} · ${esc(timeFull(t.timestamp))}</div>
+    </div>
+
+    ${indexed === false ? `
+    <div class="alert warn" style="margin-bottom:18px">Confirmed on chain. The explorer is still indexing this block, so address and token pages may not list this transaction for a few more minutes.</div>` : ''}
+
+    ${t.status === 0 ? `
+    <div class="card" style="margin-bottom:18px;border-color:var(--error)">
+      <div class="card-header" style="border-bottom-color:var(--error-soft);background:var(--error-soft);color:var(--error)">
+        <h3 style="color:var(--error)">⚠ This transaction failed</h3>
+        <div class="muted small" id="revert-meta">Looking up revert reason…</div>
+      </div>
+      <div class="card-body padded" id="revert-body">
+        <span class="spin"></span> <span class="muted">Replaying the transaction against the parent block to recover the revert reason — this may take a few seconds.</span>
+      </div>
+    </div>` : ''}
+
+    <div class="card" style="margin-bottom:18px">
+      <dl class="dlist">
+        <dt>Transaction hash</dt><dd class="mono">${esc(t.hash)}</dd>
+        <dt>Status</dt><dd>${statusBadge(t.status)}</dd>
+        <dt>Block</dt><dd>${blockLink(t.blockNumber)} <span class="muted">· index ${t.txIndex}</span></dd>
+        <dt>Timestamp</dt><dd>${timeAgo(t.timestamp)} (${esc(timeFull(t.timestamp))})</dd>
+        <dt>From</dt><dd>${addrLink(t.from, { trunc:false })}</dd>
+        <dt>${t.isContractCreation ? 'Contract created' : 'To'}</dt><dd>${t.isContractCreation ? addrLink(t.contractCreated, { trunc:false }) : (t.to ? addrLink(t.to, { trunc:false }) : '<span class="muted">—</span>')}</dd>
+        <dt>Value</dt><dd>${fmtNative(t.value, 8)}</dd>
+        <dt>Method</dt><dd>${methodLabel(t.methodId)} ${t.methodId ? `<span class="mono muted small">${esc(t.methodId)}</span>` : ''}</dd>
+        <dt>Gas used</dt><dd>${Number(t.gasUsed).toLocaleString()}</dd>
+        <dt>Gas price</dt><dd>${fmtGwei(t.gasPrice)}</dd>
+        <dt>Transaction fee</dt><dd><strong>${fmtNative(t.gasFee, 8)}</strong></dd>
+      </dl>
+    </div>
+
+    ${transfers.length ? `
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header"><h3>Token transfers (${transfers.length})</h3></div>
+      <div style="overflow-x:auto">
+        <table class="t">
+          <thead><tr><th>Token</th><th>From</th><th></th><th>To</th><th class="right">Amount</th></tr></thead>
+          <tbody>
+            ${transfers.map(x => {
+              const dec = x.meta?.decimals ?? 18;
+              const sym = x.meta?.symbol || '?';
+              return `<tr>
+                <td>${addrLink(x.tokenAddr)} <span class="muted small">${esc(sym)}</span></td>
+                <td>${addrLink(x.from)}</td>
+                <td class="muted">→</td>
+                <td>${addrLink(x.to)}</td>
+                <td class="right">${fmtToken(x.amount, dec, 6)} ${esc(sym)}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>` : ''}
+
+    <div class="card">
+      <div class="card-header"><h3>Event logs (${logs.length})</h3></div>
+      ${logs.length === 0 ? '<div class="card-body padded muted">No events emitted.</div>' : `
+      <div style="padding:0">
+        ${logs.map((log, i) => `
+          <div style="padding:14px 18px;border-bottom:1px solid var(--hairline)">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div><strong>Log #${i}</strong> · address ${addrLink(log.address)}</div>
+              <div class="muted small mono">${esc(log.logIndex || '')}</div>
+            </div>
+            ${log.topics.map((t, j) => `<div class="mono small"><span class="muted">topic ${j}:</span> ${esc(t)}</div>`).join('')}
+            ${log.data && log.data !== '0x' ? `<div class="mono small" style="margin-top:6px;word-break:break-all"><span class="muted">data:</span> ${esc(log.data)}</div>` : ''}
+          </div>`).join('')}
+      </div>`}
+    </div>
+  `;
+  // For failed txs, lazily fetch the revert reason and render it.
+  if (t.status === 0) {
+    const body = document.getElementById('revert-body');
+    const meta = document.getElementById('revert-meta');
+    try {
+      const r = await api('/api/tx/' + hash + '/revert');
+      const KIND_LABEL = {
+        'revert':       'Reverted with a reason string',
+        'panic':        'Solidity Panic',
+        'custom-error': 'Custom error',
+        'oog':          'Out of gas',
+        'unknown':      'No revert data returned',
+        'ok':           'Succeeded',
+      };
+      meta.textContent = (r.cached ? 'Cached · ' : '') + (KIND_LABEL[r.kind] || r.kind);
+      body.innerHTML = `
+        <div style="font-family:var(--mono);font-size:13px;background:var(--bg-soft);padding:14px;border-radius:8px;color:var(--text);word-break:break-all">
+          ${esc(r.message || '(no message)')}
+        </div>
+        ${r.selector ? `<div class="muted small" style="margin-top:10px">Selector: <code>${esc(r.selector)}</code></div>` : ''}
+        ${r.data ? `<div class="muted small" style="margin-top:4px;word-break:break-all">Raw return data: <code>${esc(r.data)}</code></div>` : ''}
+        <div class="muted small" style="margin-top:10px">Recovered by replaying the transaction as <code>eth_call</code> against block #${t.blockNumber - 1}. State at the parent block is used, so reasons can differ if the failure depended on state that changed between blocks.</div>`;
+    } catch (e) {
+      meta.textContent = '';
+      body.innerHTML = `<div class="muted">Could not recover a revert reason: ${esc(e.message)}</div>`;
+    }
+  }
+} catch (e) {
+  content.innerHTML = `<div class="alert err">Could not load transaction: ${esc(e.message)}</div>`;
+}
+</script>
+</body>
+</html>

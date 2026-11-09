@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verify contract · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container" style="max-width:880px">
+    <div class="page-title"><h1>Verify contract source</h1></div>
+
+    <div class="card">
+      <div class="card-body padded">
+        <p class="muted">Publish the source code for a deployed contract so anyone can read it directly on Elyon Explorer. The submission is stored against the address and surfaced under the <strong>Contract</strong> tab on the address page.</p>
+
+        <form id="vform">
+          <div class="row-2">
+            <div class="field">
+              <label>Contract address</label>
+              <input id="f-addr" type="text" placeholder="0x…" required>
+              <div class="hint">Must already be deployed on Elyon Chain.</div>
+            </div>
+            <div class="field">
+              <label>Contract name</label>
+              <input id="f-name" type="text" placeholder="MyToken" required>
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label>Compiler version</label>
+              <input id="f-compiler" type="text" placeholder="v0.8.28+commit.123" required value="v0.8.28">
+            </div>
+            <div class="field">
+              <label>License</label>
+              <select id="f-license">
+                <option value="">No license</option>
+                <option>MIT</option>
+                <option>Apache-2.0</option>
+                <option>GPL-3.0</option>
+                <option>BSD-3-Clause</option>
+                <option>Unlicense</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="row-2">
+            <div class="field">
+              <label>Optimization</label>
+              <select id="f-opt">
+                <option value="false">Disabled</option>
+                <option value="true">Enabled</option>
+              </select>
+            </div>
+            <div class="field">
+              <label>Optimization runs</label>
+              <input id="f-runs" type="number" value="200" min="1">
+            </div>
+          </div>
+
+          <div class="field">
+            <label>Constructor arguments (ABI-encoded, optional)</label>
+            <input id="f-args" type="text" placeholder="0x000…" class="mono">
+            <div class="hint">Leave blank if the contract had no constructor args.</div>
+          </div>
+
+          <div class="field">
+            <label>Source code (single Solidity file or flattened)</label>
+            <textarea id="f-source" placeholder="// SPDX-License-Identifier: MIT&#10;pragma solidity ^0.8.28;&#10;&#10;contract MyToken { … }" required></textarea>
+          </div>
+
+          <div class="field">
+            <label>ABI (optional — pasted JSON)</label>
+            <textarea id="f-abi" placeholder='[{ "inputs": [], "name": "name", ... }]' style="min-height:140px"></textarea>
+          </div>
+
+          <div id="alert"></div>
+
+          <div style="display:flex;gap:10px">
+            <button class="btn primary" type="submit">Submit for verification</button>
+            <a class="btn" href="/">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { api, esc } from '/js/common.js';
+
+await renderLayout('verify');
+
+const params = new URLSearchParams(location.search);
+if (params.get('addr')) document.getElementById('f-addr').value = params.get('addr');
+
+document.getElementById('vform').addEventListener('submit', async e => {
+  e.preventDefault();
+  const alertBox = document.getElementById('alert');
+  alertBox.innerHTML = '<div class="alert"><span class="spin"></span> Submitting…</div>';
+  let abi = null;
+  const abiTxt = document.getElementById('f-abi').value.trim();
+  if (abiTxt) {
+    try { abi = JSON.parse(abiTxt); }
+    catch { alertBox.innerHTML = '<div class="alert err">ABI is not valid JSON.</div>'; return; }
+  }
+  try {
+    const r = await api('/api/contract/verify', { method: 'POST', body: {
+      addr:            document.getElementById('f-addr').value.trim(),
+      name:            document.getElementById('f-name').value.trim(),
+      compilerVersion: document.getElementById('f-compiler').value.trim(),
+      optimization:    document.getElementById('f-opt').value === 'true',
+      optimizationRuns: parseInt(document.getElementById('f-runs').value, 10) || null,
+      license:         document.getElementById('f-license').value || null,
+      sourceCode:      document.getElementById('f-source').value,
+      abi,
+      constructorArgs: document.getElementById('f-args').value.trim() || null,
+    }});
+    alertBox.innerHTML = `<div class="alert ok">Verified. <a href="/address/${esc(r.addr)}">View contract page →</a></div>`;
+  } catch (err) {
+    alertBox.innerHTML = `<div class="alert err">${esc(err.message)}</div>`;
+  }
+});
+</script>
+</body>
+</html>

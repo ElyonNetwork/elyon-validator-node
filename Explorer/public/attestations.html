@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>URELAY1 Attestations · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container">
+    <div class="page-title">
+      <h1>URELAY1 Attestations</h1>
+      <div class="meta">117-byte relayer fee records embedded by the block producer in <code>block.extraData</code>.</div>
+    </div>
+    <div id="mount"></div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { addrLink, txLink, blockLink, timeAgo } from '/js/common.js';
+import { mountPager } from '/js/pager.js';
+
+await renderLayout('blockchain');
+
+mountPager({
+  mount: document.getElementById('mount'),
+  fetchUrl: (page) => `/api/attestations?page=${page}&limit=25`,
+  columns: `
+    <th>Block</th><th>Age</th><th>Transaction</th><th>Attested relayer</th>
+  `,
+  rowsHtml: items => items.map(a => `
+    <tr>
+      <td>${blockLink(a.blockNumber)}</td>
+      <td class="muted small">${timeAgo(a.timestamp)}</td>
+      <td>${txLink(a.txHash)}</td>
+      <td>${addrLink(a.relayer, { trunc:false })}</td>
+    </tr>`).join(''),
+  emptyHtml: 'No URELAY1 attestations have been observed yet. They appear when ACTIVE operators relay transactions through the chain.',
+});
+</script>
+</body>
+</html>

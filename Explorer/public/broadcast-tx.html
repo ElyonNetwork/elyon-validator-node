@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Broadcast Transaction · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container" style="max-width:880px">
+    <div class="page-title"><h1>Broadcast Transaction</h1></div>
+
+    <div class="card">
+      <div class="card-body padded">
+        <p class="muted">Paste a raw, signed transaction in hex (prefixed with <code>0x</code>) and submit it to the chain RPC at <code>mainnet.elyon.network/rpc</code>. The explorer never holds your keys — sign the transaction in your wallet or with a CLI and bring the resulting raw hex here.</p>
+        <form id="bform">
+          <div class="field">
+            <label>Raw signed transaction (hex)</label>
+            <textarea id="raw" placeholder="0xf86c8085…" required></textarea>
+            <div class="hint">Output of <code>eth_signTransaction</code>, <code>cast tx --raw</code>, or the equivalent from your wallet.</div>
+          </div>
+          <div id="alert"></div>
+          <div style="display:flex;gap:10px">
+            <button class="btn primary" type="submit">Send via RPC</button>
+            <a class="btn" href="/">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { api, esc } from '/js/common.js';
+
+await renderLayout('developers');
+
+document.getElementById('bform').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const raw = document.getElementById('raw').value.trim();
+  const box = document.getElementById('alert');
+  if (!/^0x[0-9a-f]+$/i.test(raw)) {
+    box.innerHTML = '<div class="alert err">Raw tx must be a 0x-prefixed hex string.</div>';
+    return;
+  }
+  box.innerHTML = '<div class="alert"><span class="spin"></span> Broadcasting…</div>';
+  try {
+    const r = await api('/api/broadcast', { method: 'POST', body: { rawTx: raw } });
+    box.innerHTML = `<div class="alert ok">Broadcast accepted. <a href="/tx/${esc(r.hash)}">View transaction →</a></div>`;
+  } catch (err) {
+    box.innerHTML = `<div class="alert err">${esc(err.message)}</div>`;
+  }
+});
+</script>
+</body>
+</html>

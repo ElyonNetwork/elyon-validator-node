@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Transactions · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container">
+    <div class="page-title"><h1>Transactions</h1></div>
+    <div id="mount"></div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { addrLink, txLink, blockLink, timeAgo, statusBadge, methodLabel, fmtNative } from '/js/common.js';
+import { mountPager } from '/js/pager.js';
+
+await renderLayout('blockchain');
+
+mountPager({
+  mount: document.getElementById('mount'),
+  fetchUrl: (page) => `/api/txs?page=${page}&limit=25`,
+  columns: `
+    <th>Hash</th><th>Method</th><th>Block</th><th>Age</th>
+    <th>From</th><th></th><th>To</th>
+    <th class="right">Value</th><th class="right">Fee</th>
+  `,
+  rowsHtml: items => items.map(t => `
+    <tr>
+      <td>${txLink(t.hash)} ${statusBadge(t.status)}</td>
+      <td>${methodLabel(t.methodId)}</td>
+      <td>${blockLink(t.blockNumber)}</td>
+      <td class="muted small">${timeAgo(t.timestamp)}</td>
+      <td>${addrLink(t.from)}</td>
+      <td class="muted">→</td>
+      <td>${t.to ? addrLink(t.to) : '<span class="badge warn">Create</span>'}</td>
+      <td class="right">${fmtNative(t.value, 4)}</td>
+      <td class="right small">${fmtNative(t.gasFee, 6)}</td>
+    </tr>`).join(''),
+  emptyHtml: 'No transactions indexed yet.',
+});
+</script>
+</body>
+</html>

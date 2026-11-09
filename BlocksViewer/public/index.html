@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elyon Blocks — the last 100 mainnet blocks, live</title>
+<meta name="description" content="Every new block on Elyon Chain mainnet as it is formed: hash, producer, timing, gas and the full block header.">
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="mark" aria-hidden="true"></span><div><b>Elyon Blocks</b><small>Mainnet · Chain ID 55452773 · native token ELN</small></div></div>
+  <nav><a href="https://elyon.network" rel="noopener">elyon.network</a><a href="https://explorer.elyon.network" rel="noopener">Explorer</a><a href="https://dex.elyon.network" rel="noopener">DEX</a></nav>
+  <div class="status" id="status"><span class="dot"></span><span id="status-text">Connecting…</span></div>
+</header>
+<main>
+  <section class="kpis" aria-label="Network">
+    <div class="kpi"><span>Latest block</span><b id="k-head">—</b><small id="k-age">&nbsp;</small></div>
+    <div class="kpi"><span>Average block time</span><b id="k-time">—</b><small>last 100 blocks</small></div>
+    <div class="kpi"><span>Transactions</span><b id="k-txs">—</b><small id="k-tps">&nbsp;</small></div>
+    <div class="kpi"><span>Block space used</span><b id="k-gas">—</b><small>average of gas limit</small></div>
+    <div class="kpi"><span>Active validators</span><b id="k-val">—</b><small id="k-stake">&nbsp;</small></div>
+    <div class="kpi"><span>Produced in turn</span><b id="k-turn">—</b><small>rest stepped in after a missed slot</small></div>
+  </section>
+  <div class="cols">
+    <section class="panel" aria-label="Blocks">
+      <div class="panel-h"><h2>Last 100 blocks</h2><span class="hint">Updates as each block is formed. Click a block to see its full header.</span></div>
+      <div class="tw"><table><thead><tr><th>Block</th><th>Age</th><th>Hash</th><th>Produced by</th><th class="r">Txs</th><th class="r">Gas</th><th class="r">Gap</th></tr></thead><tbody id="rows"></tbody></table></div>
+    </section>
+    <aside class="panel" aria-label="Validators">
+      <div class="panel-h"><h2>Validators</h2><span class="hint">Blocks each one produced in the last 100</span></div>
+      <div id="vals"></div>
+      <div class="note">
+        <h3>How to read this page</h3>
+        <p><b>Produced by</b> is the validator whose signature seals the block. Validators take turns in a fixed rotation read from the staking contract.</p>
+        <p><b>In turn</b> means the block came from the validator whose turn it was. <b>Backup</b> means that validator missed its slot and the next one stepped in after 10 seconds.</p>
+        <p><b>Gap</b> is the time since the previous block. The target is 2 seconds.</p>
+      </div>
+    </aside>
+  </div>
+</main>
+<div class="drawer" id="drawer" hidden>
+  <div class="drawer-in" role="dialog" aria-modal="true" aria-labelledby="d-title">
+    <div class="drawer-h"><h2 id="d-title">Block</h2><button id="d-close" aria-label="Close">✕</button></div>
+    <div id="d-body"></div>
+  </div>
+</div>
+<footer>Read-only view of Elyon Chain mainnet. Each block links to the <a href="https://explorer.elyon.network" rel="noopener">Elyon Explorer</a> for transactions and addresses.</footer>
+<script src="/app.js"></script>
+</body>
+</html>

@@ -15,72 +15,22 @@ const multer = require('multer');
 BigInt.prototype.toJSON = function () { return this.toString(); };
 
 const app = express();
-
-// ─────────────────────────────────────────────────────────────────────
-// VALIDATOR NODE — default-DENY security guard (whitelist).
-//
-// This image is validator-only and must NEVER expose chain administration.
-// A blacklist is fail-OPEN: any admin route someone forgets to list stays
-// reachable. Instead we ALLOW only the validator / delegator / read / join /
-// infrastructure endpoints this node legitimately needs and return 404 for
-// everything else. The posture is fail-SAFE: a newly added admin route is
-// denied automatically until it is explicitly and deliberately permitted, so
-// a single omission can never silently expose chain-administration capability.
-//
-// This runs BEFORE requireAuth, so admin paths are blocked even during the
-// pre-setup window when auth is not yet enforced (isProtectedMode() === false).
-// ─────────────────────────────────────────────────────────────────────
-const VALIDATOR_ALLOW = [
-  // auth · status · RPC proxy · node infra
-  /^\/api\/auth\//i,
-  /^\/api\/rpc(\/|$)/i,
-  /^\/api\/(status|role-info)(\/|$)/i,
-  /^\/api\/operator\/config(\/|$)/i,
-  /^\/api\/simple-admin\/config(\/|$)/i,
-  /^\/api\/blocks\//i,
-  /^\/api\/wallet\/send-native(\/|$)/i,
-  // wizard: JOIN + READ only — NOT create-chain / convert-pos / sync-convert-pos /
-  // force-activate-pos / sync-disconnect / deploy-staking / staking/*
-  /^\/api\/wizard\/(status|sync-status|connect|bootstrap|generate-key|derive-address)(\/|$)/i,
-  /^\/api\/wizard\/operator\//i,
-  // apos: read endpoints
-  /^\/api\/apos\/(info|mode|packages|tiers|validators|validator-by-code|vpackages|credits|handshake)(\/|$)/i,
-  // apos: validator actions + per-validator read (/validator/:addr, /validator/apply, ...)
-  /^\/api\/apos\/validator(\/|$)/i,
-  // apos: delegator actions
-  /^\/api\/apos\/(delegate|delegator-status|delegators|my-delegations|withdraw-position)(\/|$)/i,
-  // apos: registry-pointer DISCOVERY only — NEVER deploy/apply/repair/cancel a pointer
-  /^\/api\/apos\/(discover-pointer|use-pointer|sync-from-pointer|pointer-info|pointer-build)(\/|$)/i,
-  // delegation desk · leaderboard reads · PoS block-producer staking (validator-side)
-  /^\/api\/desk\//i,
-  /^\/api\/lb\/(state|heartbeat)(\/|$)/i,
-  /^\/api\/staking\/(status|active-validators|stake-producer|request-unstake|withdraw)(\/|$)/i,
-];
-const _deny = (res) => res.status(404).json({ error: 'not available on a validator node' });
-app.use((req, res, next) => {
-  let p = req.path;
-  if (p === '/rpc') p = '/api/rpc';
-  // Non-API requests (static assets, /manager, /node, pages) are not gated.
-  if (!p.startsWith('/api/')) return next();
-  // /api/admin-proxy/* forwards to the chain's ADMIN node — permit only the
-  // read/bootstrap calls the join flow needs; never proxy an admin action.
-  if (p.startsWith('/api/admin-proxy/')) {
-    const inner = p.slice('/api/admin-proxy'.length);
-    if (/^\/api\/(rpc|wizard\/(bootstrap|status)|apos\/(info|mode|packages|tiers|validators))(\/|$)/i.test(inner)) return next();
-    return _deny(res);
-  }
-  // /api/proxy/* re-enters the LOCAL API — evaluate the effective inner path so
-  // an admin route can't be tunnelled through the proxy.
-  const eff = p.startsWith('/api/proxy/') ? p.slice('/api/proxy'.length) : p;
-  if (VALIDATOR_ALLOW.some((re) => re.test(eff))) return next();
-  return _deny(res);
-});
-
 // v7.0.3 SECURITY (audit I7): trust the loopback proxy so req.ip resolves
 // from X-Forwarded-For when Caddy fronts the dashboard. Without this, ALL
 // requests appear from 127.0.0.1, which the rate limiters skip — silently
 // disabling login / RPC / faucet rate limiting.
-app.set('trust proxy', 'loopback');
+// Only the reverse proxy may set the client address. Docker's shared network holds many
+// unrelated containers, so private address ranges as such are not trusted.
+const dns = require('dns');
+let _trustedProxyIp = null;
+function _refreshTrustedProxy() {
+  dns.lookup(process.env.TRUSTED_PROXY_HOST || 'nginx-proxy-manager', (err, addr) => { if (!err) _trustedProxyIp = addr; });
+}
+_refreshTrustedProxy();
+setInterval(_refreshTrustedProxy, 60000).unref();
+app.set('trust proxy', ip => ip === '127.0.0.1' || ip === '::1' || ip === _trustedProxyIp);
+
+process.on('unhandledRejection', e => console.error('[guard] unhandled rejection:', (e && e.stack) || e));
 // v7.0.3 SECURITY (audit I6): restrict CORS. Same-origin browser flows work
 // (the dashboard's own pages don't need CORS). Cross-origin requests from
 // random sites can no longer probe state-changing endpoints. If the operator
@@ -95,7 +45,40 @@ app.use(cors({
   },
   credentials: false,
 }));
-app.use(express.json({ limit: '50mb' }));
+// Per-client limit on the dashboard API, ahead of body parsing. JSON-RPC, the
+// faucet and the operator attestation route have their own limits; callers on
+// the host's private Docker networks are internal services.
+const API_RATE_WINDOW_MS = 60_000;
+const API_RATE_MAX = parseInt(process.env.API_RATE_MAX || '300', 10);
+const API_RATE_HEAVY_MAX = parseInt(process.env.API_RATE_HEAVY_MAX || '20', 10);
+const API_RATE_HEAVY = /^\/api\/(wallet\/transactions\/|apos\/(delegators|my-delegations|discover-pointer)(\/|$))/;
+const API_RATE_EXEMPT = /^\/api\/(rpc$|faucet\/v2\/|internal\/relayer-attestation$)/;
+const _apiRate = new Map();
+app.use((req, res, next) => {
+  if (!req.path.startsWith('/api/') || API_RATE_EXEMPT.test(req.path)) return next();
+  const ip = rpcClientIp(req);
+  if (!ip || /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2\d|3[01])\.|::1$)/.test(ip)) return next();
+  const heavy = API_RATE_HEAVY.test(req.path);
+  const key = (heavy ? 'h:' : 'a:') + ip;
+  const now = Date.now();
+  let r = _apiRate.get(key);
+  if (!r || now - r.windowStart > API_RATE_WINDOW_MS) r = { count: 0, windowStart: now };
+  r.count += 1;
+  _apiRate.set(key, r);
+  if (_apiRate.size > 50_000) {
+    for (const [k, v] of _apiRate) if (now - v.windowStart > API_RATE_WINDOW_MS) _apiRate.delete(k);
+  }
+  if (r.count > (heavy ? API_RATE_HEAVY_MAX : API_RATE_MAX)) return res.status(429).json({ error: 'too many requests' });
+  next();
+});
+const _bigJson = express.json({ limit: '50mb' });
+const _rpcJson = express.json({ limit: '10mb' });
+const _smallJson = express.json({ limit: '1mb' });
+app.use((req, res, next) => {
+  if (/^\/api\/wizard\/(connect|sync-start|create-chain)$/.test(req.path)) return _bigJson(req, res, next);
+  if (req.path === '/rpc' || req.path === '/api/rpc') return _rpcJson(req, res, next);
+  return _smallJson(req, res, next);
+});
 
 // ticket #9 (BUG-005): JSON-parse failures on /rpc and /api/rpc previously
 // fell through to Express's default error page (HTML stack trace exposing
@@ -177,14 +160,22 @@ function isWizardDone() {
     return !!(config && config.chainId);
   } catch { return false; }
 }
-app.get('/', (req, res) => {
-  // Validator node: the only dashboard is the validator panel.
-  return res.redirect(302, '/manager');
+app.get('/', (req, res, next) => {
+  // v7.13 — operator image (NODE_ROLE=operator, elyonchain/node) always lands
+  // on /manager. Admin image (NODE_ROLE=admin, elyonchain/adminnode) keeps the
+  // previous wizard / site.html behaviour.
+  const role = (process.env.NODE_ROLE || '').toLowerCase();
+  if (role === 'operator') return res.redirect(302, '/manager');
+  const sitePath = path.join(__dirname, 'public', 'site.html');
+  const indexPath = path.join(__dirname, 'public', 'index.html');
+  if (isWizardDone() && fs.existsSync(sitePath)) {
+    return res.sendFile(sitePath);
+  }
+  if (fs.existsSync(indexPath)) return res.sendFile(indexPath);
+  next();
 });
-// The /admin wizard and /setup routes are intentionally REMOVED on a validator
-// node — there is no admin dashboard in this distribution.
-app.get(['/admin', '/setup'], (req, res) =>
-  res.status(404).send('Not found — this is a validator node (no admin dashboard).'));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.get('/setup', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 
 // v7.11.16 — unified domain routing. Previously the operator panel ran
 // on :4000 and the simple-admin on :5000 with their own static-file
@@ -247,6 +238,14 @@ const PORT       = parseInt(process.env.DASHBOARD_PORT || '3000');
 // that point at port 8545 hit the filter; raw Nethermind isn't reachable
 // from outside the container.
 const NETHERMIND_INTERNAL_RPC_PORT = 8540;
+// devp2p listen port for Nethermind (TCP + UDP). Default 30303; set P2P_PORT when the host
+// already uses 30303 so the port published by Docker, the port Nethermind listens on and the
+// port in the enode handed out by /api/wizard/bootstrap are the same.
+const P2P_PORT = String(parseInt(process.env.P2P_PORT || '30303', 10) || 30303);
+// Other validators to keep a connection with, comma-separated enode URLs. Lets block
+// producers peer with each other directly instead of only through the admin node.
+const EXTRA_STATIC_PEERS = String(process.env.STATIC_PEERS || '')
+  .split(',').map(s => s.trim()).filter(s => /^enode:\/\/[0-9a-fA-F]{128}@[^:\s]+:\d+$/.test(s));
 const RPC_PROXY_PORT = parseInt(process.env.RPC_PROXY_PORT || '8545');
 let   RPC_URL    = process.env.RPC_URL || `http://127.0.0.1:${NETHERMIND_INTERNAL_RPC_PORT}`;
 const DATA_DIR   = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -403,6 +402,7 @@ function _decryptKey(blob) {
     return null;
   }
 }
+let _configUnreadable = false;
 function loadConfig() {
   try {
     const c = JSON.parse(fs.readFileSync(CFG_FILE, 'utf8'));
@@ -412,7 +412,10 @@ function loadConfig() {
       if (dec) c.validatorKey = dec;
     }
     return c;
-  } catch { return null; }
+  } catch (e) {
+    if (e.code !== 'ENOENT') { _configUnreadable = true; console.error('[wizard] config unreadable; staying locked:', e.message); }
+    return null;
+  }
 }
 function saveConfig(c) {
   config = c;
@@ -424,9 +427,11 @@ function saveConfig(c) {
     if (enc) onDisk.validatorKey = enc;
   }
   // mode 0o600 — readable only by container uid.
-  fs.writeFileSync(CFG_FILE, JSON.stringify(onDisk, null, 2), { mode: 0o600 });
+  const tmp = CFG_FILE + '.tmp';
+  fs.writeFileSync(tmp, JSON.stringify(onDisk, null, 2), { mode: 0o600 });
   // Defensive chmod — writeFileSync mode arg is honored on create only.
-  try { fs.chmodSync(CFG_FILE, 0o600); } catch {}
+  try { fs.chmodSync(tmp, 0o600); } catch {}
+  fs.renameSync(tmp, CFG_FILE);
 }
 
 // v7.1.6: load config NOW that _CFG_PASS / _decryptKey are defined.
@@ -570,6 +575,7 @@ function getToken(req) {
 // still must require wallet/PK login). Pre-validator nodes (the wizard's
 // first-time form) stay open so the wizard can run.
 function isProtectedMode() {
+  if (_configUnreadable) return true;
   if (!config) return false;
   return !!(config.validatorAddress || config.validatorKey || config.adminPassHash);
 }
@@ -646,7 +652,7 @@ app.post('/api/auth/login', async (req, res) => {
     return res.status(400).json({ error: 'No admin password configured yet' });
   }
   const { password } = req.body || {};
-  if (!password) return res.status(400).json({ error: 'Password required' });
+  if (typeof password !== 'string' || !password || password.length > 4096) return res.status(400).json({ error: 'Password required' });
   const result = verifyPassword(password, config.adminPassHash, config.adminPassSalt || '');
   if (!result.match) {
     recordLoginFailure(rl.ip);
@@ -663,8 +669,7 @@ app.post('/api/auth/login', async (req, res) => {
     } catch (e) { console.warn('[auth] hash upgrade failed:', e.message); }
   }
   clearLoginFailures(rl.ip);
-  const t = newToken();
-  sessions.set(t, { expiresAt: Date.now() + SESSION_TTL_MS, createdAt: Date.now() });
+  const t = createSession();
   res.json({ token: t, ttlMs: SESSION_TTL_MS });
 });
 
@@ -753,8 +758,7 @@ app.post('/api/auth/key-login', (req, res) => {
       return res.status(403).json({ error: 'key does not match an authorized admin address' });
     }
     clearLoginFailures(rl.ip);
-    const t = newToken();
-    sessions.set(t, { expiresAt: Date.now() + SESSION_TTL_MS, createdAt: Date.now() });
+    const t = createSession();
     res.json({ token: t, ttlMs: SESSION_TTL_MS, address: acct.address });
   } catch (e) { recordLoginFailure(rl.ip); res.status(500).json({ error: 'login failed' }); }
 });
@@ -856,8 +860,7 @@ app.post('/api/auth/wallet-verify', async (req, res) => {
     if (recovered !== rec.address) { recordLoginFailure(rl.ip); return res.status(401).json({ error: 'bad signature' }); }
     walletNonces.delete(nonce);
     clearLoginFailures(rl.ip);
-    const t = newToken();
-    sessions.set(t, { expiresAt: Date.now() + SESSION_TTL_MS, createdAt: Date.now() });
+    const t = createSession();
     res.json({ token: t, ttlMs: SESSION_TTL_MS, address });
   } catch (e) { recordLoginFailure(rl.ip); res.status(500).json({ error: 'verify failed' }); }
 });
@@ -869,8 +872,8 @@ app.post('/api/auth/wallet-verify', async (req, res) => {
 // + scrypt). Storage always writes scrypt with 32-byte salt.
 app.post('/api/auth/change-password', requireAuth, (req, res) => {
   const { oldPassword, newPassword } = req.body || {};
-  if (!newPassword || newPassword.length < 4) {
-    return res.status(400).json({ error: 'New password must be at least 4 characters' });
+  if (typeof newPassword !== 'string' || newPassword.length < 12 || newPassword.length > 4096) {
+    return res.status(400).json({ error: 'New password must be at least 12 characters' });
   }
   if (config.adminPassHash) {
     const result = verifyPassword(oldPassword || '', config.adminPassHash, config.adminPassSalt || '');
@@ -880,8 +883,7 @@ app.post('/api/auth/change-password', requireAuth, (req, res) => {
   saveConfig({ ...config, adminPassSalt: salt, adminPassHash: hashPasswordScrypt(newPassword, salt) });
   // Invalidate all other sessions
   sessions.clear();
-  const t = newToken();
-  sessions.set(t, { expiresAt: Date.now() + SESSION_TTL_MS, createdAt: Date.now() });
+  const t = createSession();
   res.json({ ok: true, token: t });
 });
 
@@ -1357,9 +1359,54 @@ function stopNode() {
       resolve();
     }, 15000);
     proc.once('exit', () => { clearTimeout(timeout); resolve(); });
+    _deliberateStops.add(proc);              // tell the watchdog this exit is wanted
     try { proc.kill('SIGTERM'); } catch {}
     nodeProc = null;
   });
+}
+
+// v9.16 watchdog. Nethermind can exit on its own — notably its built-in
+// low-disk guard (free space < 1% → clean shutdown). The exit handlers only
+// cleared nodeProc, so the RPC proxy answered "Internal error" until someone
+// restarted the container: on 2026-10-09 the host disk briefly filled and the
+// testnet, mainnet and APOS-testnet nodes all stayed down for hours. Any exit
+// that stopNode() did not ask for is now relaunched with backoff, and the
+// relaunch waits while the data disk is still nearly full.
+const _deliberateStops = new WeakSet();
+const WATCHDOG_BASE_MS = 10_000, WATCHDOG_MAX_MS = 300_000, WATCHDOG_MIN_FREE = 0.02;
+let _watchdogDelay = WATCHDOG_BASE_MS, _watchdogTimer = null;
+
+function dataDiskFree() {
+  try { const s = fs.statfsSync(DATA_DIR); return { frac: s.bavail / s.blocks, gb: s.bavail * s.bsize / 1e9 }; }
+  catch { return null; }
+}
+
+function superviseNode(proc) {
+  const startedAt = Date.now();
+  proc.once('exit', (code, signal) => {
+    if (_deliberateStops.has(proc) || nodeProc) return;   // wanted, or already replaced
+    if (Date.now() - startedAt > 600_000) _watchdogDelay = WATCHDOG_BASE_MS; // it had been healthy
+    scheduleNodeRestart(`exit ${code}${signal ? ' / ' + signal : ''}`);
+  });
+}
+
+function scheduleNodeRestart(reason) {
+  if (_watchdogTimer) return;
+  const delay = _watchdogDelay;
+  _watchdogDelay = Math.min(_watchdogDelay * 2, WATCHDOG_MAX_MS);
+  console.warn(`[watchdog] Nethermind is down (${reason}) — relaunching in ${Math.round(delay / 1000)}s`);
+  _watchdogTimer = setTimeout(async () => {
+    _watchdogTimer = null;
+    if (nodeProc) return;                                 // already relaunched elsewhere
+    const disk = dataDiskFree();
+    if (disk && disk.frac < WATCHDOG_MIN_FREE) {
+      console.warn(`[watchdog] only ${disk.gb.toFixed(1)} GB (${(disk.frac * 100).toFixed(2)}%) free on ${DATA_DIR} — waiting for disk space`);
+      return scheduleNodeRestart('low disk');
+    }
+    try { await autoRestartNode(); } catch (e) { console.warn('[watchdog] relaunch failed:', e.message); }
+    // startNethermind() spawns asynchronously; verify it actually came up.
+    setTimeout(() => { if (!nodeProc) scheduleNodeRestart('relaunch did not start'); }, 30_000);
+  }, delay);
 }
 
 async function startNethermind(specPath, validatorKey, extraArgs = []) {
@@ -1423,12 +1470,15 @@ async function startNethermind(specPath, validatorKey, extraArgs = []) {
         try { fs.unlinkSync(full); } catch {}
       }
     }
+    for (const f of fs.readdirSync(keystoreDir, { withFileTypes: true })) {
+      if (f.isFile()) { try { fs.chmodSync(path.join(keystoreDir, f.name), 0o600); } catch {} }
+    }
     const stillExisting = fs.readdirSync(keystoreDir).find(f => f.toLowerCase().endsWith(lower));
     if (!stillExisting) {
       const v3 = await web3.eth.accounts.encrypt('0x' + key, ksPwd);
       const ts = new Date().toISOString().replace(/[:.]/g, '-').replace('Z', '0Z');
       const filename = `UTC--${ts}--${lower}`;
-      fs.writeFileSync(path.join(keystoreDir, filename), JSON.stringify(v3));
+      fs.writeFileSync(path.join(keystoreDir, filename), JSON.stringify(v3), { mode: 0o600 });
       console.log('[wizard] Wrote validator keystore:', filename);
     }
   } catch (e) { console.warn('[wizard] keystore write failed:', e.message); }
@@ -1439,12 +1489,12 @@ async function startNethermind(specPath, validatorKey, extraArgs = []) {
     '--Init.ChainSpecPath', specPath,
     '--Init.BaseDbPath', path.join(DATA_DIR, 'db'),
     '--Init.LogDirectory', logDir,
-    '--Init.EnableUnsecuredDevWallet','true',
+    '--Init.EnableUnsecuredDevWallet','false',
     '--Init.IsMining','true',
     '--JsonRpc.Enabled','true',
     '--JsonRpc.Host','127.0.0.1',
     '--JsonRpc.Port', String(NETHERMIND_INTERNAL_RPC_PORT),
-    '--JsonRpc.EnabledModules','eth,net,web3,personal,admin,debug,clique',
+    '--JsonRpc.EnabledModules','eth,net,web3,admin',
     '--Mining.Enabled','true',
     '--Blocks.MinGasPrice', minGasPriceWei,
     // v7.1.10: Hybrid pruning keeps state pruning aggressive (disk savings) but
@@ -1455,13 +1505,12 @@ async function startNethermind(specPath, validatorKey, extraArgs = []) {
     // the worker can credit reliably.
     '--Pruning.Mode','Hybrid',
     '--KeyStore.KeyStoreDirectory', keystoreDir,
-    '--KeyStore.TestNodeKey', key,
     // Tell Nethermind the validator address: who to sign blocks as.
     '--KeyStore.BlockAuthorAccount', validatorAddr,
     '--KeyStore.UnlockAccounts',     validatorAddr,
     '--KeyStore.PasswordFiles',      pwdFile,
-    '--Network.DiscoveryPort','30303',
-    '--Network.P2PPort','30303',
+    '--Network.DiscoveryPort', P2P_PORT,
+    '--Network.P2PPort', P2P_PORT,
     // Admin's standalone-but-listenable mode:
     //   - PeerManagerEnabled:true  — required so the node listens on
     //     port 30303 (operators must be able to dial in) and so
@@ -1508,10 +1557,11 @@ async function startNethermind(specPath, validatorKey, extraArgs = []) {
     (i > 0 && /^(0x)?[0-9a-f]{64}$/i.test(a) && /KeyStore|TestNodeKey|Password/i.test(args[i-1]))
       ? '<redacted>' : a);
   console.log('[wizard] Starting Nethermind with args:', _redacted.join(' '));
-  nodeProc = spawn('dotnet', args, { stdio: 'pipe', cwd: NM_PATH });
+  nodeProc = spawn('dotnet', args, { stdio: 'pipe', cwd: NM_PATH, env: nodeEnv(key) });
   nodeProc.stdout.on('data', d => process.stdout.write('[node] ' + d));
   nodeProc.stderr.on('data', d => process.stderr.write('[node] ' + d));
   nodeProc.on('exit', code => { console.log(`[node] exit ${code}`); nodeProc = null; });
+  superviseNode(nodeProc);
 }
 
 // Start Nethermind in sync-only mode (no mining, connects to bootnode)
@@ -1551,19 +1601,19 @@ async function startNethermindSyncOnly(specPath, bootnode, clearDb = true) {
     '--Init.ChainSpecPath', specPath,
     '--Init.BaseDbPath', path.join(DATA_DIR, 'db'),
     '--Init.LogDirectory', logDir,
-    '--Init.EnableUnsecuredDevWallet','true',
+    '--Init.EnableUnsecuredDevWallet','false',
     '--Init.IsMining','false',
     '--JsonRpc.Enabled','true',
     '--JsonRpc.Host','127.0.0.1',
     '--JsonRpc.Port', String(NETHERMIND_INTERNAL_RPC_PORT),
-    '--JsonRpc.EnabledModules','eth,net,web3,personal,admin,debug',
+    '--JsonRpc.EnabledModules','eth,net,web3,admin',
     '--Mining.Enabled','false',
     // v7.1.10: Hybrid pruning — see startNethermind for rationale (preserve receipts for apos-fee worker).
     '--Pruning.Mode','Hybrid',
     '--KeyStore.KeyStoreDirectory', keystoreDir,
     '--KeyStore.TestNodeKey', tempKey,
-    '--Network.DiscoveryPort','30303',
-    '--Network.P2PPort','30303',
+    '--Network.DiscoveryPort', P2P_PORT,
+    '--Network.P2PPort', P2P_PORT,
     '--Network.MaxActivePeers','50',
     '--Network.StaticPeers', bootnode,
     '--Network.OnlyStaticPeers','true',
@@ -1587,6 +1637,7 @@ async function startNethermindSyncOnly(specPath, bootnode, clearDb = true) {
   nodeProc.stdout.on('data', d => process.stdout.write('[node] ' + d));
   nodeProc.stderr.on('data', d => process.stderr.write('[node] ' + d));
   nodeProc.on('exit', code => { console.log(`[node] exit ${code}`); nodeProc = null; });
+  superviseNode(nodeProc);
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -1670,9 +1721,9 @@ app.post('/api/wizard/create-chain', requireAuth, async (req, res) => {
     // would have no admin login at all.
     const mmAddr = (adminWalletAddress || '').toString().trim();
     const hasMm = /^0x[0-9a-fA-F]{40}$/.test(mmAddr);
-    const hasPwd = adminPassword && String(adminPassword).length >= 4;
+    const hasPwd = adminPassword && String(adminPassword).length >= 12;
     if (!hasMm && !hasPwd)
-      return res.status(400).json({ error: 'Need either a MetaMask admin wallet OR an admin password (min 4 chars)' });
+      return res.status(400).json({ error: 'Need either a MetaMask admin wallet OR an admin password (min 12 chars)' });
 
     const spec = makeChainspec({ chainName, chainId, blockPeriod: blockPeriod||5,
       transitionBlock: transitionBlock||10000, validatorAddr: validatorAddress,
@@ -1714,8 +1765,7 @@ app.post('/api/wizard/create-chain', requireAuth, async (req, res) => {
     saveConfig(cfg);
 
     // Issue an initial session token so the creator stays logged in
-    const token = newToken();
-    sessions.set(token, { expiresAt: Date.now() + SESSION_TTL_MS, createdAt: Date.now() });
+    const token = createSession();
 
     if (STANDALONE) await startNethermind(specPath, validatorKey);
     res.json({ success: true, token, ttlMs: SESSION_TTL_MS });
@@ -1831,6 +1881,23 @@ app.post('/api/wizard/connect', requireAuth, async (req, res) => {
 // Start Nethermind as an operator/observer node. Syncs from the admin's
 // enode and stays connected (static peers only). No mining — the operator
 // is not a consensus validator.
+// The node's P2P identity key is passed through the child's environment: a value on
+// the command line is visible in the process list of the whole container.
+function nodeEnv(hexKey) {
+  return { ...process.env, NETHERMIND_KEYSTORECONFIG_TESTNODEKEY: String(hexKey).replace(/^0x/, '') };
+}
+
+function loadOrCreateNodeKey() {
+  const file = path.join(DATA_DIR, 'node-p2p.key');
+  try {
+    const existing = fs.readFileSync(file, 'utf8').trim();
+    if (/^[0-9a-f]{64}$/i.test(existing)) return existing;
+  } catch {}
+  const fresh = crypto.randomBytes(32).toString('hex');
+  fs.writeFileSync(file, fresh, { mode: 0o600 });
+  return fresh;
+}
+
 async function startNethermindOperator(specPath, adminEnode) {
   await stopNode();
   await new Promise(r => setTimeout(r, 2000));
@@ -1869,8 +1936,9 @@ async function startNethermindOperator(specPath, adminEnode) {
   }
 
   // P2P node key — separate from the validator key, just used for libp2p identity.
-  const tempAccount = web3.eth.accounts.create();
-  const nodeKey = tempAccount.privateKey.replace('0x','');
+  // Kept on disk so this node's enode survives restarts and other validators can
+  // list it as a static peer.
+  const nodeKey = loadOrCreateNodeKey();
 
   const args = [
     path.join(NM_PATH, 'nethermind.dll'),
@@ -1878,23 +1946,22 @@ async function startNethermindOperator(specPath, adminEnode) {
     '--Init.ChainSpecPath', specPath,
     '--Init.BaseDbPath', path.join(DATA_DIR, 'db'),
     '--Init.LogDirectory', logDir,
-    '--Init.EnableUnsecuredDevWallet','true',
+    '--Init.EnableUnsecuredDevWallet','false',
     '--Init.IsMining', miningEnabled ? 'true' : 'false',
     '--Mining.Enabled', miningEnabled ? 'true' : 'false',
     '--JsonRpc.Enabled','true',
     '--JsonRpc.Host','127.0.0.1',
     '--JsonRpc.Port', String(NETHERMIND_INTERNAL_RPC_PORT),
-    '--JsonRpc.EnabledModules','eth,net,web3,personal,admin,debug,clique',
+    '--JsonRpc.EnabledModules','eth,net,web3,admin',
     // v7.1.10: Hybrid pruning — preserve receipts for apos-fee worker (operator
     // also runs the worker; without this, operator's worker hits "Pruned history
     // unavailable" on lookback and orphans credits the same way admin would).
     '--Pruning.Mode','Hybrid',
     '--KeyStore.KeyStoreDirectory', keystoreDir,
-    '--KeyStore.TestNodeKey', nodeKey,
-    '--Network.DiscoveryPort','30303',
-    '--Network.P2PPort','30303',
+    '--Network.DiscoveryPort', P2P_PORT,
+    '--Network.P2PPort', P2P_PORT,
     '--Network.MaxActivePeers','25',
-    '--Network.StaticPeers', adminEnode,
+    '--Network.StaticPeers', [adminEnode, ...EXTRA_STATIC_PEERS].join(','),
     '--Network.OnlyStaticPeers','true',
     '--Discovery.Bootnodes', adminEnode,
   ];
@@ -1928,10 +1995,11 @@ async function startNethermindOperator(specPath, adminEnode) {
     args.push('--Blocks.MinGasPrice', opMinGas);
   }
   console.log('[wizard] Starting Nethermind in OPERATOR mode, peering with admin:', adminEnode, opMinGas ? `(MinGasPrice=${opMinGas})` : '(no MinGasPrice configured)');
-  nodeProc = spawn('dotnet', args, { stdio: 'pipe', cwd: NM_PATH });
+  nodeProc = spawn('dotnet', args, { stdio: 'pipe', cwd: NM_PATH, env: nodeEnv(nodeKey) });
   nodeProc.stdout.on('data', d => process.stdout.write('[node] ' + d));
   nodeProc.stderr.on('data', d => process.stderr.write('[node] ' + d));
   nodeProc.on('exit', code => { console.log(`[node] exit ${code}`); nodeProc = null; });
+  superviseNode(nodeProc);
 }
 
 // ──────────────────────────────────────────────────────────────────
@@ -2989,9 +3057,6 @@ app.get('/api/wizard/version', (req, res) => {
   res.json({
     version,
     standalone: STANDALONE,
-    dataDir: DATA_DIR,
-    nethermindPath: NM_PATH,
-    pid: process.pid,
     uptimeSec: Math.floor(process.uptime()),
   });
 });
@@ -3727,8 +3792,14 @@ const _adminWalletGetter = () => {
   if (!/^[0-9a-fA-F]{64}$/.test(raw)) return null;
   return web3.eth.accounts.privateKeyToAccount('0x' + raw);
 };
-// VALIDATOR NODE — the faucet is an admin-node service and is intentionally
-// NOT bundled here (faucet-v2.js is removed; /api/faucet/* is hard-disabled).
+const { mountFaucet: _mountFaucetV2 } = require('./faucet-v2.js');
+_mountFaucetV2(app, {
+  web3,
+  requireAuth,
+  getConfig:        () => config,
+  getCaptchaSecret: () => (config?.captchaSecret || 'elyon-faucet-captcha-' + (config?.chainId || '0')),
+  getAdminWallet:   _adminWalletGetter,
+});
 
 // v7.10 — APOS Leaderboard module: registers /api/lb/* routes and starts
 // the per-node uptime bot.
@@ -4698,6 +4769,8 @@ function loadRelayedTxState() {
   }
 }
 function recordRelayedTx(txHash, senderHint) {
+  // Only the legacy worker reads this state; without it every call just rewrites a file.
+  if (process.env.APOS_LEGACY_WORKER !== '1') return;
   if (!txHash || typeof txHash !== 'string') return;
   const k = txHash.toLowerCase();
   // If we already credited this hash there's no point re-tracking it.
@@ -4795,6 +4868,7 @@ function _computeRelayDigest(chainId, txHashHex, relayerAddrHex) {
 // before any block uses it, so we don't need to validate here.
 app.post('/api/internal/relayer-attestation', express.raw({type: '*/*', limit: '256kb'}), (req, res) => {
   try {
+    if (!rpcRateCheck(req)) return res.status(429).json({ error: 'rate limit exceeded' });
     const buf = req.body;
     if (!Buffer.isBuffer(buf) || buf.length !== 117) {
       return res.status(400).json({ error: 'expected 117-byte raw attestation' });
@@ -4803,11 +4877,22 @@ app.post('/api/internal/relayer-attestation', express.raw({type: '*/*', limit: '
     if (!/^[0-9a-f]{64}$/.test(hashHex)) return res.status(400).json({ error: 'X-Tx-Hash header missing/invalid' });
     const onDiskHash = buf.subarray(0, 32).toString('hex');
     if (onDiskHash !== hashHex) return res.status(400).json({ error: 'hash mismatch with payload' });
+    const relayer = '0x' + buf.subarray(32, 52).toString('hex');
+    const digest = _computeRelayDigest(config?.chainId, '0x' + hashHex, relayer);
+    if (!digest) return res.status(400).json({ error: 'attestation rejected' });
+    let recovered = '';
+    try {
+      recovered = require('ethers').recoverAddress('0x' + Buffer.from(digest).toString('hex'), '0x' + buf.subarray(52, 117).toString('hex')).toLowerCase();
+    } catch {}
+    if (recovered !== relayer) return res.status(403).json({ error: 'attestation rejected' });
     if (!fs.existsSync(ATTESTATION_DIR)) fs.mkdirSync(ATTESTATION_DIR, { recursive: true });
     const filePath = path.join(ATTESTATION_DIR, hashHex + '.bin');
-    fs.writeFileSync(filePath, buf);
+    fs.writeFileSync(filePath, buf, { flag: 'wx' });
     res.json({ success: true });
-  } catch (e) { res.status(500).json({ error: e.message }); }
+  } catch (e) {
+    if (e.code === 'EEXIST') return res.json({ success: true, duplicate: true });
+    res.status(500).json({ error: 'attestation failed' });
+  }
 });
 
 async function _signAndStoreAttestation(txHashHex) {
@@ -4884,15 +4969,15 @@ async function _signAndStoreAttestation(txHashHex) {
 
 // Background cleanup: delete attestation files older than 1 hour. Block
 // producer will have included them by then; if not, the tx didn't make it.
-setInterval(() => {
+setInterval(async () => {
   try {
-    if (!fs.existsSync(ATTESTATION_DIR)) return;
     const cutoff = Date.now() - 60 * 60 * 1000;
-    for (const f of fs.readdirSync(ATTESTATION_DIR)) {
-      const fp = path.join(ATTESTATION_DIR, f);
+    const dir = await fs.promises.opendir(ATTESTATION_DIR);
+    for await (const d of dir) {
+      const fp = path.join(ATTESTATION_DIR, d.name);
       try {
-        const st = fs.statSync(fp);
-        if (st.mtimeMs < cutoff) fs.unlinkSync(fp);
+        const st = await fs.promises.stat(fp);
+        if (st.mtimeMs < cutoff) await fs.promises.unlink(fp);
       } catch {}
     }
   } catch {}
@@ -4901,12 +4986,42 @@ setInterval(() => {
 // v7.0 SECURITY: per-IP rate limit on the public RPC proxy. Prevents trivial
 // DoS by spamming JSON-RPC calls. Trusted local IPs bypass the limit.
 const RPC_RATE_WINDOW_MS = 60_000;
-// v7.0.3.1: env-tunable. Default 600/min/IP (~10 rps). Stress tests on a
-// single source IP need much higher; bump via RPC_RATE_MAX env var.
-const RPC_RATE_MAX       = parseInt(process.env.RPC_RATE_MAX || '600', 10);
+// v7.0.3.1: env-tunable. Default 1200/min per REAL client IP (~20 rps). A
+// single wallet's "Add network" flow fires well under 20 calls, so this is
+// generous; the higher default (was 600) also absorbs many legitimate users
+// sharing ONE carrier-grade-NAT / corporate egress IP during an airdrop.
+// Stress tests on a single source IP can bump it further via RPC_RATE_MAX.
+const RPC_RATE_MAX       = parseInt(process.env.RPC_RATE_MAX || '1200', 10);
 const rpcRateMap = new Map();            // ip -> { count, windowStart }
+
+// v7.49 FIX (wallet "Error while connecting to the custom network"): derive the
+// REAL client IP for the per-IP limiter. This public RPC proxy sits behind
+// Cloudflare -> nginx-proxy-manager, so req.ip / the socket peer are the
+// *proxy's* address — IDENTICAL for every visitor. Keying the limiter on that
+// collapsed ALL public callers into ONE shared 600/min bucket, which the
+// testnet's ambient traffic (explorer, indexer, dapps, bots) kept saturated; a
+// new user's MetaMask network-add burst (eth_chainId, net_version,
+// eth_blockNumber, eth_getBlockByNumber, ...) then tripped -32005 and the
+// wallet reported "Error while connecting to the custom network." Prefer
+// Cloudflare's CF-Connecting-IP (set at the CF edge, NOT client-spoofable),
+// then X-Real-IP, then the left-most X-Forwarded-For hop, then the socket peer.
+// Internal callers (quest-indexer, explorer) reach :8545 directly with none of
+// these headers, so they keep their own per-container bucket — no regression.
+function rpcClientIp(req) {
+  const cf = req.headers['cf-connecting-ip'];
+  if (cf) return String(cf).trim().replace(/^::ffff:/, '');
+  const xr = req.headers['x-real-ip'];
+  if (xr) return String(xr).trim().replace(/^::ffff:/, '');
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) {
+    const first = String(xff).split(',')[0].trim();
+    if (first) return first.replace(/^::ffff:/, '');
+  }
+  return (req.ip || req.socket?.remoteAddress || req.connection?.remoteAddress || '').replace(/^::ffff:/, '');
+}
+
 function rpcRateCheck(req) {
-  const ip = (req.ip || req.connection?.remoteAddress || '').replace(/^::ffff:/, '');
+  const ip = rpcClientIp(req);
   // v7.0.3 SECURITY (audit I7): rate-limit loopback unless explicitly trusted.
   if (!ip) return true;
   if (process.env.TRUST_LOOPBACK === '1' && (ip === '127.0.0.1' || ip === '::1')) return true;
@@ -4945,12 +5060,34 @@ const RPC_METHOD_ALLOWLIST = new Set([
   'rpc_modules',
 ]);
 
+// v9.17: wallets the Quest Engine banned may not call CampaignQuests.claim()
+// (they were draining the campaign faucet). Off unless CLAIM_GUARD_CONTRACT and
+// CLAIM_GUARD_URL are set; fails open. See claim-guard.js.
+const claimGuard = require('./claim-guard.js').createClaimGuard({
+  contract: process.env.CLAIM_GUARD_CONTRACT,
+  url: process.env.CLAIM_GUARD_URL,
+  token: process.env.CLAIM_GUARD_TOKEN,
+  refreshMs: parseInt(process.env.CLAIM_GUARD_REFRESH_SEC || '120', 10) * 1000,
+});
+claimGuard.start();
+
+function isSignedTx(raw) {
+  try { return !!web3.eth.accounts.recoverTransaction(raw); } catch { return false; }
+}
+
 async function handleRpcCall(call) {
-  const { method, params, id } = call || {};
-  // v7.0: method allowlist
-  if (method && !RPC_METHOD_ALLOWLIST.has(method)) {
-    return rpcError(id, -32601, 'Method ' + method + ' is not exposed by this RPC. Allowed methods: ' + RPC_METHOD_ALLOWLIST.size + ' eth_/net_/web3_ entries (no debug_/admin_/personal_/miner_).');
+  // Every call must be one request object. An array used here to skip the method
+  // check and was forwarded to the node as a batch of its own.
+  if (call === null || typeof call !== 'object' || Array.isArray(call)) {
+    return rpcError(null, -32600, 'Invalid Request');
   }
+  const { method, params, id } = call;
+  // v7.0: method allowlist
+  if (typeof method !== 'string' || !RPC_METHOD_ALLOWLIST.has(method)) {
+    return rpcError(id, -32601, 'Method ' + (typeof method === 'string' ? method : '(missing)') + ' is not exposed by this RPC. Allowed methods: ' + RPC_METHOD_ALLOWLIST.size + ' eth_/net_/web3_ entries (no debug_/admin_/personal_/miner_).');
+  }
+  const claimDenied = claimGuard.check(method, params);
+  if (claimDenied) return rpcError(id, -32003, claimDenied);
   if (method === 'eth_sendRawTransaction') {
     const minWei = config?.minGasPriceWei ? BigInt(config.minGasPriceWei) : 0n;
     if (minWei > 0n) {
@@ -4971,7 +5108,7 @@ async function handleRpcCall(call) {
     // Forward FIRST, then on success record the hash. We use the locally-
     // computed hash so we have it even if Nethermind returns a JSON-RPC
     // error for a tx that's actually already known.
-    const localHash = localHashFromRaw(params?.[0]);
+    const localHash = isSignedTx(params?.[0]) ? localHashFromRaw(params?.[0]) : null;
     // v7.3.0: sign + store a relayer attestation BEFORE forwarding, so the
     // file is on disk by the time the local block producer (if this node
     // proposes the next block) picks the tx from its mempool. Failure
@@ -4990,10 +5127,20 @@ async function handleRpcCall(call) {
       _bridgeApi.forwardTxToL2(params?.[0]).catch(() => {});
     }
     const resp = await forwardToNethermind(call);
-    if (localHash) recordRelayedTx(localHash, null);
+    if (localHash) {
+      const rejected = resp?.error && !/already known/i.test(resp.error.message || '');
+      if (rejected) fs.unlink(path.join(ATTESTATION_DIR, localHash.slice(2).toLowerCase() + '.bin'), () => {});
+      else recordRelayedTx(localHash, null);
+    }
     return resp;
   }
-  return forwardToNethermind(call);
+  const out = await forwardToNethermind(call);
+  // A transaction that is still pending has no receipt yet. Standard clients expect
+  // null here, and this client answers with a "pruned history" error instead.
+  if (method === 'eth_getTransactionReceipt' && out?.error?.code === 4444) {
+    return { jsonrpc: '2.0', id: id ?? null, result: null };
+  }
+  return out;
 }
 
 rpcApp.post('/', async (req, res) => {
@@ -5038,6 +5185,12 @@ rpcApp.listen(RPC_PROXY_PORT, '0.0.0.0', () => {
 // nginx-proxy forwards everything to :3000, so /rpc must exist here or
 // "Could not fetch chain ID" breaks every wallet network-add.
 app.post(['/api/rpc', '/rpc'], async (req, res) => {
+  if (!rpcRateCheck(req)) {
+    return res.status(429).json(rpcError(req.body?.id, -32005, 'rate limit exceeded; reduce request frequency'));
+  }
+  if (Array.isArray(req.body) && req.body.length > 50) {
+    return res.status(413).json(rpcError(null, -32600, 'batch too large (max 50)'));
+  }
   try {
     const body = req.body;
     if (Array.isArray(body)) {
@@ -5058,7 +5211,20 @@ app.post(['/api/rpc', '/rpc'], async (req, res) => {
 // Anyone can submit an observed bug / UX problem / optimization idea with a
 // description + at least one screenshot. Stored on the admin node's volume.
 // Admin reads them (auth-gated) to triage and fix.
-app.post('/api/feedback', feedbackUpload.array('photos', 5), async (req, res) => {
+// Public form with file uploads: per-address throttle and a total cap before anything is stored.
+const _feedbackHits = new Map();
+function feedbackGuard(req, res, next) {
+  const ip = (req.ip || '').replace(/^::ffff:/, '');
+  const now = Date.now();
+  const hits = (_feedbackHits.get(ip) || []).filter(t => now - t < 3600_000);
+  if (hits.length >= 10) return res.status(429).json({ error: 'Too many reports from this address. Try again later.' });
+  hits.push(now); _feedbackHits.set(ip, hits);
+  if (_feedbackHits.size > 20000) _feedbackHits.clear();
+  try { if (loadFeedback().length >= 5000) return res.status(429).json({ error: 'Report inbox is full.' }); } catch {}
+  next();
+}
+
+app.post('/api/feedback', feedbackGuard, feedbackUpload.array('photos', 5), async (req, res) => {
   try {
     const b = req.body || {};
     const message = String(b.message || '').trim();
@@ -5148,3 +5314,11 @@ try {
 } catch (e) {
   console.warn('[simple-admin] wire failed:', e.message);
 }
+
+// Registered last, so nothing thrown by a route reaches Express's default page.
+app.use((err, req, res, next) => {
+  if (res.headersSent) return next(err);
+  if (err && err.status === 413) return res.status(413).json({ error: 'request too large' });
+  console.warn('[http] unhandled route error:', err && err.message);
+  res.status(500).json({ error: 'server error' });
+});

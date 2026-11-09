@@ -1,12 +1,18 @@
-# Dependencies (installed in the Docker image from the base)
+# Build output
+bin/
+obj/
+artifacts/
 node_modules/
 
-# Runtime data / logs
+# Runtime data and logs
 data/
 *.log
 
-# OS / editor
+# Local environment
+.env
+.env.*
 .DS_Store
 Thumbs.db
 .idea/
+.vs/
 .vscode/

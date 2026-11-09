@@ -1,0 +1,4 @@
+FROM elyonchain/explorer:latest
+COPY src/db.js src/history-read.mjs src/server.js src/indexer.js src/tx-lookup.js /app/src/
+COPY public/tx.html /app/public/tx.html
+COPY db/schema.sql /app/db/schema.sql

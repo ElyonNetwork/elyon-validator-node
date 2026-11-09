@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Elyon Chain · Video Tutorials</title>
+<style>
+  :root{
+    --bg:#020a18; --bg2:#041022; --card:#071226; --line:rgba(213,224,255,.16);
+    --txt:#d5e0ff; --mut:rgba(213,224,255,.62); --accent:#3882ff; --accent2:#1f6bff;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:Inter,Segoe UI,system-ui,-apple-system,sans-serif;background:
+    radial-gradient(1200px 700px at 70% -10%,rgba(56,130,255,.14),transparent 60%),
+    linear-gradient(180deg,var(--bg),var(--bg2));
+    color:var(--txt);min-height:100vh;line-height:1.5}
+  .wrap{max-width:1080px;margin:0 auto;padding:48px 22px 80px}
+  .brand{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  .logo{width:40px;height:40px;border-radius:11px;display:flex;align-items:center;justify-content:center;
+    font-weight:800;color:#d5e0ff;background:linear-gradient(135deg,var(--accent),var(--accent2));box-shadow:0 6px 22px rgba(22,180,131,.45)}
+  h1{font-size:clamp(28px,4vw,42px);letter-spacing:-.02em;font-weight:800}
+  .lede{color:var(--mut);font-size:17px;margin:10px 0 36px;max-width:720px}
+  .grid{display:grid;grid-template-columns:1fr;gap:30px}
+  @media(min-width:880px){.grid{grid-template-columns:1fr 1fr}}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:18px;overflow:hidden;
+    box-shadow:0 18px 50px rgba(0,0,0,.35)}
+  .card video{width:100%;display:block;background:#000;aspect-ratio:16/9}
+  .body{padding:20px 22px 24px}
+  .tag{display:inline-block;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--accent);background:rgba(56,227,160,.10);border:1px solid rgba(56,227,160,.28);
+    padding:4px 11px;border-radius:999px;margin-bottom:12px}
+  .card h2{font-size:22px;font-weight:800;margin-bottom:8px}
+  .card p{color:var(--mut);font-size:14.5px}
+  ol{margin:14px 0 0 18px;color:var(--mut);font-size:14px}
+  ol li{margin:4px 0}
+  .foot{margin-top:42px;color:var(--mut);font-size:13.5px;text-align:center}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand"><div class="logo">E</div><strong style="font-size:18px">Elyon Chain</strong></div>
+    <h1>Video Tutorials</h1>
+    <p class="lede">Two short, step-by-step walkthroughs recorded directly in the live dashboard — one for network administrators, one for validators. Each is fully narrated.</p>
+
+    <div class="grid">
+      <div class="card">
+        <video controls preload="metadata" poster="videos/poster-admin.png">
+          <source src="videos/elyon-admin-tutorial.mp4" type="video/mp4" />
+        </video>
+        <div class="body">
+          <span class="tag">For Admins</span>
+          <h2>Admin Guide</h2>
+          <p>Run the network from the Admin Console.</p>
+          <ol>
+            <li>Sign in with your key file</li>
+            <li>Read the live dashboard &amp; tier curve</li>
+            <li>Define a staking package</li>
+            <li>Approve a validator &amp; issue their public code</li>
+          </ol>
+        </div>
+      </div>
+
+      <div class="card">
+        <video controls preload="metadata" poster="videos/poster-validator.png">
+          <source src="videos/elyon-validator-tutorial.mp4" type="video/mp4" />
+        </video>
+        <div class="body">
+          <span class="tag">For Validators</span>
+          <h2>Validator Guide</h2>
+          <p>Join the network and start earning a fee share.</p>
+          <ol>
+            <li>Sign in with your key file</li>
+            <li>Apply by staking through a package</li>
+            <li>Get approved &amp; receive your public Elyon code</li>
+            <li>Publish a staking package for delegators</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot">Elyon Chain — Authorized Proof of Stake testnet · <a href="/">Back to dashboard</a></div>
+  </div>
+</body>
+</html>

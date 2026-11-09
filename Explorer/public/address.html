@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Address · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container" id="content"><div class="card card-body padded"><span class="spin"></span> Loading…</div></div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { api, esc, fmtNative, fmtGwei, fmtToken, addrLink, txLink, blockLink, timeAgo, statusBadge, methodLabel, short, copyButton } from '/js/common.js';
+import { FEATURED_TOKENS, findFeatured, featuredFor, TOKEN_ISSUER, mountTvWidget } from '/js/tokens.js';
+
+await renderLayout();
+
+const addr = (decodeURIComponent(location.pathname.split('/')[2] || '')).toLowerCase();
+const content = document.getElementById('content');
+
+// USDT token (default chain stablecoin) — show a live TradingView price chart.
+const USDT_ADDR = '0x4a0bce713e45b09353aadf320afb14b46e143b19';
+function mountTradingView(hostId, symbol) {
+  const host = document.getElementById(hostId);
+  if (!host || host.dataset.tvMounted) return;
+  host.dataset.tvMounted = '1';
+  const widget = document.createElement('div');
+  widget.className = 'tradingview-widget-container__widget';
+  widget.style.height = '100%';
+  host.appendChild(widget);
+  const s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  s.src = 'https://s3.tradingview.com/external-embedding/embed-widget-advanced-chart.js';
+  s.text = JSON.stringify({
+    autosize: true, symbol, interval: '60', timezone: 'Etc/UTC',
+    theme: 'light', style: '1', locale: 'en', hide_side_toolbar: true,
+    allow_symbol_change: false, save_image: false, calendar: false,
+  });
+  host.appendChild(s);
+}
+
+async function loadOverview() {
+  const o = await api('/api/address/' + addr);
+  const isContract = o.isContract;
+  const t = o.token;
+  const cs = o.contractSource;
+  let liveChainId = null;
+  try { liveChainId = (await api('/api/chain')).chainId; } catch {}
+  const featured = findFeatured(addr, liveChainId)
+    || (t && t.symbol ? featuredFor(liveChainId).find(x => x.symbol === (t.symbol || '').toUpperCase()) : null);
+  if (featured) { await renderTokenPage(o, featured); return; }
+
+  const tabs = [
+    { id: 'txs', label: 'Transactions', count: o.counts?.txs },
+    { id: 'transfers', label: 'Token transfers', count: o.counts?.transfers },
+    { id: 'holdings', label: 'Token holdings', count: null },
+  ];
+  if (o.counts?.relayed > 0) tabs.push({ id: 'relayed', label: 'Relayed (operator)', count: o.counts.relayed });
+  if (isContract) tabs.push({ id: 'contract', label: cs ? 'Contract ✓' : 'Contract', count: null });
+  tabs.push({ id: 'analytics', label: 'Analytics', count: null });
+
+  const cardChips = [];
+  if (isContract) cardChips.push('<span class="badge blue">Contract</span>');
+  if (o.account?.isOperator) cardChips.push('<span class="badge ok">Operator</span>');
+  if (o.account?.isRegisteredContract) cardChips.push('<span class="badge ok">Registered Contract</span>');
+  if (o.account?.isRegisteredToken) cardChips.push('<span class="badge ok">Registered Token</span>');
+  if (t) cardChips.push(`<span class="badge gray">${esc(t.symbol || 'ERC-20')}</span>`);
+
+  content.innerHTML = `
+    <div class="page-title">
+      <h1>${isContract ? 'Contract' : 'Address'} <span class="mono" style="font-size:14px;font-weight:500;color:var(--text-secondary)">${esc(o.address)}</span> ${copyButton(o.address)}</h1>
+      <div>${cardChips.join(' ')}</div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-body padded">
+        <div style="display:grid;gap:18px;grid-template-columns:repeat(auto-fit, minmax(220px,1fr))">
+          <div>
+            <div class="label small muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">ELN balance</div>
+            <div style="font-size:22px;font-weight:600;margin-top:2px">${fmtNative(o.balance, 8)}</div>
+          </div>
+          <div>
+            <div class="label small muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">Transactions</div>
+            <div style="font-size:22px;font-weight:600;margin-top:2px">${(o.counts?.txs || 0).toLocaleString()}</div>
+          </div>
+          <div>
+            <div class="label small muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">Token transfers</div>
+            <div style="font-size:22px;font-weight:600;margin-top:2px">${(o.counts?.transfers || 0).toLocaleString()}</div>
+          </div>
+          ${o.counts?.relayed > 0 ? `
+          <div>
+            <div class="label small muted" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">Relayed txns</div>
+            <div style="font-size:22px;font-weight:600;margin-top:2px">${o.counts.relayed.toLocaleString()}</div>
+          </div>` : ''}
+        </div>
+      </div>
+    </div>
+
+    <nav class="tabs" id="tabs">
+      ${tabs.map((t, i) => `<a href="#${t.id}" data-tab="${t.id}"${i === 0 ? ' class="active"' : ''}>${esc(t.label)}${t.count != null ? ` <span class="muted small">(${t.count.toLocaleString()})</span>` : ''}</a>`).join('')}
+    </nav>
+
+    <div id="tab-content"><div class="card card-body padded"><span class="spin"></span> Loading…</div></div>
+  `;
+
+  document.querySelectorAll('#tabs a').forEach(a => a.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelectorAll('#tabs a').forEach(x => x.classList.remove('active'));
+    a.classList.add('active');
+    renderTab(a.dataset.tab, o);
+  }));
+  renderTab(tabs[0].id, o);
+}
+
+function mountTimeline(hostId, symbol) {
+  const host = document.getElementById(hostId);
+  if (!host || host.dataset.tvMounted) return;
+  host.dataset.tvMounted = '1';
+  const widget = document.createElement('div');
+  widget.className = 'tradingview-widget-container__widget';
+  host.appendChild(widget);
+  const s = document.createElement('script');
+  s.type = 'text/javascript';
+  s.async = true;
+  s.src = 'https://s3.tradingview.com/external-embedding/embed-widget-timeline.js';
+  s.text = JSON.stringify({ feedMode: 'symbol', symbol, isTransparent: true, displayMode: 'regular', width: '100%', height: 420, colorTheme: 'light', locale: 'en' });
+  host.appendChild(s);
+}
+
+function mountSymbolInfo(hostId, symbol) {
+  mountTvWidget(document.getElementById(hostId), 'embed-widget-symbol-info.js', {
+    symbol, width: '100%', locale: 'en', colorTheme: 'light', isTransparent: true,
+  });
+}
+
+// ── Generic "pro" page for any featured token (USDT, USDC, BTC, …) ──
+async function renderTokenPage(o, cfg) {
+  const dec = cfg.decimals || (o.token && o.token.decimals) || 18;
+  const transfers = (o.counts && o.counts.transfers) || 0;
+  content.innerHTML = `
+    <div class="page-title" style="display:flex;align-items:center;gap:14px;flex-wrap:wrap">
+      <div style="width:48px;height:48px;border-radius:50%;background:${cfg.color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;flex:none">${esc(cfg.symbol.slice(0, 4))}</div>
+      <div>
+        <h1 style="margin:0">${esc(cfg.name)} <span class="muted" style="font-size:1rem">(${esc(cfg.symbol)})</span></h1>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:6px">
+          <span class="badge ok">Verified ✓</span>
+          <span class="badge gray">ERC-20 · ${dec} decimals</span>
+          <span class="badge blue">${esc(cfg.kind)}</span>
+        </div>
+      </div>
+      <div style="margin-left:auto" class="mono small">${esc(o.address)} ${copyButton(o.address)}</div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px"><div class="card-body" style="padding:8px"><div id="tk-info" class="tradingview-widget-container" style="min-height:130px"></div></div></div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px">
+      ${metric('Holders', '<span id="m-holders">—</span>', 'Excluding issuer wallet')}
+      ${metric('Transfers', transfers.toLocaleString(), 'On-chain ERC-20 transfers')}
+      ${metric('Decimals', String(dec), 'Token precision')}
+      ${metric('Network', 'Elyon Chain', 'Mainnet · chainId 55452773')}
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header"><h3>${esc(cfg.symbol)} / USD — Live Price</h3><span class="badge ok">TradingView</span></div>
+      <div class="card-body padded"><div id="tk-tv" class="tradingview-widget-container" style="width:100%;aspect-ratio:1/1;min-height:600px"></div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header"><h3>📰 ${esc(cfg.symbol)} News</h3><span class="muted small">via TradingView</span></div>
+      <div class="card-body padded"><div id="tk-news" class="tradingview-widget-container" style="height:420px"></div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header"><h3>Top Holders</h3><span class="muted small">issuer wallet excluded</span></div>
+      <div class="card-body" id="tk-holders"><div style="padding:20px"><span class="spin"></span> Loading holders…</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Recent Transfers</h3><a href="/token-transfers">View all →</a></div>
+      <div class="card-body" id="tk-transfers"><div style="padding:20px"><span class="spin"></span> Loading…</div></div>
+    </div>
+  `;
+  mountSymbolInfo('tk-info', cfg.tv);
+  mountTradingView('tk-tv', cfg.tv);
+  mountTimeline('tk-news', cfg.tv);
+
+  try {
+    const h = await api('/api/token/' + addr + '/holders?exclude=' + TOKEN_ISSUER + '&limit=100');
+    const mh = document.getElementById('m-holders'); if (mh) mh.textContent = (h.count || 0).toLocaleString();
+    const host = document.getElementById('tk-holders');
+    if (!h.holders || !h.holders.length) {
+      host.innerHTML = `<div style="padding:24px" class="muted">No holders yet besides the issuer. As ${esc(cfg.symbol)} is distributed, balances appear here ranked by amount.</div>`;
+    } else {
+      host.innerHTML = `<table class="t"><thead><tr><th>#</th><th>Holder</th><th class="right">Quantity (${esc(cfg.symbol)})</th><th class="right">Share</th><th style="width:160px">Distribution</th></tr></thead><tbody>${h.holders.map((x, i) => `<tr><td class="muted">${i + 1}</td><td>${addrLink(x.address)}</td><td class="right mono">${fmtToken(x.balance, h.decimals, 2)}</td><td class="right">${x.pct != null ? x.pct.toFixed(4) + '%' : '—'}</td><td><div style="height:8px;border-radius:999px;background:#e6ece9;overflow:hidden"><div style="height:100%;width:${Math.min(100, x.pct || 0)}%;background:linear-gradient(90deg,#15a878,#0e7d5a)"></div></div></td></tr>`).join('')}</tbody></table>`;
+    }
+  } catch (e) { const host = document.getElementById('tk-holders'); if (host) host.innerHTML = '<div style="padding:20px" class="muted">Could not load holders.</div>'; }
+
+  try {
+    const r = await api('/api/address/' + addr + '/transfers?limit=15');
+    const host = document.getElementById('tk-transfers');
+    host.innerHTML = (!r.items || !r.items.length)
+      ? `<div style="padding:24px" class="muted">No transfers yet.</div>`
+      : `<table class="t"><thead><tr><th>Tx</th><th>Age</th><th>From</th><th>To</th><th class="right">Amount</th></tr></thead><tbody>${r.items.map(x => `<tr><td>${txLink(x.txHash)}</td><td class="muted">${x.timestamp ? timeAgo(x.timestamp) : '—'}</td><td>${addrLink(x.from)}</td><td>${x.to ? addrLink(x.to) : '—'}</td><td class="right mono">${fmtToken(x.amount, dec, 2)} ${esc(cfg.symbol)}</td></tr>`).join('')}</tbody></table>`;
+  } catch (e) { const host = document.getElementById('tk-transfers'); if (host) host.innerHTML = '<div style="padding:20px" class="muted">Could not load transfers.</div>'; }
+}
+
+// ── (legacy) USDT-specific page, superseded by renderTokenPage ──────
+const USDT_ADMIN = '0xe26f1a776778912c3747f6fd240b573cd57b5601'; // issuer/creator — hidden from holders
+const USDT_LOGO = 'https://raw.githubusercontent.com/trustwallet/assets/master/blockchains/ethereum/assets/0xdAC17F958D2ee523a2206206994597C13D831ec7/logo.png';
+
+function metric(label, value, sub) {
+  return `<div class="card" style="margin:0"><div class="card-body padded">
+    <div class="muted small" style="text-transform:uppercase;letter-spacing:.04em;font-weight:600">${esc(label)}</div>
+    <div style="font-size:1.5rem;font-weight:800;margin:4px 0">${value}</div>
+    <div class="muted small">${esc(sub)}</div>
+  </div></div>`;
+}
+
+async function renderUsdtPage(o) {
+  const t = o.token || {};
+  const dec = t.decimals || 6;
+  const transfers = (o.counts && o.counts.transfers) || 0;
+
+  content.innerHTML = `
+    <div class="card" style="margin-bottom:18px;border:none;background:linear-gradient(120deg,#0f8a6b,#1aa882 55%,#0e7d5a);color:#fff;box-shadow:0 14px 44px rgba(21,168,120,.28)">
+      <div class="card-body padded" style="display:flex;flex-wrap:wrap;align-items:center;gap:22px">
+        <img src="${USDT_LOGO}" alt="USDT" width="66" height="66" style="border-radius:50%;background:#fff;padding:4px;flex:none" onerror="this.style.display='none'">
+        <div style="min-width:240px">
+          <div style="font-size:1.8rem;font-weight:800;letter-spacing:-.02em">Tether USD <span style="opacity:.85;font-weight:600">(USDT)</span></div>
+          <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:9px">
+            <span class="badge" style="background:rgba(255,255,255,.18);color:#fff">Stablecoin</span>
+            <span class="badge" style="background:rgba(255,255,255,.18);color:#fff">ERC-20 · ${dec} decimals</span>
+            <span class="badge" style="background:#fff;color:#0e7d5a;font-weight:700">Verified ✓</span>
+          </div>
+          <div class="mono" style="margin-top:11px;font-size:.82rem;opacity:.95;display:flex;align-items:center;gap:6px">${esc(o.address)} ${copyButton(o.address)}</div>
+        </div>
+        <div style="margin-left:auto;text-align:right">
+          <div style="opacity:.85;font-size:.74rem;text-transform:uppercase;letter-spacing:.08em">Price</div>
+          <div style="font-size:2.1rem;font-weight:800;line-height:1.05">$1.00</div>
+          <div style="opacity:.85;font-size:.82rem">USD-pegged · 1:1</div>
+        </div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-bottom:18px">
+      ${metric('Price', '$1.00', 'Pegged 1:1 to USD')}
+      ${metric('Holders', '<span id="m-holders">—</span>', 'Excluding issuer wallet')}
+      ${metric('Transfers', transfers.toLocaleString(), 'On-chain ERC-20 transfers')}
+      ${metric('Network', 'Elyon Chain', 'Mainnet · chainId 55452773')}
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header"><h3>USDT / USD — Live Price</h3><span class="badge ok">TradingView</span></div>
+      <div class="card-body padded"><div id="usdt-tv" class="tradingview-widget-container" style="height:640px"></div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header"><h3>📰 USDT News</h3><span class="muted small">via TradingView</span></div>
+      <div class="card-body padded"><div id="usdt-news" class="tradingview-widget-container" style="height:420px"></div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header"><h3>Top Holders</h3><span class="muted small">issuer wallet excluded</span></div>
+      <div class="card-body" id="usdt-holders"><div style="padding:20px"><span class="spin"></span> Loading holders…</div></div>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Recent Transfers</h3><a href="/token-transfers">View all →</a></div>
+      <div class="card-body" id="usdt-transfers"><div style="padding:20px"><span class="spin"></span> Loading…</div></div>
+    </div>
+  `;
+
+  mountTradingView('usdt-tv', 'CRYPTO:USDTUSD');
+  mountTimeline('usdt-news', 'CRYPTO:USDTUSD');
+
+  // Top holders (issuer/creator excluded)
+  try {
+    const h = await api('/api/token/' + addr + '/holders?exclude=' + USDT_ADMIN + '&limit=100');
+    const mh = document.getElementById('m-holders');
+    if (mh) mh.textContent = (h.count || 0).toLocaleString();
+    const host = document.getElementById('usdt-holders');
+    if (!h.holders || !h.holders.length) {
+      host.innerHTML = `<div style="padding:24px" class="muted">No holders yet besides the issuer. As USDT is distributed, balances appear here ranked by amount.</div>`;
+    } else {
+      host.innerHTML = `
+        <table class="t">
+          <thead><tr><th>#</th><th>Holder</th><th class="right">Quantity (USDT)</th><th class="right">Share</th><th style="width:160px">Distribution</th></tr></thead>
+          <tbody>
+            ${h.holders.map((x, i) => `
+              <tr>
+                <td class="muted">${i + 1}</td>
+                <td>${addrLink(x.address)}</td>
+                <td class="right mono">${fmtToken(x.balance, h.decimals, 2)}</td>
+                <td class="right">${x.pct != null ? x.pct.toFixed(4) + '%' : '—'}</td>
+                <td><div style="height:8px;border-radius:999px;background:#e6ece9;overflow:hidden"><div style="height:100%;width:${Math.min(100, x.pct || 0)}%;background:linear-gradient(90deg,#15a878,#0e7d5a)"></div></div></td>
+              </tr>`).join('')}
+          </tbody>
+        </table>`;
+    }
+  } catch (e) {
+    const host = document.getElementById('usdt-holders');
+    if (host) host.innerHTML = '<div style="padding:20px" class="muted">Could not load holders.</div>';
+  }
+
+  // Recent transfers
+  try {
+    const r = await api('/api/address/' + addr + '/transfers?limit=15');
+    const host = document.getElementById('usdt-transfers');
+    host.innerHTML = (!r.items || !r.items.length)
+      ? `<div style="padding:24px" class="muted">No transfers yet.</div>`
+      : `<table class="t">
+           <thead><tr><th>Tx</th><th>Age</th><th>From</th><th>To</th><th class="right">Amount</th></tr></thead>
+           <tbody>${r.items.map(x => `
+             <tr>
+               <td>${txLink(x.txHash)}</td>
+               <td class="muted">${x.timestamp ? timeAgo(x.timestamp) : '—'}</td>
+               <td>${addrLink(x.from)}</td>
+               <td>${x.to ? addrLink(x.to) : '—'}</td>
+               <td class="right mono">${fmtToken(x.amount, dec, 2)} USDT</td>
+             </tr>`).join('')}</tbody>
+         </table>`;
+  } catch (e) {
+    const host = document.getElementById('usdt-transfers');
+    if (host) host.innerHTML = '<div style="padding:20px" class="muted">Could not load transfers.</div>';
+  }
+}
+
+async function renderTab(id, o) {
+  const host = document.getElementById('tab-content');
+  host.innerHTML = `<div class="card card-body padded"><span class="spin"></span> Loading…</div>`;
+
+  if (id === 'txs') {
+    const r = await api('/api/address/' + addr + '/txs?limit=50');
+    host.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h3>Transactions</h3></div>
+        <div style="overflow-x:auto">
+          <table class="t">
+            <thead><tr><th>Hash</th><th>Method</th><th>Block</th><th>Age</th><th>From</th><th></th><th>To</th><th class="right">Value</th><th class="right">Fee</th></tr></thead>
+            <tbody>
+              ${r.items.length === 0 ? `<tr><td colspan="9" class="center muted" style="padding:18px">No transactions</td></tr>` : r.items.map(t => `
+                <tr>
+                  <td>${txLink(t.hash)} ${statusBadge(t.status)}</td>
+                  <td>${methodLabel(t.methodId)}</td>
+                  <td>${blockLink(t.blockNumber)}</td>
+                  <td class="muted small">${timeAgo(t.timestamp)}</td>
+                  <td>${addrLink(t.from)}${t.from?.toLowerCase() === o.address.toLowerCase() ? ' <span class="badge gray small">OUT</span>' : ''}</td>
+                  <td class="muted">→</td>
+                  <td>${t.to ? addrLink(t.to) : '<span class="badge warn">Create</span>'}${t.to?.toLowerCase() === o.address.toLowerCase() ? ' <span class="badge ok small">IN</span>' : ''}</td>
+                  <td class="right">${fmtNative(t.value, 4)}</td>
+                  <td class="right small">${fmtNative(t.gasFee, 6)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  if (id === 'transfers') {
+    const r = await api('/api/address/' + addr + '/transfers?limit=50');
+    host.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h3>Token transfers</h3></div>
+        <div style="overflow-x:auto">
+          <table class="t">
+            <thead><tr><th>Hash</th><th>Age</th><th>From</th><th></th><th>To</th><th class="right">Amount</th><th>Token</th></tr></thead>
+            <tbody>
+              ${r.items.length === 0 ? `<tr><td colspan="7" class="center muted" style="padding:18px">No token transfers</td></tr>` : r.items.map(x => `
+                <tr>
+                  <td>${txLink(x.txHash)}</td>
+                  <td class="muted small">${timeAgo(x.timestamp)}</td>
+                  <td>${addrLink(x.from)}</td>
+                  <td class="muted">→</td>
+                  <td>${addrLink(x.to)}</td>
+                  <td class="right">${fmtToken(x.amount, x.token.decimals || 18, 6)}</td>
+                  <td>${addrLink(x.token.addr)} <span class="muted small">${esc(x.token.symbol || '')}</span></td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  if (id === 'holdings') {
+    const r = await api('/api/address/' + addr + '/holdings');
+    host.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h3>Token holdings</h3></div>
+        <div style="overflow-x:auto">
+          <table class="t">
+            <thead><tr><th>Token</th><th>Symbol</th><th class="right">Balance</th></tr></thead>
+            <tbody>
+              ${r.items.length === 0 ? `<tr><td colspan="3" class="center muted" style="padding:18px">No tracked token balances.</td></tr>` : r.items.map(h => `
+                <tr>
+                  <td>${addrLink(h.token.addr)} <span class="muted small">${esc(h.token.name || '')}</span></td>
+                  <td>${esc(h.token.symbol || '—')}</td>
+                  <td class="right">${fmtToken(h.balance, h.token.decimals || 18, 6)}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  if (id === 'relayed') {
+    const r = await api('/api/address/' + addr + '/relayed?limit=50');
+    host.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h3>Transactions this address relayed (URELAY1 attested)</h3></div>
+        <div style="overflow-x:auto">
+          <table class="t">
+            <thead><tr><th>Hash</th><th>Block</th><th>Age</th><th>From</th><th>To</th></tr></thead>
+            <tbody>
+              ${r.items.length === 0 ? `<tr><td colspan="5" class="center muted" style="padding:18px">No relayed transactions.</td></tr>` : r.items.map(t => `
+                <tr>
+                  <td>${txLink(t.hash)} ${statusBadge(t.status)}</td>
+                  <td>${blockLink(t.blockNumber)}</td>
+                  <td class="muted small">${timeAgo(t.timestamp)}</td>
+                  <td>${addrLink(t.from)}</td>
+                  <td>${t.to ? addrLink(t.to) : '<span class="badge warn">Create</span>'}</td>
+                </tr>`).join('')}
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+
+  if (id === 'contract') {
+    if (!o.contractSource) {
+      host.innerHTML = `
+        <div class="card">
+          <div class="card-body padded">
+            <div class="alert warn">This contract is not verified.</div>
+            <p class="muted small" style="margin:12px 0">Verify the source code to make the contract readable here. The runtime bytecode is below.</p>
+            <a class="btn primary" href="/verify-contract?addr=${addr}">Verify contract source</a>
+          </div>
+          <div class="card-header"><h3>Bytecode</h3></div>
+          <div class="card-body padded">
+            <div class="source-block">${esc(o.code || '0x')}</div>
+          </div>
+        </div>`;
+    } else {
+      const cs = o.contractSource;
+      host.innerHTML = `
+        <div class="card">
+          <div class="card-header">
+            <h3>${esc(cs.name)} <span class="badge ok">Verified</span></h3>
+            <div class="tools muted small">Compiler ${esc(cs.compiler_version)} · Optimization ${cs.optimization ? 'on' : 'off'}${cs.optimization_runs ? ` (${cs.optimization_runs} runs)` : ''}${cs.license ? ` · ${esc(cs.license)}` : ''}</div>
+          </div>
+          <div class="card-body padded">
+            <div class="source-block">${esc(cs.source_code)}</div>
+          </div>
+        </div>`;
+    }
+  }
+
+  if (id === 'analytics') {
+    host.innerHTML = `
+      <div class="card">
+        <div class="card-header"><h3>Analytics</h3></div>
+        <div class="card-body padded">
+          <p class="muted">Counters for this address, computed from the indexer's view of the chain.</p>
+          <table class="t" style="margin-top:12px">
+            <tbody>
+              <tr><td class="muted">First seen block</td><td>${o.account?.firstSeenBlock ? blockLink(o.account.firstSeenBlock) : '<span class="muted">unknown</span>'}</td></tr>
+              <tr><td class="muted">Last seen block</td><td>${o.account?.lastSeenBlock ? blockLink(o.account.lastSeenBlock) : '<span class="muted">unknown</span>'}</td></tr>
+              <tr><td class="muted">Total tx involvement</td><td>${(o.counts?.txs || 0).toLocaleString()}</td></tr>
+              <tr><td class="muted">Total token transfers involved</td><td>${(o.counts?.transfers || 0).toLocaleString()}</td></tr>
+              <tr><td class="muted">Total relayed (operator role)</td><td>${(o.counts?.relayed || 0).toLocaleString()}</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>`;
+  }
+}
+
+try { await loadOverview(); }
+catch (e) { content.innerHTML = `<div class="alert err">Could not load address: ${esc(e.message)}</div>`; }
+</script>
+</body>
+</html>

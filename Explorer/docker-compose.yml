@@ -1,0 +1,81 @@
+name: elyon-explorer
+
+# Elyon Explorer — fully isolated from the chain, the website, and StudentEarnMoney.
+# Own image, own Postgres container, own docker network.
+#
+# Bring up the stack with:   docker compose up -d
+# The web service listens on host port 1043.
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: elyon-explorer-pg
+    # Tuned 2026-11-06 with ALTER SYSTEM (kept in the data volume's
+    # postgresql.auto.conf): shared_buffers=24GB, synchronous_commit=off,
+    # max_wal_size=16GB, checkpoint_timeout=15min, wal_compression=on and
+    # shared_preload_libraries=pg_prewarm (autoprewarm reloads the hot indexes
+    # after a restart). With the 128MB default the indexer's random index
+    # reads went to disk and it fell hours behind the chain.
+    restart: unless-stopped
+    networks: [explorer-net]
+    environment:
+      POSTGRES_USER:     ${PGUSER:-explorer}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-explorer}
+      POSTGRES_DB:       ${PGDATABASE:-elyon_explorer}
+    volumes:
+      - explorer-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: .
+    image: elyonchain/explorer:latest
+    container_name: elyon-explorer
+    restart: unless-stopped
+    # explorer-net → reach Postgres; npm_default → reach the chain RPC
+    # (elyon-mainnet:8545) and be fronted by nginx-proxy-manager. No host
+    # port is published — NPM proxies to :8080 over the docker network.
+    networks: [explorer-net, npm_default]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      PORT: "8080"
+      RPC_URL:    ${RPC_URL:-https://operatortestnet.elyon.network/rpc}
+      PUBLIC_RPC_URL: ${PUBLIC_RPC_URL:-https://mainnet.elyon.network/rpc}
+      CHAIN_ID:   ${CHAIN_ID:-0}
+      CHAIN_NAME: ${CHAIN_NAME:-Elyon Chain}
+      NATIVE_NAME:    ${NATIVE_NAME:-Elyon}
+      NATIVE_SYMBOL:  ${NATIVE_SYMBOL:-ELN}
+      NATIVE_DECIMALS: ${NATIVE_DECIMALS:-18}
+      REGISTRY_ADDR:  ${REGISTRY_ADDR:-}
+      PGHOST:     postgres
+      PGPORT:     "5432"
+      PGUSER:     ${PGUSER:-explorer}
+      PGPASSWORD: ${PGPASSWORD:-explorer}
+      PGDATABASE: ${PGDATABASE:-elyon_explorer}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-27437823}
+      JWT_SECRET:     ${JWT_SECRET:-change-me-in-production-32-plus-chars-please-elyon-explorer}
+      INDEXER_ENABLED: ${INDEXER_ENABLED:-true}
+      INDEXER_BATCH:   ${INDEXER_BATCH:-10}
+      INDEXER_HEAD_LAG: ${INDEXER_HEAD_LAG:-2}
+      INDEXER_POLL_MS: ${INDEXER_POLL_MS:-2000}
+      CADDY_DIR: /data/caddy
+    volumes:
+      - explorer-app-data:/data
+
+networks:
+  explorer-net:
+    name: elyon-explorer-net
+    driver: bridge
+  npm_default:
+    external: true
+
+volumes:
+  explorer-pg-data:
+    name: elyon-explorer-pg-data
+  explorer-app-data:
+    name: elyon-explorer-app-data

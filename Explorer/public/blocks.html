@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Blocks · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container">
+    <div class="page-title"><h1>Blocks</h1><div class="meta" id="meta">—</div></div>
+    <div id="mount"></div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { addrLink, blockLink, timeAgo } from '/js/common.js';
+import { mountPager } from '/js/pager.js';
+
+await renderLayout('blockchain');
+
+mountPager({
+  mount: document.getElementById('mount'),
+  fetchUrl: (page) => `/api/blocks?page=${page}&limit=25`,
+  columns: `
+    <th>Block</th><th>Age</th><th>Txns</th><th>URELAY1</th>
+    <th>Miner</th><th class="right">Gas used</th><th class="right">Gas limit</th><th class="right">Size</th>
+  `,
+  rowsHtml: items => items.map(b => `
+    <tr>
+      <td>${blockLink(b.number)}</td>
+      <td class="muted small">${timeAgo(b.timestamp)}</td>
+      <td>${b.txCount}</td>
+      <td>${b.urelayCount > 0 ? `<span class="badge ok">${b.urelayCount}</span>` : '<span class="muted">—</span>'}</td>
+      <td>${addrLink(b.miner)}</td>
+      <td class="right">${Number(b.gasUsed).toLocaleString()}</td>
+      <td class="right muted">${Number(b.gasLimit).toLocaleString()}</td>
+      <td class="right muted small">${b.size.toLocaleString()} B</td>
+    </tr>`).join(''),
+  emptyHtml: 'No blocks indexed yet.',
+});
+</script>
+</body>
+</html>

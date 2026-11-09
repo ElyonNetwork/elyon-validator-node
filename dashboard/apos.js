@@ -1848,8 +1848,24 @@ function mount(app, ctx) {
   // accepts/declines and the two keep a message thread. Stored server-side
   // on the ADMIN node (operator panels reach it via /api/admin-proxy).
   const DESK_PATH = path.join(ctx.dataDir || __dirname, 'delegation-desk.json');
-  function deskLoad() { try { return JSON.parse(fs.readFileSync(DESK_PATH, 'utf8')); } catch { return { seq: 0, threads: [] }; } }
-  function deskSave(d) { try { fs.writeFileSync(DESK_PATH, JSON.stringify(d, null, 2)); } catch {} }
+  // Held in memory and saved at most every 1.5 s, so a burst of calls cannot stall the event loop.
+  const DESK_MAX_THREADS = 20000, DESK_MAX_MSGS = 200;
+  let _desk = null, _deskTimer = null;
+  function deskLoad() {
+    if (_desk) return _desk;
+    try { _desk = JSON.parse(fs.readFileSync(DESK_PATH, 'utf8')); } catch { _desk = { seq: 0, threads: [] }; }
+    return _desk;
+  }
+  function deskSave() {
+    if (_deskTimer) return;
+    _deskTimer = setTimeout(async () => {
+      _deskTimer = null;
+      const tmp = DESK_PATH + '.tmp';
+      try { await fs.promises.writeFile(tmp, JSON.stringify(_desk)); await fs.promises.rename(tmp, DESK_PATH); }
+      catch (e) { console.warn('[desk] save failed:', e.message); }
+    }, 1500);
+    if (_deskTimer.unref) _deskTimer.unref();
+  }
   const _addrOk = a => /^0x[0-9a-fA-F]{40}$/.test(String(a || ''));
 
   // v9.13 FIX — the desk must be ONE shared store for the whole network.
@@ -1934,9 +1950,11 @@ function mount(app, ctx) {
       if (!t) {
         t = { id: ++d.seq, validator: valAddr, delegator, status: 'open',
               createdAt: Date.now(), updatedAt: Date.now(), messages: [] };
+        if (d.threads.length >= DESK_MAX_THREADS) return res.status(429).json({ error: 'desk is full' });
         d.threads.push(t);
       }
       if (vpkg) { t.vpkgIdx = vpkg.idx; t.vpkg = vpkg; }
+      if (t.messages.length >= DESK_MAX_MSGS) return res.status(429).json({ error: 'conversation is full' });
       t.messages.push({ from: 'delegator', body: String(message).slice(0, 2000), at: Date.now() });
       t.updatedAt = Date.now();
       deskSave(d);
@@ -1968,6 +1986,7 @@ function mount(app, ctx) {
       if (!t) return res.status(404).json({ error: 'thread not found' });
       const expected = from === 'validator' ? t.validator : t.delegator;
       if (!address || expected.toLowerCase() !== String(address).toLowerCase()) return res.status(403).json({ error: 'address does not match thread ' + from });
+      if (t.messages.length >= DESK_MAX_MSGS) return res.status(429).json({ error: 'conversation is full' });
       t.messages.push({ from, body: String(body).slice(0, 2000), at: Date.now() });
       t.updatedAt = Date.now();
       deskSave(d);

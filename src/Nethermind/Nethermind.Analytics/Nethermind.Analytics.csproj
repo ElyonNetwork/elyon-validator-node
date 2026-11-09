@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nethermind.Api\Nethermind.Api.csproj" />
+  </ItemGroup>
+
+</Project>

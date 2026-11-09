@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verified Contracts · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container">
+    <div class="page-title">
+      <h1>Verified Contracts</h1>
+      <div class="meta"><a href="/verify-contract" class="btn primary" style="padding:6px 12px">+ Verify a contract</a></div>
+    </div>
+    <div id="mount"></div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { esc, addrLink, timeAgo } from '/js/common.js';
+import { mountPager } from '/js/pager.js';
+
+await renderLayout('blockchain');
+
+mountPager({
+  mount: document.getElementById('mount'),
+  fetchUrl: (page) => `/api/verified-contracts?page=${page}&limit=25`,
+  columns: `
+    <th>Address</th><th>Contract name</th><th>Compiler</th>
+    <th>Optimization</th><th>License</th><th>Verified</th>
+  `,
+  rowsHtml: items => items.map(c => `
+    <tr>
+      <td>${addrLink(c.addr)}</td>
+      <td>${esc(c.name)}</td>
+      <td class="mono small">${esc(c.compilerVersion)}</td>
+      <td>${c.optimization ? `<span class="badge ok">on${c.optimizationRuns ? ' · ' + c.optimizationRuns + ' runs' : ''}</span>` : '<span class="badge gray">off</span>'}</td>
+      <td>${c.license ? esc(c.license) : '<span class="muted">—</span>'}</td>
+      <td class="muted small">${c.verifiedAt ? timeAgo(Math.floor(new Date(c.verifiedAt).getTime() / 1000)) : ''}</td>
+    </tr>`).join(''),
+  emptyHtml: 'No contracts verified yet. Be the first — submit source on the Verify Contract page.',
+});
+</script>
+</body>
+</html>

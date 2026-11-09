@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elyon Chain · ELNTST Faucet</title>
+<link rel="icon" href="site-assets/icon.png" type="image/png">
+<link rel="stylesheet" href="/elyon-theme.css?v=1785923184">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#020a18; --surface:#071226; --surface-alt:rgba(213,224,255,.05);
+    --text:#d5e0ff; --text2:rgba(213,224,255,.62); --text3:rgba(213,224,255,.4);
+    --accent:#3882ff; --accent2:#7db2ff;
+    --success:#3882ff; --warn:#b45309; --danger:#dc2626;
+    --border:rgba(213,224,255,.08); --radius:12px; --radius-lg:18px;
+    --shadow:0 8px 32px rgba(213,224,255,.08);
+  }
+  * { box-sizing:border-box; margin:0; padding:0; }
+  html { background:var(--bg); }
+  html, body { color:var(--text); font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif; -webkit-font-smoothing:antialiased; min-height:100%; }
+  body { background:transparent; }
+  .topbar { position:sticky; top:0; z-index:30; background:rgba(2,10,24,.96); border-bottom:1px solid var(--border); padding:14px 28px; display:flex; align-items:center; gap:14px; }
+  .topbar .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:16px; letter-spacing:-0.005em; }
+  .topbar .brand .logo { width:26px; height:26px; border-radius:7px; background:linear-gradient(135deg,var(--accent),#7db2ff); box-shadow:0 4px 14px rgba(56,130,255,0.30); }
+  .topbar .meta { margin-left:auto; font-size:12px; color:var(--text3); }
+  .wrap { max-width:780px; margin:0 auto; padding:36px 22px 80px; }
+  h1.page { font-size:36px; font-weight:700; letter-spacing:-0.025em; margin-bottom:10px; }
+  .lede { font-size:16px; color:var(--text2); line-height:1.55; }
+  .card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-lg); padding:24px 26px; box-shadow:var(--shadow); margin-top:20px; }
+  h2 { font-size:18px; font-weight:600; margin-bottom:14px; }
+  .metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(160px,1fr)); gap:12px; margin-top:18px; }
+  .metric { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:14px 16px; }
+  .metric .label { font-size:11px; font-weight:600; color:var(--text3); text-transform:uppercase; letter-spacing:0.06em; }
+  .metric .value { font-size:22px; font-weight:700; margin-top:4px; letter-spacing:-0.015em; }
+  .metric .sub   { font-size:11px; color:var(--text3); margin-top:4px; }
+  .field { display:flex; flex-direction:column; gap:5px; margin-bottom:14px; }
+  .field label { font-size:12px; font-weight:600; color:var(--text2); }
+  .field input, .field select { background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text); padding:0 14px; height:42px; font-size:14px; font-family:inherit; }
+  .field input:focus, .field select:focus { outline:none; border-color:var(--accent); box-shadow:0 0 0 4px rgba(56,130,255,0.14); }
+  .btn { appearance:none; border:0; background:var(--accent); color:#fff; height:44px; padding:0 22px; border-radius:999px; font-family:inherit; font-weight:500; font-size:15px; cursor:pointer; transition:background 120ms,transform 80ms; display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+  .btn:hover { background:var(--accent2); }
+  .btn:disabled { opacity:0.4; cursor:not-allowed; }
+  .btn.outline { background:transparent; color:var(--accent2); border:1px solid var(--accent); }
+  .alert { padding:12px 14px; border-radius:10px; font-size:13px; line-height:1.55; margin-top:14px; }
+  .alert.info { background:rgba(31,107,255,0.06); border-left:3px solid #7db2ff; color:var(--text); }
+  .alert.ok   { background:rgba(56,130,255,0.10); border-left:3px solid var(--success); color:#7db2ff; }
+  .alert.warn { background:rgba(245,158,11,0.12); border-left:3px solid #f59e0b; color:#b45309; }
+  .alert.err  { background:rgba(239,68,68,0.08); border-left:3px solid var(--danger); color:#d5e0ff; }
+  .countdown { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:28px; font-weight:700; color:var(--accent2); margin-top:6px; }
+  .cap-bar { height:10px; background:#0a1830; border-radius:999px; overflow:hidden; margin-top:8px; }
+  .cap-bar > div { height:100%; background:linear-gradient(90deg,var(--accent),#7db2ff); transition:width 600ms ease-out; }
+  .captcha { display:flex; gap:10px; align-items:center; }
+  .captcha .ch { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:18px; padding:6px 14px; background:rgba(56,130,255,.08); border:1px solid rgba(56,130,255,.25); border-radius:10px; letter-spacing:0.1em; user-select:none; color:#7db2ff; }
+  .captcha input { width:120px; height:38px; }
+  .mono { font-family:'JetBrains Mono', ui-monospace, monospace; font-size:12px; color:var(--text2); }
+
+/* ===== v10.0 — light premium redesign (class-preserving) ===== */
+:root{ --ease:cubic-bezier(.34,1.56,.64,1); --shadow-sm:0 2px 10px rgba(213,224,255,.06); --shadow-md:0 8px 32px rgba(213,224,255,.08); --grad-primary:linear-gradient(135deg,#3882ff,#7db2ff); --font-heading:'Space Grotesk','Inter',sans-serif; }
+body{ background:#020a18 !important; background-image:radial-gradient(ellipse 800px 500px at 50% -5%,rgba(56,130,255,.07),transparent 60%),radial-gradient(ellipse 700px 460px at 90% 100%,rgba(31,107,255,.05),transparent 60%) !important; background-repeat:no-repeat !important; background-attachment:fixed !important; }
+.wrap{ max-width:840px; padding:8px 22px 80px; }
+.fa-hero{ text-align:center; padding:44px 0 8px; }
+.fa-hero .eyebrow{ display:inline-flex;align-items:center;gap:8px;font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent2);background:rgba(56,130,255,.10);border:1px solid rgba(56,130,255,.25);padding:6px 14px;border-radius:999px;margin-bottom:16px; }
+.fa-hero .eyebrow .pulse{ width:7px;height:7px;border-radius:50%;background:var(--accent);animation:faPulse 1.8s infinite; }
+@keyframes faPulse{0%{box-shadow:0 0 0 0 rgba(56,130,255,.5)}70%,100%{box-shadow:0 0 0 7px rgba(56,130,255,0)}}
+h1.page{ font-family:var(--font-heading) !important;font-size:clamp(2rem,5vw,3rem) !important;font-weight:800 !important;letter-spacing:-.03em;line-height:1.05;color:var(--text); }
+h1.page .grad{ background:linear-gradient(120deg,#7db2ff,#3882ff 55%,#5ea0ff);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent; }
+.lede{ max-width:600px;margin:10px auto 0;text-align:center; }
+.card{ border-radius:20px !important;border:1px solid rgba(213,224,255,.08) !important;box-shadow:var(--shadow-md) !important;padding:26px !important;animation:faRise .5s var(--ease) both;transition:border-color .3s,box-shadow .3s; }
+.card:hover{ border-color:rgba(56,130,255,.25) !important;box-shadow:var(--shadow-md),0 0 26px rgba(56,130,255,.08) !important; }
+@keyframes faRise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+h2{ font-family:var(--font-heading) !important;font-weight:800 !important;font-size:1.2rem !important;letter-spacing:-.02em; }
+.metrics{ gap:14px; }
+.metric{ position:relative;border-radius:14px !important;border:1px solid rgba(213,224,255,.08) !important;padding:16px !important;overflow:hidden;box-shadow:var(--shadow-sm); }
+.metric::before{ content:"";position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--grad-primary);opacity:.8; }
+.metric .label{ font-family:'JetBrains Mono',monospace;letter-spacing:.08em; }
+.metric .value{ font-family:var(--font-heading);font-weight:800;font-size:1.4rem !important; }
+.btn{ border-radius:999px !important;font-family:var(--font-heading);font-weight:600 !important;background:var(--grad-primary) !important;box-shadow:0 6px 22px rgba(56,130,255,.25);transition:all .2s var(--ease) !important; }
+.btn:hover{ transform:translateY(-2px);box-shadow:0 12px 36px rgba(56,130,255,.32);background:var(--grad-primary) !important; }
+.btn.outline{ background:#071226 !important;color:var(--accent2) !important;border:1px solid rgba(56,130,255,.40) !important;box-shadow:none; }
+.btn.outline:hover{ background:rgba(56,130,255,.08) !important;box-shadow:0 4px 14px rgba(56,130,255,.14); }
+.countdown{ font-size:32px !important; }
+.field input,.field select{ border-radius:12px !important; }
+.field input:focus,.field select:focus{ box-shadow:0 0 0 4px rgba(56,130,255,.14) !important; }
+.alert.ok{ background:rgba(56,130,255,.10) !important;border-left-color:#3882ff !important;color:#7db2ff !important; }
+
+/* v10.0 — respect reduced motion: freeze decorative pulses/lifts */
+@media(prefers-reduced-motion:reduce){
+  .fa-hero .eyebrow .pulse,.card{ animation:none !important; }
+  .btn:hover{ transform:none; }
+}
+
+  /* v9.16 human verification */
+  .vf-box { border:1px solid rgba(56,130,255,.22); border-radius:14px; padding:14px; background:rgba(56,130,255,.05); }
+  .vf-label { font-size:14px; margin-bottom:10px; color:var(--text2,#9fb3d9); }
+  .vf-label b { color:#7db2ff; text-transform:uppercase; letter-spacing:.06em; }
+  .vf-grid { position:relative; width:min(300px,100%); aspect-ratio:1/1; margin:0 auto; border-radius:12px; overflow:hidden; }
+  .vf-grid svg { display:block; width:100%; height:100%; }
+  .vf-cells { position:absolute; inset:0; display:grid; grid-template-columns:repeat(3,1fr); grid-template-rows:repeat(3,1fr); }
+  .vf-cells button { background:transparent; border:3px solid transparent; border-radius:11px; margin:4px; cursor:pointer; padding:0; }
+  .vf-cells button.on { border-color:#2ecc8a; background:rgba(46,204,138,.14); box-shadow:inset 0 0 0 2px rgba(46,204,138,.35); }
+  .vf-foot { display:flex; justify-content:space-between; align-items:center; gap:10px; margin-top:10px; font-size:12px; color:var(--text3,#7f93b8); flex-wrap:wrap; }
+  .vf-pow { display:flex; align-items:center; gap:8px; }
+  .vf-pow .bar { width:120px; height:6px; border-radius:4px; background:rgba(255,255,255,.08); overflow:hidden; }
+  .vf-pow .bar i { display:block; height:100%; width:0; background:linear-gradient(90deg,#3882ff,#2ecc8a); transition:width .3s; }
+  .hp-field { position:absolute; left:-9999px; top:-9999px; height:0; width:0; opacity:0; }
+</style>
+<link rel="stylesheet" href="/elyon-fx.css?v=1785923184">
+<script defer src="/elyon-fx.js?v=1785923184"></script>
+
+<link rel="stylesheet" href="/elyon-app.css?v=1785923184">
+</head>
+<body class="elx-shelled">
+<aside class="elx-sidebar" id="elx-sidebar">
+  <a class="elx-sb-brand" href="/"><img src="/site-assets/logo.png" alt="Elyon Chain"></a>
+  <nav class="elx-sb-nav">
+    <a href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 11l9-8 9 8M5 10v10h14V10"/></svg><span>Home</span></a>
+    <a href="/owner.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l8 4v6c0 4-3.5 7-8 8-4.5-1-8-4-8-8V7z"/><path d="M9 12l2 2 4-4"/></svg><span>Delegate</span></a>
+    <a href="/docs.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M6 2h9l5 5v15H6z"/><path d="M14 2v6h6M9 13h6M9 17h6"/></svg><span>Docs</span></a>
+    <a href="/faucet.html" class="active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3c3 4 5 6.5 5 9a5 5 0 0 1-10 0c0-2.5 2-5 5-9z"/></svg><span>Faucet</span></a>
+    <a href="/leaderboard.html"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0V4zM5 4H3v2a3 3 0 0 0 3 3M19 4h2v2a3 3 0 0 1-3 3"/></svg><span>Leaderboard</span></a>
+  </nav>
+  <div class="elx-sb-foot">Elyon Chain · APOS L1</div>
+</aside>
+<div class="elx-app">
+  <header class="elx-topbar">
+    <button class="elx-burger" onclick="document.getElementById('elx-sidebar').classList.toggle('open')">☰</button>
+    <h1>Faucet</h1>
+    <span class="elx-spacer"></span>
+    <span class="elx-net"><span class="dot"></span>Elyon Chain</span>
+  </header>
+  <div class="elx-work">
+
+
+
+
+<div class="wrap">
+  <section class="fa-hero">
+    <span class="eyebrow"><span class="pulse"></span> Testnet Faucet</span>
+    <h1 class="page">Get free <span class="grad">ELN</span></h1>
+    <div class="lede">Claim free <strong>ELN</strong> — the native gas coin of the Elyon Chain testnet — so you can pay gas and transact. One claim per wallet and per network (IP) every 24 hours — with a quick picture check so bots stay out.</div>
+  </section>
+
+  <div id="not-deployed" class="alert warn" style="display:none">The faucet is not available yet. Ask the chain admin to make sure the admin node is configured.</div>
+
+  <div class="metrics" id="metrics" style="display:none">
+    <div class="metric"><div class="label">Validator claim</div><div class="value" id="m-val">—</div><div class="sub">ELN per claim</div></div>
+    <div class="metric"><div class="label">Delegator claim</div><div class="value" id="m-del">—</div><div class="sub">ELN per claim</div></div>
+    <div class="metric"><div class="label">Cooldown</div><div class="value" id="m-cool">24h</div><div class="sub">per wallet</div></div>
+    <div class="metric"><div class="label">Faucet balance</div><div class="value" id="m-bal">—</div><div class="sub">ELN available</div></div>
+  </div>
+
+  <div class="card" id="claim-card" style="display:none">
+    <h2>Claim</h2>
+    <div class="field"><label>Your wallet address (Elyon Chain · 0x…)</label>
+      <input id="addr" placeholder="0x… or connect a wallet">
+    </div>
+    <div style="display:flex;gap:10px;margin-bottom:14px"><button class="btn outline" id="connect">Connect wallet</button></div>
+    <div class="field"><label>Role</label>
+      <select id="role"><option value="delegator">Delegator</option><option value="validator">Validator</option></select>
+    </div>
+    <div class="field"><label>Human verification</label>
+      <div class="vf-box" id="vf-box">
+        <div id="vf-idle">
+          <div class="vf-label">Enter your wallet address above, then start the verification. Rules: <b>1 claim per wallet</b> and <b>1 claim per network (IP)</b> every 24 hours.</div>
+          <button class="btn outline" id="vf-start" type="button">Start verification</button>
+        </div>
+        <div id="vf-live" style="display:none">
+          <div class="vf-label">Select all the <b id="vf-target">…</b> in the picture, then claim.</div>
+          <div class="vf-grid" id="vf-grid"></div>
+          <div class="vf-foot">
+            <div class="vf-pow"><span id="vf-pow-txt">Securing your request…</span><span class="bar"><i id="vf-pow-bar"></i></span></div>
+            <button class="btn outline" id="vf-refresh" type="button" style="height:32px;padding:0 12px;font-size:12px">↻ New picture</button>
+          </div>
+        </div>
+      </div>
+      <input class="hp-field" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+    </div>
+    <div id="countdown-wrap" style="display:none">
+      <div style="font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:0.06em;font-weight:600">Next claim available in</div>
+      <div class="countdown" id="countdown">00:00:00</div>
+    </div>
+    <div id="result" style="display:none"></div>
+    <button class="btn" id="claim" style="margin-top:14px">Claim ELN</button>
+  </div>
+</div>
+
+<script>
+(async () => {
+  const $ = (s) => document.querySelector(s);
+  let info = null;
+  let countdownTimer = null;
+  // v9.16 verification state
+  let vf = null;            // { token, pow:{seed,bits}, minSolveSec, issuedAt }
+  let vfCells = new Set();
+  let powNonce = null, powWorker = null;
+
+  async function load() {
+    info = await fetch('/api/faucet/v2/info').then(r => r.json());
+    if (!info.deployed) { $('#not-deployed').style.display = ''; return; }
+    $('#metrics').style.display = '';
+    $('#claim-card').style.display = '';
+    const fmt = (wei) => (BigInt(wei) / 10n**18n).toString();
+    $('#m-val').textContent  = fmt(info.amounts.validator) + ' ELN';
+    $('#m-del').textContent  = fmt(info.amounts.delegator) + ' ELN';
+    if (info.cooldownSec) $('#m-cool').textContent = Math.round(info.cooldownSec / 3600) + 'h';
+    if (info.faucetWalletBalance != null) $('#m-bal').textContent = Number(fmt(info.faucetWalletBalance)).toLocaleString();
+  }
+  await load();
+  setInterval(load, 30000);
+
+  // ── device facts for the server-side fingerprint (no tracking, no storage on the client) ──
+  function deviceFacts() {
+    let cv = '';
+    try { const c = document.createElement('canvas'); c.width = 120; c.height = 24; const g = c.getContext('2d'); g.font = '16px sans-serif'; g.fillText('elyon·faucet', 4, 18); cv = c.toDataURL().slice(-48); } catch (e) {}
+    return { tz: Intl.DateTimeFormat().resolvedOptions().timeZone || '', lang: navigator.language || '', scr: screen.width + 'x' + screen.height + 'x' + (window.devicePixelRatio || 1),
+             hc: navigator.hardwareConcurrency || 0, dm: navigator.deviceMemory || 0, plat: navigator.platform || '', cv };
+  }
+
+  // ── proof-of-work in a Web Worker (SHA-256 hashcash; same-origin file — the page CSP forbids blob: workers) ──
+  function startPow(seed, addr, bits) {
+    stopPow(); powNonce = null;
+    const expected = Math.pow(2, bits);
+    $('#vf-pow-bar').style.width = '0%'; $('#vf-pow-txt').textContent = 'Securing your request…';
+    powWorker = new Worker('/faucet-pow.js?v=20261019');
+    powWorker.onerror = (err) => { $('#vf-pow-txt').textContent = 'Browser check failed — reload the page'; console.error('pow worker error', err && err.message); };
+    powWorker.onmessage = (e) => {
+      if (e.data.progress) { $('#vf-pow-bar').style.width = Math.min(95, 100 * e.data.progress / expected).toFixed(0) + '%'; }
+      if (e.data.done) { powNonce = e.data.nonce; $('#vf-pow-bar').style.width = '100%'; $('#vf-pow-txt').textContent = 'Secured ✓ (' + (e.data.ms / 1000).toFixed(1) + 's)'; updateClaimButton(); }
+    };
+    powWorker.postMessage({ seed, addr, bits });
+  }
+  function stopPow() { if (powWorker) { powWorker.terminate(); powWorker = null; } }
+
+  // ── challenge (captcha picture + pow params) ──
+  async function startVerification() {
+    const addr = $('#addr').value.trim();
+    if (!/^0x[0-9a-fA-F]{40}$/.test(addr)) { showResult('err', 'Enter a valid wallet address first (0x…).'); return; }
+    $('#vf-start').disabled = true;
+    try {
+      const r = await fetch('/api/faucet/v2/challenge', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ address: addr }) });
+      const d = await r.json();
+      if (!r.ok) throw new Error(d.error || r.statusText);
+      vf = { token: d.token, pow: d.pow, minSolveSec: d.minSolveSec || 4, issuedAt: Date.now(), addr };
+      vfCells = new Set();
+      $('#vf-target').textContent = d.captcha.label;
+      const grid = $('#vf-grid'); grid.innerHTML = d.captcha.svg;
+      const cells = document.createElement('div'); cells.className = 'vf-cells';
+      for (let i = 0; i < 9; i++) { const b = document.createElement('button'); b.type = 'button'; b.dataset.i = i; b.setAttribute('aria-label', 'cell ' + (i + 1)); b.addEventListener('click', () => { if (vfCells.has(i)) { vfCells.delete(i); b.classList.remove('on'); } else { vfCells.add(i); b.classList.add('on'); } updateClaimButton(); }); cells.appendChild(b); }
+      grid.appendChild(cells);
+      $('#vf-idle').style.display = 'none'; $('#vf-live').style.display = '';
+      startPow(d.pow.seed, addr, d.pow.bits);
+      hideResult();
+    } catch (e) { showResult('err', e.message); }
+    finally { $('#vf-start').disabled = false; updateClaimButton(); }
+  }
+  function resetVerification() { stopPow(); vf = null; powNonce = null; vfCells = new Set(); $('#vf-live').style.display = 'none'; $('#vf-idle').style.display = ''; updateClaimButton(); }
+  $('#vf-start').addEventListener('click', startVerification);
+  $('#vf-refresh').addEventListener('click', startVerification);
+  function updateClaimButton() {
+    const ready = !!vf && vfCells.size > 0 && !!powNonce && !$('#claim').dataset.blocked;
+    $('#claim').disabled = !ready;
+    $('#claim').textContent = !vf ? 'Claim ELN (verify first)' : !powNonce ? 'Claim ELN (securing…)' : vfCells.size === 0 ? 'Claim ELN (select the pictures)' : 'Claim ELN';
+  }
+  function showResult(kind, html, asHtml) { const out = $('#result'); out.style.display = ''; out.className = 'alert ' + kind; if (asHtml) out.innerHTML = html; else out.textContent = html; }
+  function hideResult() { $('#result').style.display = 'none'; }
+
+  // v9.14 — multi-wallet-safe connect (EIP-6963).
+  const __eip6963 = [];
+  try {
+    window.addEventListener('eip6963:announceProvider', (e) => { if (e && e.detail && e.detail.provider) __eip6963.push(e.detail); });
+    window.dispatchEvent(new Event('eip6963:requestProvider'));
+  } catch (e) {}
+  function pickProvider() {
+    if (__eip6963.length) { const mm = __eip6963.find(p => /metamask/i.test((p.info && (p.info.rdns || p.info.name)) || '')); return (mm || __eip6963[0]).provider; }
+    const eth = window.ethereum;
+    if (eth && Array.isArray(eth.providers) && eth.providers.length) return eth.providers.find(p => p && p.isMetaMask) || eth.providers[0];
+    return eth || null;
+  }
+  async function ensureElyonChain(wallet) {
+    try {
+      const hs = await fetch('/api/apos/handshake').then(r => r.json());
+      if (!hs || !hs.chainId) return;
+      const hexId = hs.chainIdHex || ('0x' + Number(hs.chainId).toString(16));
+      const cur = await wallet.request({ method: 'eth_chainId' });
+      if (parseInt(cur, 16) === Number(hs.chainId)) return;
+      try { await wallet.request({ method: 'wallet_switchEthereumChain', params: [{ chainId: hexId }] }); }
+      catch (e) {
+        if (e && (e.code === 4902 || /4902|unrecognized chain/i.test(e.message || ''))) {
+          await wallet.request({ method: 'wallet_addEthereumChain', params: [{ chainId: hexId, chainName: hs.chainName || 'Elyon Chain', nativeCurrency: { name: 'ELN', symbol: 'ELN', decimals: 18 }, rpcUrls: [hs.rpcUrl || (location.origin + '/rpc')] }] });
+        }
+      }
+    } catch (e) {}
+  }
+  $('#connect').addEventListener('click', async () => {
+    const wallet = pickProvider();
+    if (!wallet) { alert('No wallet detected. Install MetaMask and reload.'); return; }
+    try {
+      let accs = await wallet.request({ method: 'eth_requestAccounts' });
+      if (!accs || !accs[0]) accs = await wallet.request({ method: 'eth_accounts' });
+      if (accs && accs[0]) { await ensureElyonChain(wallet); $('#addr').value = accs[0]; $('#connect').textContent = accs[0].slice(0,6) + '…' + accs[0].slice(-4); resetVerification(); refreshStatus(); }
+      else alert('Your wallet returned no account. In MetaMask: unlock it and pick an account, then try again.');
+    } catch (e) {
+      alert(/no active wallet|no active account|locked/i.test(e.message || '') ? 'No active account in your wallet. Open MetaMask, unlock it and select an account, then click Connect again.' : (e.message || String(e)));
+    }
+  });
+  $('#addr').addEventListener('change', () => { resetVerification(); refreshStatus(); });
+  $('#addr').addEventListener('blur', refreshStatus);
+
+  function fmtCountdown(secs) { const h = Math.floor(secs/3600), m = Math.floor((secs%3600)/60), s = secs%60; return [h, m, s].map(n => String(n).padStart(2, '0')).join(':'); }
+  async function refreshStatus() {
+    const addr = $('#addr').value.trim();
+    if (!/^0x[0-9a-fA-F]{40}$/.test(addr)) { $('#countdown-wrap').style.display = 'none'; if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; } return; }
+    try {
+      const st = await fetch('/api/faucet/v2/status/' + addr).then(r => r.json());
+      if (st.canClaim) {
+        $('#countdown-wrap').style.display = 'none';
+        if (countdownTimer) { clearInterval(countdownTimer); countdownTimer = null; }
+        delete $('#claim').dataset.blocked; updateClaimButton();
+        return;
+      }
+      $('#countdown-wrap').style.display = '';
+      $('#countdown-wrap').firstElementChild.textContent = st.blockedBy === 'ip' ? 'Your network (IP) already claimed — next claim available in'
+        : st.blockedBy === 'banned' ? 'Too many failed attempts from your network — try again in' : 'Next claim for this wallet available in';
+      let remaining = st.secondsUntilNextClaim || 0;
+      $('#countdown').textContent = fmtCountdown(remaining);
+      $('#claim').dataset.blocked = '1'; updateClaimButton();
+      if (countdownTimer) clearInterval(countdownTimer);
+      countdownTimer = setInterval(() => {
+        remaining = Math.max(0, remaining - 1);
+        $('#countdown').textContent = fmtCountdown(remaining);
+        if (remaining === 0) { clearInterval(countdownTimer); countdownTimer = null; delete $('#claim').dataset.blocked; updateClaimButton(); $('#countdown-wrap').style.display='none'; }
+      }, 1000);
+    } catch (e) { console.warn('status err', e); }
+  }
+
+  $('#claim').addEventListener('click', async () => {
+    const addr = $('#addr').value.trim();
+    const role = $('#role').value;
+    if (!vf || vf.addr !== addr) { showResult('err', 'Please complete the verification for this address first.'); return; }
+    if (!powNonce) { showResult('info', 'Still securing your request — one moment…'); return; }
+    if (vfCells.size === 0) { showResult('err', 'Select all the matching pictures first.'); return; }
+    const waitMs = vf.issuedAt + vf.minSolveSec * 1000 - Date.now();
+    if (waitMs > 0) await new Promise(r => setTimeout(r, waitMs));
+    showResult('info', 'Submitting claim…');
+    $('#claim').disabled = true;
+    try {
+      const r = await fetch('/api/faucet/v2/claim', {
+        method: 'POST', headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ address: addr, role, token: vf.token, cells: [...vfCells], powNonce, website: $('#website').value, fp: deviceFacts() }),
+      });
+      const data = await r.json();
+      if (!r.ok) throw new Error(data.error || r.statusText);
+      const amt = (BigInt(data.amount) / 10n**18n).toString();
+      showResult('ok', '✓ Sent <strong>' + amt + ' ELN</strong> to your wallet. Tx: <span class="mono">' + data.txHash + '</span>'
+        + '<div style="margin-top:8px;font-size:13px;color:var(--text2,#789)">ELN is the chain\'s native coin — it shows directly as your wallet balance (no token to add).</div>', true);
+      resetVerification(); refreshStatus(); load();
+    } catch (e) {
+      showResult('err', e.message);
+      resetVerification();
+    } finally { updateClaimButton(); }
+  });
+  updateClaimButton();
+})();
+</script>
+
+  </div>
+</div>
+<script src="/elx-nav.js?v=20261106b" defer></script>
+</body>
+</html>

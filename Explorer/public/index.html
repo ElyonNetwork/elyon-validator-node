@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Elyon Explorer — block explorer for Elyon Chain</title>
+<meta name="description" content="The block explorer for Elyon Chain. Track blocks, transactions, addresses, tokens, contracts, and the in-block fee distribution paid to operators, contract owners, and token issuers.">
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+
+<section class="hero">
+  <div class="container">
+    <h1>The Elyon Chain Block Explorer</h1>
+    <div class="hero-search">
+      <select id="hero-filter" aria-label="Filter">
+        <option value="all">All Filters</option>
+        <option value="addresses">Addresses</option>
+        <option value="txs">Transactions</option>
+        <option value="blocks">Blocks</option>
+        <option value="tokens">Tokens</option>
+      </select>
+      <input id="hero-search" type="search" placeholder="Search by Address / Txn Hash / Block / Token" autocomplete="off">
+      <button id="hero-go" aria-label="Search"><span class="hero-search-icon">⌕</span><span class="hero-search-label">Search</span></button>
+      <div class="search-results" id="hero-results"></div>
+    </div>
+  </div>
+</section>
+
+<div class="container stats-overlay">
+  <div class="stats-card" id="stats-card">
+
+    <div class="stats-col">
+      <div class="stat-row">
+        <div class="stat-icon">◈</div>
+        <div class="stat-body">
+          <div class="stat-cell">
+            <span class="stat-label">ELN Price</span>
+            <span class="stat-value" id="s-price">—</span>
+            <span class="stat-sub" id="s-price-sub">ELN / USDT · live DEX</span>
+          </div>
+        </div>
+      </div>
+      <div class="stat-row alt">
+        <div class="stat-icon">◉</div>
+        <div class="stat-body">
+          <div class="stat-cell">
+            <span class="stat-label">Market Cap</span>
+            <span class="stat-value" id="s-mcap">—</span>
+            <span class="stat-sub" id="s-mcap-sub">based on circulating supply</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stats-col">
+      <div class="stat-row gray">
+        <div class="stat-icon">≡</div>
+        <div class="stat-body">
+          <div class="stat-cell">
+            <span class="stat-label">Transactions</span>
+            <span class="stat-value" id="s-txs">—</span>
+            <span class="stat-sub" id="s-tps">— TPS</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-label">Med Gas Price</span>
+            <span class="stat-value" id="s-gas">—</span>
+            <span class="stat-sub">last 1k txs</span>
+          </div>
+        </div>
+      </div>
+      <div class="stat-row warn">
+        <div class="stat-icon">◐</div>
+        <div class="stat-body">
+          <div class="stat-cell">
+            <span class="stat-label">Latest Block</span>
+            <span class="stat-value" id="s-block">—</span>
+            <span class="stat-sub" id="s-block-sub">—</span>
+          </div>
+          <div class="stat-cell">
+            <span class="stat-label">Indexed Up To</span>
+            <span class="stat-value" id="s-indexed">—</span>
+            <span class="stat-sub" id="s-lag">—</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="stat-chart">
+      <span class="stat-label">Transaction History (14 days)</span>
+      <svg id="tx-chart" viewBox="0 0 600 100" preserveAspectRatio="none">
+        <path id="tx-chart-line" d="" fill="none" stroke="#15a878" stroke-width="2"/>
+        <path id="tx-chart-fill" d="" fill="rgba(21,168,120,0.10)"/>
+      </svg>
+      <div class="x-axis" id="tx-chart-axis"><span>—</span><span>—</span><span>—</span></div>
+    </div>
+
+  </div>
+</div>
+
+<section class="page" style="padding-top:0;padding-bottom:0">
+  <div class="container">
+    <div class="card-header" style="padding:4px 4px 12px;border:none">
+      <h3 style="font-size:1.25rem">Featured Tokens</h3>
+      <a href="/tokens">All tokens →</a>
+    </div>
+    <div id="featured-tokens-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:16px"></div>
+  </div>
+</section>
+
+<main class="page" style="padding-top:18px">
+  <div class="container">
+    <div class="grid-2">
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Latest Blocks</h3>
+          <a href="/blocks">View all blocks →</a>
+        </div>
+        <div class="card-body" id="latest-blocks"><div style="padding:20px"><span class="spin"></span> Loading…</div></div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h3>Latest Transactions</h3>
+          <a href="/txs">View all transactions →</a>
+        </div>
+        <div class="card-body" id="latest-txs"><div style="padding:20px"><span class="spin"></span> Loading…</div></div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout, wireSearch } from '/js/layout.js?v=2';
+import { featuredFor, mountTvWidget } from '/js/tokens.js';
+import { api, esc, fmtNative, fmtGwei, addrLink, txLink, blockLink, timeAgo, statusBadge, methodLabel, short } from '/js/common.js';
+
+await renderLayout('home', { heroSearch: true });
+
+// Featured token cards (USDT, USDC, BTC, ETH, TRX, SOL, Gold) — each links
+// to its pro detail page and shows a live TradingView mini price chart.
+async function renderFeaturedTokens() {
+  const grid = document.getElementById('featured-tokens-grid');
+  if (!grid) return;
+  let chainId = null;
+  try { chainId = (await api('/api/chain')).chainId; } catch {}
+  const TOKENS = featuredFor(chainId);
+  const section = grid.closest('section');
+  if (!TOKENS.length) { if (section) section.style.display = 'none'; return; }
+  grid.innerHTML = TOKENS.map((t, i) => `
+    <a class="card" href="/address/${t.address}" style="text-decoration:none;color:inherit;display:block;overflow:hidden">
+      <div class="card-body" style="padding:14px 16px 8px">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div style="width:36px;height:36px;border-radius:50%;background:${t.color};color:#fff;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:.78rem;flex:none">${t.symbol.slice(0, 3)}</div>
+          <div style="min-width:0">
+            <div style="font-weight:700">${t.symbol}</div>
+            <div class="muted small" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${t.name}</div>
+          </div>
+          <span class="badge ok small" style="margin-left:auto">Verified ✓</span>
+        </div>
+      </div>
+      <div class="tk-mini tradingview-widget-container" data-i="${i}" style="height:130px;pointer-events:none"></div>
+    </a>`).join('');
+  grid.querySelectorAll('.tk-mini').forEach(host => {
+    const t = TOKENS[+host.dataset.i];
+    mountTvWidget(host, 'embed-widget-mini-symbol-overview.js', {
+      symbol: t.tv, width: '100%', height: 130, locale: 'en', dateRange: '3M',
+      colorTheme: 'light', isTransparent: true, autosize: false,
+      trendLineColor: t.color, underLineColor: 'rgba(0,0,0,0.05)',
+    });
+  });
+}
+renderFeaturedTokens();
+
+// Hero search wiring (reuses the shared search dropdown logic)
+const heroInput = document.getElementById('hero-search');
+const heroResults = document.getElementById('hero-results');
+const heroBtn = document.getElementById('hero-go');
+wireSearch(heroInput, heroResults);
+heroBtn.addEventListener('click', () => {
+  const v = heroInput.value.trim();
+  if (!v) return;
+  heroInput.dispatchEvent(new Event('input'));
+  setTimeout(() => {
+    const a = heroResults.querySelector('a');
+    if (a) location.href = a.getAttribute('href');
+  }, 150);
+});
+
+// Sparkline rendering for the 14-day TX chart
+function renderChart(series) {
+  const line = document.getElementById('tx-chart-line');
+  const fill = document.getElementById('tx-chart-fill');
+  const axis = document.getElementById('tx-chart-axis');
+  if (!series.length) {
+    line.setAttribute('d', '');
+    fill.setAttribute('d', '');
+    return;
+  }
+  const W = 600, H = 100, P = 4;
+  const max = Math.max(1, ...series.map(s => s.count));
+  const stepX = (W - P*2) / Math.max(1, series.length - 1);
+  let d = '';
+  series.forEach((s, i) => {
+    const x = P + i * stepX;
+    const y = H - P - ((s.count / max) * (H - P*2));
+    d += (i === 0 ? 'M' : ' L') + x.toFixed(1) + ' ' + y.toFixed(1);
+  });
+  line.setAttribute('d', d);
+  fill.setAttribute('d', d + ` L ${W-P} ${H} L ${P} ${H} Z`);
+  // Axis labels — first / middle / last day
+  const fmt = ts => {
+    const d = new Date(ts * 1000);
+    return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  };
+  const first = series[0], mid = series[Math.floor(series.length/2)], last = series[series.length-1];
+  axis.innerHTML = `<span>${esc(fmt(first.day))}</span><span>${esc(fmt(mid.day))}</span><span>${esc(fmt(last.day))}</span>`;
+}
+
+async function load() {
+  try {
+    const [stats, blocks, txs] = await Promise.all([
+      api('/api/stats'),
+      api('/api/blocks/latest?limit=6'),
+      api('/api/txs/latest?limit=6'),
+    ]);
+
+    document.getElementById('s-txs').textContent = stats.totalTxs.toLocaleString();
+    document.getElementById('s-tps').textContent = stats.tps24h.toFixed(2) + ' TPS · ' + stats.tx24h.toLocaleString() + ' in 24h';
+    document.getElementById('s-gas').textContent = fmtGwei(stats.medianGasPrice);
+    document.getElementById('s-block').textContent = '#' + stats.latestBlock.toLocaleString();
+    document.getElementById('s-block-sub').textContent = blocks[0] ? timeAgo(blocks[0].timestamp) : '—';
+    document.getElementById('s-indexed').textContent = '#' + stats.latestBlock.toLocaleString();
+    document.getElementById('s-lag').textContent = stats.totalAddresses.toLocaleString() + ' addresses · ' + stats.totalContracts.toLocaleString() + ' contracts';
+
+    // ELN price (live from the on-chain ELN/USDT DEX pair)
+    try {
+      const ep = await api('/api/eln-price');
+      if (ep && typeof ep.priceUsdt === 'number') {
+        const px = ep.priceUsdt.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 6 });
+        const sp = document.getElementById('s-price'); if (sp) sp.textContent = '$' + px;
+        const sps = document.getElementById('s-price-sub'); if (sps) sps.textContent = 'ELN / USDT · live DEX';
+        const ue = document.getElementById('usdt-eln-price'); if (ue) ue.textContent = px;
+      }
+    } catch {}
+
+    // 14-day chart from /api/stats series (or fall back to a derived series)
+    try {
+      const r = await fetch('/api/stats/daily?days=14').then(r => r.ok ? r.json() : null);
+      if (r?.series?.length) renderChart(r.series);
+      else renderChart([]);
+    } catch { renderChart([]); }
+
+    document.getElementById('latest-blocks').innerHTML = blocks.length === 0
+      ? `<div style="padding:20px" class="muted">No blocks indexed yet.</div>`
+      : blocks.map(b => `
+        <div class="feed-row">
+          <div class="feed-icon" title="Block">◰</div>
+          <div class="feed-body">
+            <div class="l1">${blockLink(b.number)}</div>
+            <div class="l2">Miner ${addrLink(b.miner)}<br><span class="muted">${b.txCount} txn${b.txCount===1?'':'s'} · ${timeAgo(b.timestamp)}</span></div>
+          </div>
+          <div class="feed-value">${b.urelayCount} URELAY1</div>
+        </div>`).join('')
+      + `<div class="card-footer"><a href="/blocks">View all blocks →</a></div>`;
+
+    document.getElementById('latest-txs').innerHTML = txs.length === 0
+      ? `<div style="padding:20px" class="muted">No transactions indexed yet.</div>`
+      : txs.map(t => `
+        <div class="feed-row">
+          <div class="feed-icon" title="Transaction">≡</div>
+          <div class="feed-body" style="min-width:0">
+            <div class="l1">${txLink(t.hash)}</div>
+            <div class="l2">From ${addrLink(t.from)}<br>To ${t.to ? addrLink(t.to) : '<span class="badge warn">Contract Create</span>'}</div>
+          </div>
+          <div class="feed-value">${fmtNative(t.value, 4)}</div>
+        </div>`).join('')
+      + `<div class="card-footer"><a href="/txs">View all transactions →</a></div>`;
+  } catch (e) {
+    console.error(e);
+  }
+}
+load();
+setInterval(load, 15_000);
+</script>
+</body>
+</html>

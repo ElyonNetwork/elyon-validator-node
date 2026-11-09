@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Block · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container" id="content"><div class="card card-body padded"><span class="spin"></span> Loading…</div></div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { api, esc, fmtNative, fmtGwei, addrLink, txLink, blockLink, timeAgo, timeFull, statusBadge, methodLabel } from '/js/common.js';
+
+await renderLayout('blocks');
+
+const num = decodeURIComponent(location.pathname.split('/')[2] || '');
+const content = document.getElementById('content');
+
+try {
+  const { block: b, txs } = await api('/api/blocks/' + num);
+  const used = Number(b.gasUsed); const limit = Number(b.gasLimit);
+  content.innerHTML = `
+    <div class="page-title">
+      <h1>Block <span class="mono">#${b.number.toLocaleString()}</span></h1>
+      <div class="meta">${timeAgo(b.timestamp)} · ${esc(timeFull(b.timestamp))}</div>
+    </div>
+
+    <div class="card" style="margin-bottom:18px">
+      <dl class="dlist">
+        <dt>Block height</dt><dd><span class="mono">${b.number}</span></dd>
+        <dt>Status</dt><dd><span class="badge ok">Finalised</span></dd>
+        <dt>Timestamp</dt><dd>${timeAgo(b.timestamp)} (${esc(timeFull(b.timestamp))})</dd>
+        <dt>Transactions</dt><dd>${b.txCount} transactions in this block</dd>
+        <dt>Miner / proposer</dt><dd>${addrLink(b.miner, { trunc:false })}</dd>
+        <dt>Gas used</dt><dd>${used.toLocaleString()} <span class="muted">(${limit ? (used/limit*100).toFixed(2) : '0'}% of limit)</span></dd>
+        <dt>Gas limit</dt><dd>${limit.toLocaleString()}</dd>
+        ${b.baseFeePerGas ? `<dt>Base fee per gas</dt><dd>${fmtGwei(b.baseFeePerGas)}</dd>` : ''}
+        <dt>Size</dt><dd>${b.size.toLocaleString()} bytes</dd>
+        <dt>Hash</dt><dd class="mono">${esc(b.hash)}</dd>
+        <dt>Parent hash</dt><dd>${blockLink(b.number - 1)} <span class="mono muted">${esc(b.parentHash)}</span></dd>
+        <dt>URELAY1 attestations</dt><dd>${b.urelayCount} <span class="muted">— relayer fee attestations embedded by the block producer</span></dd>
+      </dl>
+    </div>
+
+    <div class="card">
+      <div class="card-header"><h3>Transactions in this block (${txs.length})</h3></div>
+      <div style="overflow-x:auto">
+        <table class="t">
+          <thead><tr>
+            <th>Hash</th><th>Method</th><th>From</th><th></th><th>To</th><th class="right">Value</th><th class="right">Fee</th>
+          </tr></thead>
+          <tbody>
+            ${txs.length === 0 ? `<tr><td colspan="7" class="center muted" style="padding:18px">No transactions</td></tr>` : txs.map(t => `
+              <tr>
+                <td>${txLink(t.hash)} ${statusBadge(t.status)}</td>
+                <td>${methodLabel(t.methodId)}</td>
+                <td>${addrLink(t.from)}</td>
+                <td class="muted">→</td>
+                <td>${t.to ? addrLink(t.to) : '<span class="badge warn">Create</span>'}</td>
+                <td class="right">${fmtNative(t.value, 4)}</td>
+                <td class="right mono small">${fmtNative(t.gasFee, 6)}</td>
+              </tr>`).join('')}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  `;
+} catch (e) {
+  content.innerHTML = `<div class="alert err">Could not load block: ${esc(e.message)}</div>`;
+}
+</script>
+</body>
+</html>

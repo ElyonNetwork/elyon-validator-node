@@ -282,11 +282,11 @@ window.trackBtn = window.trackBtn || async function(b, f, t){ if (typeof f !== '
 <div class="tab" data-tab="vpackages"  onclick="switchTab('vpackages')">Staking Packages</div>
 <div class="tab" data-tab="send"     onclick="switchTab('send')">Send ELN</div>
 <div class="tab" data-tab="earnings" onclick="switchTab('earnings')">Fee Earnings</div>
-
-
+<div class="tab" data-tab="validators" data-role="admin" onclick="switchTab('validators')">Validators (Admin)</div>
+<div class="tab" data-tab="tiers"      data-role="admin" onclick="switchTab('tiers')">Tier Curve</div>
 <div class="tab" data-tab="pos"        onclick="switchTab('pos')">PoS Staking</div>
-
-
+<div class="tab" data-tab="faucet"     data-role="admin" onclick="switchTab('faucet')">Faucet</div>
+<div class="tab" data-tab="lbweights"  data-role="admin" onclick="switchTab('lbweights')">LB Weights</div>
 </nav>
   <div class="elx-sb-foot">Elyon Chain · APOS L1</div>
 </aside>
@@ -308,7 +308,7 @@ window.trackBtn = window.trackBtn || async function(b, f, t){ if (typeof f !== '
 <div id="gate" class="gate">
   <div class="gate-inner">
     <h1 id="gate-title">Admin sign in</h1>
-    <p id="gate-sub">Upload the key file you saved during chain install. Your private key is sent to this node only — used to sign each transaction and never stored.</p>
+    <p id="gate-sub">Upload the key file you saved during chain install. The private key is held in this browser tab only — it's sent with each transaction below and never persisted.</p>
 
     <label class="file-drop fx-lift" id="file-drop">
       <input type="file" id="key-input" accept=".txt,text/plain" onchange="onKeyFileSelected(event)" />
@@ -602,7 +602,21 @@ window.trackBtn = window.trackBtn || async function(b, f, t){ if (typeof f !== '
     </div>
     <div id="vpkg-out" class="hint" style="margin-bottom:18px"></div>
 
-    
+    <div class="card" data-role="admin">
+      <h3 style="margin-top:0">Add a new package <span style="font-size:.7em;color:var(--text-3);font-weight:400">(admin)</span></h3>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:8px">
+        <label class="field"><span>Name</span><input class="text" id="np-name" placeholder="60-day" /></label>
+        <label class="field"><span>Lock (days)</span><input class="text" id="np-days" type="number" min="1" value="60" /></label>
+        <label class="field"><span>APR (%)</span><input class="text" id="np-apr"  type="number" min="0" step="0.1" value="7" /></label>
+        <label class="field"><span>Min ELN</span><input class="text" id="np-min"  type="number" min="1" value="100" /></label>
+      </div>
+      <label class="check">
+        <input type="checkbox" id="np-early" />
+        <span>Allow early exit (validators can switch/withdraw before lock expires; APR forfeited)</span>
+      </label>
+      <button class="btn-primary" onclick="withLoading(this,'Publishing…',()=>addPackage())">Publish package</button>
+      <div id="np-status" style="margin-top:12px;font-size:14px;color:var(--text-2)"></div>
+    </div>
   </section>
 
   <section id="tab-send">
@@ -635,6 +649,8 @@ window.trackBtn = window.trackBtn || async function(b, f, t){ if (typeof f !== '
       <div class="stat-row">
         <div class="stat"><div class="stat-label">Unclaimed earnings</div><div class="stat-value" id="earn-node" data-countup>— ELN</div></div>
         <div class="stat"><div class="stat-label">Your fee share (tier)</div><div class="stat-value" id="earn-share">—</div></div>
+        <div class="stat" data-role="admin"><div class="stat-label">All validators (unclaimed)</div><div class="stat-value" id="earn-gross">— ELN</div></div>
+        <div class="stat" data-role="admin"><div class="stat-label">Admin pool</div><div class="stat-value" id="earn-admin">— ELN</div></div>
       </div>
       <div style="margin-top:18px">
         <button class="btn btn-primary" id="earn-withdraw-btn">⚡ Withdraw my earnings</button>
@@ -652,10 +668,48 @@ window.trackBtn = window.trackBtn || async function(b, f, t){ if (typeof f !== '
   </section>
 
   <!-- ═══ v8: VALIDATORS — admin approval + code issuance ═══ -->
-  
+  <section id="tab-validators" data-role="admin">
+    <h1>Validators <span style="font-size:.6em;color:var(--text-3);font-weight:400">(admin)</span></h1>
+    <p class="lead">Approve pending validator applications and issue each one a unique public APOS code. Only approved validators earn a fee share, can stake into packages, and can receive delegations.</p>
+
+    <div class="stat-row" style="margin-bottom:20px">
+      <div class="stat"><div class="stat-label">Pending</div><div class="stat-value" id="va-pending">—</div></div>
+      <div class="stat"><div class="stat-label">Active</div><div class="stat-value" id="va-active">—</div></div>
+      <div class="stat"><div class="stat-label">Total pool (tier basis)</div><div class="stat-value" id="va-pool">—</div></div>
+      <div class="stat"><div class="stat-label">Σ fee share allocated</div><div class="stat-value" id="va-gasshare">—</div></div>
+    </div>
+
+    <div class="card" style="padding:0">
+      <table>
+        <thead><tr><th>Validator</th><th>Code</th><th>Status</th><th>Pool</th><th>Rate</th><th>Fee share</th><th>Delegators</th><th style="min-width:260px">Actions</th></tr></thead>
+        <tbody id="va-rows"><tr><td colspan="8" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div id="va-out" class="hint" style="margin-top:10px"></div>
+  </section>
 
   <!-- ═══ v8: TIER CURVE — admin-set pool→(APR, fee-share) mapping ═══ -->
-  
+  <section id="tab-tiers" data-role="admin">
+    <h1>Tier curve <span style="font-size:.6em;color:var(--text-3);font-weight:400">(admin)</span></h1>
+    <p class="lead">The economic engine: POOL volume → transaction-fee share. As a validator's pool (own stake + delegator deposits) crosses each threshold, their transaction-fee share rises to that tier. Highest matching tier wins. APR comes only from staking packages. Saving replaces the whole curve on-chain.</p>
+
+    <div class="card" style="margin-bottom:18px;padding:0">
+      <table>
+        <thead><tr><th>#</th><th>Pool ≥ (ELN)</th><th>Tx-fee share (%)</th><th></th></tr></thead>
+        <tbody id="tier-rows"><tr><td colspan="4" class="empty">Loading…</td></tr></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:10px">
+      <button class="btn btn-outline" onclick="tierAddRow()">+ Add tier</button>
+      <button class="btn btn-primary" id="tier-save-btn">💾 Save curve on-chain</button>
+      <button class="btn btn-outline" id="tier-defaults-btn">Load suggested defaults</button>
+    </div>
+    <div id="tier-out" class="hint"></div>
+    <div class="card" style="margin-top:16px;background:rgba(21,168,120,.04)">
+      <h3 style="margin-top:0;font-size:14px">How it works</h3>
+      <p style="font-size:13px;color:var(--text-2);margin:0">Example: tiers at 0 / 1,000 / 10,000 / 100,000 ELN with fee share 5/10/15/20 % mean a validator whose pool grows past 10,000 ELN automatically keeps 15 % of the fees from transactions relayed through their node. APR is not part of the tier curve — it comes only from the staking package the validator stakes into. After editing the curve, existing validators re-tier on their next pool change (or use ↻ Re-tier in the Validators tab).</p>
+    </div>
+  </section>
 
   <!-- ═══════════════════════════════════════════════════════════════
        PoS Staking — this is the CONSENSUS validator stake, distinct
@@ -733,9 +787,99 @@ window.trackBtn = window.trackBtn || async function(b, f, t){ if (typeof f !== '
     </div>
   </section>
 
-  
+  <section id="tab-faucet" data-role="admin">
+    <h1>Faucet</h1>
+    <p class="lead">One faucet, one deployment. The admin (this node) deploys the <code>ELNTST</code> test-token + on-chain <code>Faucet</code> contract once — every operator node that joins the chain calls these same contracts to drip tokens to users. Native-ELN faucet (the public <i>Get 20 ELN</i> drip on <code>/faucet.html</code>) also runs out of this admin's validator wallet, so funding only needs to happen here.</p>
 
-  
+    <div class="card" id="faucet-state-card">
+      <h3>Status</h3>
+      <div id="faucet-state-loading" class="muted">Loading…</div>
+      <div id="faucet-state-undeployed" style="display:none">
+        <p style="margin-bottom:14px"><b>The ELNTST + Faucet contracts are not deployed yet.</b> Click below to deploy them in a single transaction. This is a <i>one-time</i> action for the whole chain — operator nodes will discover the addresses automatically via this admin node.</p>
+        <button class="btn-primary" id="faucet-deploy-btn" onclick="faucetDeploy()">Deploy ELNTST + Faucet</button>
+        <div id="faucet-deploy-out" class="muted" style="margin-top:10px"></div>
+      </div>
+      <div id="faucet-state-deployed" style="display:none">
+        <table style="background:transparent">
+          <tbody>
+            <tr><th style="width:200px">ELNTST token</th><td><code id="faucet-eln-addr">—</code></td></tr>
+            <tr><th>Faucet contract</th><td><code id="faucet-fct-addr">—</code></td></tr>
+            <tr><th>Deployed at</th><td id="faucet-deployed-at">—</td></tr>
+            <tr><th>Deployed by</th><td><code id="faucet-deployed-by">—</code></td></tr>
+            <tr><th>Validator amount</th><td><span id="faucet-amt-val">—</span> ELNTST / claim</td></tr>
+            <tr><th>Delegator amount</th><td><span id="faucet-amt-del">—</span> ELNTST / claim</td></tr>
+            <tr><th>Daily cap</th><td><span id="faucet-cap">—</span> ELNTST</td></tr>
+            <tr><th>Sent today</th><td><span id="faucet-sent-today">—</span> ELNTST</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" id="faucet-native-card" style="margin-top:20px">
+      <h3>Native-ELN drip (public <code>/faucet.html</code> · home page)</h3>
+      <p class="muted">The public "Get 20 ELN" drip on the marketing site is funded directly from <b>this admin's validator wallet</b> (no separate contract — native ELN is paid out via signed tx). Operator nodes forward their drip requests here, so this is the single source of truth for the whole chain. Keep this wallet topped up.</p>
+      <table style="background:transparent;margin-top:10px">
+        <tbody>
+          <tr><th style="width:200px">Per-claim amount</th><td>20 ELN</td></tr>
+          <tr><th>Per-address cooldown</th><td>24 hours</td></tr>
+          <tr><th>Endpoint</th><td><code>POST /api/faucet/request</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section id="tab-lbweights" data-role="admin">
+    <h1>Leaderboard Weights</h1>
+    <p class="lead">Edit the six coefficients used by <code>APOSLeaderboard.scoreNode()</code>. Score formula: <code>txCount·W₁ + (txVolumeWei/1e18)·W₂ + ownersStaked·W₃ + uptimePct·W₄ + (stakedTokens/1e18)·W₅ + stakePackageBase·W₆</code>. Change them on the fly — every read of <code>/api/lb/nodes/:month</code> recomputes scores against the latest weights.</p>
+
+    <div class="card" id="lbw-loading" class="muted">Loading current weights…</div>
+    <div class="card" id="lbw-undeployed" style="display:none">
+      <p>The leaderboard contract isn't deployed yet. Open <a href="/admin#tab-lb">/admin → APOS Leaderboard</a> and click <b>Deploy Leaderboard Contract</b> first.</p>
+    </div>
+    <div class="card" id="lbw-editor" style="display:none">
+      <table style="background:transparent;margin-bottom:14px">
+        <tbody>
+          <tr><th style="width:200px">Contract</th><td><code id="lbw-addr">—</code></td></tr>
+          <tr><th>Current month</th><td><code id="lbw-month">—</code></td></tr>
+          <tr><th>Nodes tracked</th><td><code id="lbw-ncount">—</code></td></tr>
+        </tbody>
+      </table>
+
+      <h3 style="margin-top:6px">Coefficients</h3>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:12px;margin-top:8px">
+        <div>
+          <label style="display:block;font-size:12px;color:var(--text-3);margin-bottom:4px">W₁ · tx count</label>
+          <input id="lbw-c-txc" type="number" min="0" step="1" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:var(--font-mono)">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;color:var(--text-3);margin-bottom:4px">W₂ · tx volume / ELN</label>
+          <input id="lbw-c-txv" type="number" min="0" step="1" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:var(--font-mono)">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;color:var(--text-3);margin-bottom:4px">W₃ · owners staked</label>
+          <input id="lbw-c-own" type="number" min="0" step="1" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:var(--font-mono)">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;color:var(--text-3);margin-bottom:4px">W₄ · uptime %</label>
+          <input id="lbw-c-up" type="number" min="0" step="1" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:var(--font-mono)">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;color:var(--text-3);margin-bottom:4px">W₅ · stake / token</label>
+          <input id="lbw-c-stk" type="number" min="0" step="1" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:var(--font-mono)">
+        </div>
+        <div>
+          <label style="display:block;font-size:12px;color:var(--text-3);margin-bottom:4px">W₆ · stake base</label>
+          <input id="lbw-c-base" type="number" min="0" step="1" style="width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-family:var(--font-mono)">
+        </div>
+      </div>
+
+      <div style="margin-top:16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap">
+        <button class="btn-primary" id="lbw-save-btn" onclick="lbwSave()">Save coefficients</button>
+        <button class="btn" onclick="refreshLbWeightsTab()" style="padding:8px 14px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);cursor:pointer">Reload from chain</button>
+        <span id="lbw-out" class="muted" style="margin-left:8px"></span>
+      </div>
+    </div>
+  </section>
 
 </main>
 </div>
@@ -807,7 +951,7 @@ async function detectGateMode() {
         fl = $('filedrop-label'), fh = $('filedrop-help');
   if (configured) {
     title.textContent = 'Admin sign in';
-    sub.textContent = "Upload the key file you saved during install. Your private key is sent to this node only — used to sign each transaction and never stored.";
+    sub.textContent = "Upload the key file you saved during install. The private key stays in this browser tab — it's sent with each transaction and never persisted.";
     if (setup) setup.style.display = 'none';
     if (fl) fl.textContent = 'Click to choose key file';
   } else {
@@ -990,7 +1134,7 @@ function promptForKey() {
     ov.innerHTML =
       '<div style="background:#fff;max-width:440px;width:100%;border-radius:18px;padding:28px;box-shadow:0 24px 60px rgba(0,0,0,.35);font-family:inherit">'
       + '<h3 style="margin:0 0 8px;font-size:22px;color:#0a0a14">Sign in to continue</h3>'
-      + '<p style="margin:0 0 18px;color:#5a6172;font-size:14px;line-height:1.5">Your session needs to be refreshed. Upload your key file to authorize this action — your key is used by this node to sign and is never stored.</p>'
+      + '<p style="margin:0 0 18px;color:#5a6172;font-size:14px;line-height:1.5">Your session needs to be refreshed. Upload your key file to authorize this action — your key stays in this browser tab only.</p>'
       + '<label style="display:block;border:2px dashed #cbd5e1;border-radius:12px;padding:24px;text-align:center;cursor:pointer;color:#5a6172;font-size:14px">'
       + '<input type="file" accept=".txt,text/plain" style="display:none" id="__reauth_file"/>🔑 <b>Click to choose your key file</b><br><span style="font-size:12px">or a bare 64-hex private key (.txt)</span></label>'
       + '<div id="__reauth_err" style="color:#ef4444;font-size:13px;margin-top:10px;display:none"></div>'
@@ -2644,5 +2788,6 @@ detectGateMode();
 
   </div>
 </div>
+<script src="/elx-nav.js?v=20261106b" defer></script>
 </body>
 </html>

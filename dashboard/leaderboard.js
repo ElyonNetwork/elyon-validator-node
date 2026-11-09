@@ -51,6 +51,7 @@ function monthIdx(ts) { return Math.floor((ts || Date.now() / 1000) / 2592000); 
 
 function recordHeartbeat(addr) {
   if (!/^0x[0-9a-fA-F]{40}$/.test(addr || '')) return false;
+  if (lastBeat.size >= 5000 && !lastBeat.has(addr.toLowerCase())) return false;
   lastBeat.set(addr.toLowerCase(), Date.now());
   return true;
 }

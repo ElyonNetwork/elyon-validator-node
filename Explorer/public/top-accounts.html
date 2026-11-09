@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Top Accounts · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container">
+    <div class="page-title">
+      <h1>Top Accounts</h1>
+      <div class="meta">Addresses ranked by total transaction involvement.</div>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto">
+        <table class="t">
+          <thead><tr>
+            <th>#</th><th>Address</th><th>Role tags</th>
+            <th class="right">Total txns</th><th class="right">Last seen block</th>
+          </tr></thead>
+          <tbody id="rows"><tr><td colspan="5" class="center muted" style="padding:18px"><span class="spin"></span> Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { api, esc, addrLink, blockLink } from '/js/common.js';
+
+await renderLayout('blockchain');
+
+try {
+  const r = await api('/api/top-accounts?limit=200');
+  document.getElementById('rows').innerHTML = r.items.length === 0
+    ? `<tr><td colspan="5" class="center muted" style="padding:24px">No accounts indexed yet.</td></tr>`
+    : r.items.map((a, i) => {
+        const tags = [];
+        if (a.isContract) tags.push('<span class="badge blue">Contract</span>');
+        if (a.isOperator) tags.push('<span class="badge ok">Operator</span>');
+        if (a.isRegisteredContract) tags.push('<span class="badge ok">Reg. Contract</span>');
+        if (a.isRegisteredToken) tags.push('<span class="badge ok">Reg. Token</span>');
+        return `<tr>
+          <td class="muted small">${i + 1}</td>
+          <td>${addrLink(a.addr, { trunc:false })}</td>
+          <td>${tags.join(' ') || '<span class="muted small">—</span>'}</td>
+          <td class="right">${a.txs.toLocaleString()}</td>
+          <td class="right">${a.lastSeenBlock != null ? blockLink(a.lastSeenBlock) : '<span class="muted">—</span>'}</td>
+        </tr>`;
+      }).join('');
+} catch (e) {
+  document.getElementById('rows').innerHTML = `<tr><td colspan="5" class="center" style="padding:18px;color:var(--error)">${esc(e.message)}</td></tr>`;
+}
+</script>
+</body>
+</html>

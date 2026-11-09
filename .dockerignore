@@ -1,4 +1,32 @@
+**/.idea/
+**/.vs/
+**/.vscode/
+**/artifacts/
+**/bin/
+**/obj/
 **/node_modules/
+
+src/Nethermind/*.Test/
+
+# Local runtime / test data — never ship in the image
+unp-runtime/
+realnet/keystore/
 **/*.log
-.git/
-*.md
+dashboard/data/
+
+# Build / report artefacts that aren't part of the runtime
+*.pdf
+*.jpg
+build.log
+last_log.txt
+orchestrator*.log
+pdf_extract.txt
+
+# Sibling projects living in this repo for convenience only. They have
+# their own Dockerfile / docker-compose and ship as separate images;
+# the chain image (Dockerfile.aposunpchain) MUST NOT pull these in.
+# Listing them here keeps the chain build context lean and guarantees
+# they never accidentally appear in the chain's runtime layers.
+website/
+Explorer/
+ElyonStressBot/

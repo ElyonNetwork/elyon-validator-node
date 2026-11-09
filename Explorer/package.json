@@ -1,0 +1,22 @@
+{
+  "name": "elyon-explorer",
+  "version": "1.0.0",
+  "description": "Block explorer for Elyon Chain — chain stats, blocks, transactions, addresses, contracts, tokens, fee-split analytics, wallet connect.",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "start": "node src/server.js",
+    "indexer": "node src/indexer.js",
+    "init-db": "node src/init-db.js"
+  },
+  "dependencies": {
+    "compression": "^1.7.5",
+    "cors": "^2.8.5",
+    "ethers": "^6.13.4",
+    "express": "^4.21.2",
+    "express-rate-limit": "^7.4.1",
+    "helmet": "^8.0.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.13.1"
+  }
+}

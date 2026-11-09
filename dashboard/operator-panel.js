@@ -41,12 +41,17 @@ function wireRoutes(app, ctx) {
     });
   });
 
+  // Only the local paths the panels actually use; never an open relay.
+  const ALLOWED_PROXY = [/^\/api\/(apos|desk|status|blocks|wallet\/send-native|auth\/key-login|rpc)\b/, /^\/api\/wizard\/(status|connect|generate-key|derive-address|sync-status|operator\/)/];
+
   app.all('/api/proxy/*', async (req, res) => {
     const upstreamPath = req.url.replace(/^\/api\/proxy/, '');
+    if (!ALLOWED_PROXY.some(rx => rx.test(upstreamPath))) return res.status(404).json({ error: 'not proxied' });
     const url = `http://127.0.0.1:${localApiPort}${upstreamPath}`;
     try {
       const headers = { 'Content-Type': 'application/json' };
       if (req.headers.authorization) headers.authorization = req.headers.authorization;
+      if (req.headers['x-real-ip']) headers['x-real-ip'] = req.headers['x-real-ip'];
       const opts = { method: req.method, headers };
       if (req.method !== 'GET' && req.method !== 'HEAD') {
         opts.body = JSON.stringify(req.body || {});
@@ -61,8 +66,11 @@ function wireRoutes(app, ctx) {
     }
   });
 
+  const ALLOWED_ADMIN_PROXY = [/^\/api\/(apos|desk|status|blocks|rpc)\b/, /^\/api\/wizard\/bootstrap\b/];
+
   app.all('/api/admin-proxy/*', async (req, res) => {
     const upstreamPath = req.url.replace(/^\/api\/admin-proxy/, '');
+    if (!ALLOWED_ADMIN_PROXY.some(rx => rx.test(upstreamPath))) return res.status(404).json({ error: 'not proxied' });
     const url = DEFAULT_ADMIN_URL.replace(/\/+$/, '') + upstreamPath;
     try {
       const opts = { method: req.method, headers: { 'Content-Type': 'application/json' } };

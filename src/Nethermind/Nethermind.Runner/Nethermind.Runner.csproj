@@ -1,0 +1,180 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <Nullable>annotations</Nullable>
+    <AssemblyName>nethermind</AssemblyName>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <EnableUnsafeBinaryFormatterSerialization>false</EnableUnsafeBinaryFormatterSerialization>
+    <EnableUnsafeUTF7Encoding>false</EnableUnsafeUTF7Encoding>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <TieredPGO>true</TieredPGO>
+    <GarbageCollectionAdaptationMode>0</GarbageCollectionAdaptationMode>
+    <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerfileRunArguments>-v $(OutDir)/.data:/data -p 8545:8545 -p 8551:8551 -p 30303:30303</DockerfileRunArguments>
+    <UserSecretsId>03db39d0-4200-473e-9ff8-4a48d496381f</UserSecretsId>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+    <DockerfileContext>.</DockerfileContext>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="AspNetCore.HealthChecks.UI.Client" />
+    <PackageReference Include="Microsoft.Build.Tasks.Git">
+      <PrivateAssets>all</PrivateAssets>
+      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
+    </PackageReference>
+    <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+    <PackageReference Include="NLog.Targets.Seq" />
+    <PackageReference Include="Pyroscope" />
+    <PackageReference Include="System.CommandLine" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Nethermind.Api\Nethermind.Api.csproj" />
+    <ProjectReference Include="..\Nethermind.Flashbots\Nethermind.Flashbots.csproj" />
+    <ProjectReference Include="..\Nethermind.Consensus.AuRa\Nethermind.Consensus.AuRa.csproj" />
+    <ProjectReference Include="..\Nethermind.Consensus.Clique\Nethermind.Consensus.Clique.csproj" />
+    <ProjectReference Include="..\Nethermind.Consensus.Ethash\Nethermind.Consensus.Ethash.csproj" />
+    <ProjectReference Include="..\Nethermind.Consensus.PoS\Nethermind.Consensus.PoS.csproj" />
+    <ProjectReference Include="..\Nethermind.Core\Nethermind.Core.csproj" />
+    <ProjectReference Include="..\Nethermind.Db\Nethermind.Db.csproj" />
+    <ProjectReference Include="..\Nethermind.Db.Rocks\Nethermind.Db.Rocks.csproj" />
+    <ProjectReference Include="..\Nethermind.Db.Rpc\Nethermind.Db.Rpc.csproj" />
+    <ProjectReference Include="..\Nethermind.EthStats\Nethermind.EthStats.csproj" />
+    <ProjectReference Include="..\Nethermind.ExternalSigner.Plugin\Nethermind.ExternalSigner.Plugin.csproj" />
+    <ProjectReference Include="..\Nethermind.Grpc\Nethermind.Grpc.csproj" />
+    <ProjectReference Include="..\Nethermind.HealthChecks\Nethermind.HealthChecks.csproj" />
+    <ProjectReference Include="..\Nethermind.Hive\Nethermind.Hive.csproj" />
+    <ProjectReference Include="..\Nethermind.Init\Nethermind.Init.csproj" />
+    <ProjectReference Include="..\Nethermind.Init.Snapshot\Nethermind.Init.Snapshot.csproj" />
+    <ProjectReference Include="..\Nethermind.JsonRpc\Nethermind.JsonRpc.csproj" />
+    <ProjectReference Include="..\Nethermind.JsonRpc.TraceStore\Nethermind.JsonRpc.TraceStore.csproj" />
+    <ProjectReference Include="..\Nethermind.Logging.NLog\Nethermind.Logging.NLog.csproj" />
+    <ProjectReference Include="..\Nethermind.Merge.AuRa\Nethermind.Merge.AuRa.csproj" />
+    <ProjectReference Include="..\Nethermind.Merge.Plugin\Nethermind.Merge.Plugin.csproj" />
+    <ProjectReference Include="..\Nethermind.Monitoring\Nethermind.Monitoring.csproj" />
+    <ProjectReference Include="..\Nethermind.Network\Nethermind.Network.csproj" />
+    <ProjectReference Include="..\Nethermind.Optimism\Nethermind.Optimism.csproj" />
+    <ProjectReference Include="..\Nethermind.Taiko\Nethermind.Taiko.csproj" />
+    <ProjectReference Include="..\Nethermind.Seq\Nethermind.Seq.csproj" />
+    <ProjectReference Include="..\Nethermind.Shutter\Nethermind.Shutter.csproj" />
+    <ProjectReference Include="..\Nethermind.Sockets\Nethermind.Sockets.csproj" />
+    <ProjectReference Include="..\Nethermind.Specs\Nethermind.Specs.csproj" />
+    <ProjectReference Include="..\Nethermind.Synchronization\Nethermind.Synchronization.csproj" />
+    <ProjectReference Include="..\Nethermind.UPnP.Plugin\Nethermind.UPnP.Plugin.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="..\Chains\**\*.*">
+      <Link>chainspec\%(RecursiveDir)%(Filename)%(Extension)</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="nethermind.css">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="configs\*.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+    <None Update="Data\**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+    </None>
+    <None Remove="keystore\**" />
+    <Content Remove="..\Chains\arena-z-mainnet.json.zst" />
+    <Content Remove="..\Chains\AuRaTest.json" />
+    <Content Remove="..\Chains\automata-mainnet.json.zst" />
+    <Content Remove="..\Chains\base-mainnet.json.zst" />
+    <Content Remove="..\Chains\base-sepolia.json.zst" />
+    <Content Remove="..\Chains\bob-mainnet.json.zst" />
+    <Content Remove="..\Chains\boba-sepolia.json.zst" />
+    <Content Remove="..\Chains\chiado.json" />
+    <Content Remove="..\Chains\cyber-mainnet.json.zst" />
+    <Content Remove="..\Chains\cyber-sepolia.json.zst" />
+    <Content Remove="..\Chains\dictionary" />
+    <Content Remove="..\Chains\energyweb.json" />
+    <Content Remove="..\Chains\ethernity-mainnet.json.zst" />
+    <Content Remove="..\Chains\ethernity-sepolia.json.zst" />
+    <Content Remove="..\Chains\funki-mainnet.json.zst" />
+    <Content Remove="..\Chains\funki-sepolia.json.zst" />
+    <Content Remove="..\Chains\genesis.json" />
+    <Content Remove="..\Chains\gnosis.json" />
+    <Content Remove="..\Chains\hashkeychain-mainnet.json.zst" />
+    <Content Remove="..\Chains\holesky.json" />
+    <Content Remove="..\Chains\hoodi.json" />
+    <Content Remove="..\Chains\ink-mainnet.json.zst" />
+    <Content Remove="..\Chains\ink-sepolia.json.zst" />
+    <Content Remove="..\Chains\joc-mainnet.json" />
+    <Content Remove="..\Chains\joc-testnet.json" />
+    <Content Remove="..\Chains\linea-mainnet.json" />
+    <Content Remove="..\Chains\linea-sepolia.json" />
+    <Content Remove="..\Chains\lisk-mainnet.json.zst" />
+    <Content Remove="..\Chains\lisk-sepolia.json.zst" />
+    <Content Remove="..\Chains\lyra-mainnet.json.zst" />
+    <Content Remove="..\Chains\metal-mainnet.json.zst" />
+    <Content Remove="..\Chains\metal-sepolia.json.zst" />
+    <Content Remove="..\Chains\mint-mainnet.json.zst" />
+    <Content Remove="..\Chains\mode-mainnet.json.zst" />
+    <Content Remove="..\Chains\mode-sepolia.json.zst" />
+    <Content Remove="..\Chains\op-mainnet.json.zst" />
+    <Content Remove="..\Chains\op-sepolia.json.zst" />
+    <Content Remove="..\Chains\orderly-mainnet.json.zst" />
+    <Content Remove="..\Chains\pivotal-sepolia.json.zst" />
+    <Content Remove="..\Chains\poacore.json" />
+    <Content Remove="..\Chains\polynomial-mainnet.json.zst" />
+    <Content Remove="..\Chains\race-mainnet.json.zst" />
+    <Content Remove="..\Chains\race-sepolia.json.zst" />
+    <Content Remove="..\Chains\redstone-mainnet.json.zst" />
+    <Content Remove="..\Chains\sepolia.json" />
+    <Content Remove="..\Chains\settlus-mainnet-mainnet.json.zst" />
+    <Content Remove="..\Chains\settlus-sepolia-sepolia.json.zst" />
+    <Content Remove="..\Chains\shape-mainnet.json.zst" />
+    <Content Remove="..\Chains\shape-sepolia.json.zst" />
+    <Content Remove="..\Chains\snax-mainnet.json.zst" />
+    <Content Remove="..\Chains\soneium-mainnet.json.zst" />
+    <Content Remove="..\Chains\soneium-minato-sepolia.json.zst" />
+    <Content Remove="..\Chains\spaceneth.json" />
+    <Content Remove="..\Chains\sseed-mainnet.json.zst" />
+    <Content Remove="..\Chains\swan-mainnet.json.zst" />
+    <Content Remove="..\Chains\swell-mainnet.json.zst" />
+    <Content Remove="..\Chains\taiko-alethia.json" />
+    <Content Remove="..\Chains\taiko-hekla.json" />
+    <Content Remove="..\Chains\tbn-mainnet.json.zst" />
+    <Content Remove="..\Chains\tbn-sepolia.json.zst" />
+    <Content Remove="..\Chains\unichain-mainnet.json.zst" />
+    <Content Remove="..\Chains\unichain-sepolia.json.zst" />
+    <Content Remove="..\Chains\volta.json" />
+    <Content Remove="..\Chains\worldchain-mainnet.json.zst" />
+    <Content Remove="..\Chains\worldchain-sepolia.json.zst" />
+    <Content Remove="..\Chains\xterio-eth-mainnet.json.zst" />
+    <Content Remove="..\Chains\zora-mainnet.json.zst" />
+    <Content Remove="..\Chains\zora-sepolia.json.zst" />
+    <None Update="NLog.config">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="CollectPlugins" AfterTargets="AfterBuild;AfterPublish">
+    <ItemGroup>
+      <PluginsForBuild Include="$(OutputPath)\Nethermind.Merge.AuRa.*;$(OutputPath)\Nethermind.Shutter.*;$(OutputPath)\Nethermind.Merge.Plugin.*;$(OutputPath)\Nethermind.Consensus.AuRa.*;$(OutputPath)\Nethermind.Init.*;$(OutputPath)\Nethermind.HealthChecks.*;$(OutputPath)\Nethermind.Api.*;$(OutputPath)\Nethermind.EthStats.*;$(OutputPath)\Nethermind.JsonRpc.TraceStore.*;$(OutputPath)\Nethermind.Init.Snapshot.*;$(OutputPath)\Nethermind.Optimism.*;$(OutputPath)\Nethermind.ExternalSigner.Plugin.*;$(OutputPath)\Nethermind.Taiko.*;$(OutputPath)\Nethermind.Flashbots.*" />
+      <PluginsForPublish Include="$(OutputPath)\Nethermind.Merge.AuRa.dll;$(OutputPath)\Nethermind.Shutter.dll;$(OutputPath)\Nethermind.Merge.Plugin.dll;$(OutputPath)\Nethermind.Consensus.AuRa.dll;$(OutputPath)\Nethermind.Init.dll;$(OutputPath)\Nethermind.HealthChecks.dll;$(OutputPath)\Nethermind.Api.dll;$(OutputPath)\Nethermind.EthStats.dll;$(OutputPath)\Nethermind.JsonRpc.TraceStore.dll;$(OutputPath)\Nethermind.Init.Snapshot.dll;$(OutputPath)\Nethermind.Optimism.dll;$(OutputPath)\Nethermind.ExternalSigner.Plugin.dll;$(OutputPath)\Nethermind.Taiko.dll;$(OutputPath)\Nethermind.Flashbots.dll" />
+    </ItemGroup>
+  </Target>
+
+  <Target Name="CopyPluginsAfterBuild" AfterTargets="AfterBuild" DependsOnTargets="CollectPlugins">
+    <Message Text="Copying plugins after build..." Importance="High" />
+    <Copy SourceFiles="@(PluginsForBuild)" DestinationFolder="$(OutDir)\plugins" />
+  </Target>
+
+  <Target Name="CopyPluginsAfterPublish" AfterTargets="AfterPublish" DependsOnTargets="CollectPlugins">
+    <Message Text="Copying plugins after publish..." Importance="High" />
+    <Copy SourceFiles="@(PluginsForBuild)" DestinationFolder="$(OutDir)\plugins" />
+    <Copy SourceFiles="@(PluginsForPublish)" DestinationFolder="$(PublishDir)\plugins" />
+  </Target>
+
+</Project>

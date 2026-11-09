@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tokens · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container">
+    <div class="page-title">
+      <h1>Token tracker</h1>
+      <div class="meta">ERC-20 tokens seen by the indexer. Registered tokens earn 3% of every transfer fee.</div>
+    </div>
+    <div class="card">
+      <div style="overflow-x:auto">
+        <table class="t">
+          <thead><tr>
+            <th>#</th><th>Token</th><th>Symbol</th><th>Address</th>
+            <th class="right">Total supply</th><th class="right">Holders</th>
+            <th class="right">Transfers</th><th>Registry</th>
+          </tr></thead>
+          <tbody id="rows"><tr><td colspan="8" class="center muted" style="padding:18px"><span class="spin"></span> Loading…</td></tr></tbody>
+        </table>
+      </div>
+      <div class="card-footer"><a href="#" id="more">Load more</a></div>
+    </div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { api, esc, addrLink, fmtToken } from '/js/common.js';
+
+await renderLayout('tokens');
+
+let page = 0;
+const rows = document.getElementById('rows');
+let acc = [];
+
+async function load() {
+  const r = await api('/api/tokens?page=' + page + '&limit=50');
+  if (page === 0) acc = r.items; else acc = acc.concat(r.items);
+  if (acc.length === 0) {
+    rows.innerHTML = `<tr><td colspan="8" class="center muted" style="padding:18px">No tokens indexed yet. Tokens appear after their first ERC-20 Transfer event.</td></tr>`;
+    return;
+  }
+  rows.innerHTML = acc.map((t, i) => `
+    <tr>
+      <td class="muted small">${i + 1}</td>
+      <td><strong>${esc(t.name || 'Unknown token')}</strong></td>
+      <td>${esc(t.symbol || '—')}</td>
+      <td>${addrLink(t.addr)}</td>
+      <td class="right small">${t.totalSupply ? fmtToken(t.totalSupply, t.decimals || 18, 2) : '—'}</td>
+      <td class="right">${(t.holders || 0).toLocaleString()}</td>
+      <td class="right">${(t.transfers || 0).toLocaleString()}</td>
+      <td>${t.registered ? '<span class="badge ok">Registered</span>' : '<span class="badge gray">Unregistered</span>'}</td>
+    </tr>`).join('');
+}
+load();
+document.getElementById('more').addEventListener('click', e => { e.preventDefault(); page += 1; load(); });
+</script>
+</body>
+</html>

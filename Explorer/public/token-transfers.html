@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Token Transfers · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container">
+    <div class="page-title">
+      <h1>Token Transfers (ERC-20)</h1>
+      <div class="meta">Every ERC-20 <code>Transfer</code> event the indexer has decoded from receipt logs.</div>
+    </div>
+    <div id="mount"></div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { esc, addrLink, txLink, blockLink, timeAgo, fmtToken } from '/js/common.js';
+import { mountPager } from '/js/pager.js';
+
+await renderLayout('tokens');
+
+mountPager({
+  mount: document.getElementById('mount'),
+  fetchUrl: (page) => `/api/token-transfers?page=${page}&limit=25`,
+  columns: `
+    <th>Hash</th><th>Block</th><th>Age</th>
+    <th>From</th><th></th><th>To</th>
+    <th class="right">Amount</th><th>Token</th>
+  `,
+  rowsHtml: items => items.map(x => {
+    const dec = x.token?.decimals ?? 18;
+    const sym = x.token?.symbol || '?';
+    return `<tr>
+      <td>${txLink(x.txHash)}</td>
+      <td>${blockLink(x.blockNumber)}</td>
+      <td class="muted small">${timeAgo(x.timestamp)}</td>
+      <td>${addrLink(x.from)}</td>
+      <td class="muted">→</td>
+      <td>${addrLink(x.to)}</td>
+      <td class="right">${fmtToken(x.amount, dec, 6)}</td>
+      <td>${addrLink(x.token.addr)} <span class="muted small">${esc(sym)}</span></td>
+    </tr>`;
+  }).join(''),
+  emptyHtml: 'No token transfers indexed yet.',
+});
+</script>
+</body>
+</html>

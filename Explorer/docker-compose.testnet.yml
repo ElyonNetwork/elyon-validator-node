@@ -1,0 +1,65 @@
+name: elyon-texplorer
+
+# Second Explorer instance, pointed at ElyonTestnet.
+# Completely separate containers/volumes/network from the mainnet explorer
+# (elyon-explorer / elyon-explorer-pg) — same image, different config.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: elyon-texplorer-pg
+    restart: unless-stopped
+    networks: [texplorer-net]
+    environment:
+      POSTGRES_USER:     ${PGUSER:-explorer}
+      POSTGRES_PASSWORD: ${PGPASSWORD:-explorer}
+      POSTGRES_DB:       ${PGDATABASE:-elyon_texplorer}
+    volumes: [texplorer-pg-data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$POSTGRES_DB"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  app:
+    build: .
+    image: elyonchain/explorer:latest
+    container_name: elyon-texplorer
+    restart: unless-stopped
+    # npm_default → fronted by nginx-proxy-manager + reach elyon-testnet:8545
+    networks: [texplorer-net, npm_default]
+    depends_on:
+      postgres: { condition: service_healthy }
+    environment:
+      PORT: "8080"
+      RPC_URL:    ${RPC_URL}
+      PUBLIC_RPC_URL: ${PUBLIC_RPC_URL}
+      CHAIN_ID:   ${CHAIN_ID}
+      CHAIN_NAME: ${CHAIN_NAME}
+      NATIVE_NAME:    ${NATIVE_NAME:-Elyon}
+      NATIVE_SYMBOL:  ${NATIVE_SYMBOL:-ELN}
+      NATIVE_DECIMALS: "18"
+      REGISTRY_ADDR:  ${REGISTRY_ADDR:-}
+      PGHOST: postgres
+      PGPORT: "5432"
+      PGUSER:     ${PGUSER:-explorer}
+      PGPASSWORD: ${PGPASSWORD:-explorer}
+      PGDATABASE: ${PGDATABASE:-elyon_texplorer}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      JWT_SECRET:     ${JWT_SECRET}
+      INDEXER_ENABLED: "true"
+      INDEXER_BATCH:   "50"
+      INDEXER_HEAD_LAG: "2"
+      INDEXER_POLL_MS: "2000"
+      CADDY_DIR: /data/caddy
+    volumes: [texplorer-app-data:/data]
+
+networks:
+  texplorer-net:
+    name: elyon-texplorer-net
+    driver: bridge
+  npm_default:
+    external: true
+
+volumes:
+  texplorer-pg-data:  { name: elyon-texplorer-pg-data }
+  texplorer-app-data: { name: elyon-texplorer-app-data }

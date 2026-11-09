@@ -1,0 +1,77 @@
+{
+  "name": "Elyon Chain Mainnet",
+  "engine": {
+    "pos": {
+      "params": {
+        "period": 2,
+        "epoch": 30000,
+        "transitionBlock": 232,
+        "reward": "0x0",
+        "relayerAttributionBlock": 1,
+        "aposPointer": "0xaac39663a4aff8f6e20f1bd2c186a941ac9effb1",
+        "hardeningBlock": 5730400
+      }
+    }
+  },
+  "params": {
+    "accountStartNonce": "0x0",
+    "eip98Transition": "0x0",
+    "eip140Transition": "0x0",
+    "eip145Transition": "0x0",
+    "eip150Transition": "0x0",
+    "eip155Transition": "0x0",
+    "eip158Transition": "0x0",
+    "eip160Transition": "0x0",
+    "eip161abcTransition": "0x0",
+    "eip161dTransition": "0x0",
+    "eip211Transition": "0x0",
+    "eip214Transition": "0x0",
+    "eip658Transition": "0x0",
+    "eip1014Transition": "0x0",
+    "eip1052Transition": "0x0",
+    "eip1283Transition": "0x0",
+    "gasLimitBoundDivisor": "0x400",
+    "homesteadTransition": "0x0",
+    "kip4Transition": "0x0",
+    "kip6Transition": "0x0",
+    "maxCodeSize": "0x100000",
+    "maxCodeSizeTransition": "0x0",
+    "eip1344Transition": "0x0",
+    "eip1884Transition": "0x0",
+    "eip2028Transition": "0x0",
+    "eip2200Transition": "0x0",
+    "eip2565Transition": "0x0",
+    "eip2929Transition": "0x0",
+    "eip2930Transition": "0x0",
+    "eip1559Transition": "0x0",
+    "eip3198Transition": "0x0",
+    "eip3529Transition": "0x0",
+    "eip3541Transition": "0x0",
+    "maximumExtraDataSize": "0x10000",
+    "minGasLimit": "0x1388",
+    "networkID": "0x34e2465",
+    "validateReceipts": true,
+    "validateReceiptsTransition": "0x0",
+    "wasmActivationTransition": "0x0"
+  },
+  "genesis": {
+    "difficulty": "0x1",
+    "gasLimit": "0x2FAF080",
+    "baseFeePerGas": "0x3B9ACA00",
+    "parentHash": "0x0000000000000000000000000000000000000000000000000000000000000000",
+    "timestamp": "0x6a42a351",
+    "extraData": "0x00000000000000000000000000000000000000000000000000000000000000001a16144347f2c07c0b69132a22dfdf5958bb5da90000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000",
+    "seal": {
+      "ethereum": {
+        "nonce": "0x0000000000000000",
+        "mixHash": "0x0000000000000000000000000000000000000000000000000000000000000000"
+      }
+    }
+  },
+  "nodes": [],
+  "accounts": {
+    "0x1a16144347f2c07c0b69132a22dfdf5958bb5da9": {
+      "balance": "0x33b2e3c9fd0803ce8000000"
+    }
+  }
+}

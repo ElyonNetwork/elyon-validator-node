@@ -1,330 +1,130 @@
 <div align="center">
 
-# 🟢 Elyon Chain — Validator Node
+# Elyon Chain
 
-**Run your own Elyon Chain validator. Join the network, stake, serve transactions, and earn your tier‑based share of the gas fees.**
+**An independent EVM proof-of-stake chain that settles transaction fees to the nodes that serve users, inside the block.**
 
-[![Docker](https://img.shields.io/badge/docker-elyonchain%2Fnode-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/r/elyonchain/node)
-[![Consensus](https://img.shields.io/badge/consensus-APOS%20(Proof%20of%20Stake)-15a878)](#how-validators-earn)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+Native token: **ELN** · Mainnet chain ID: **55452773** · Block time: **2 seconds**
+
+[Run a node](docs/NODE-SETUP.md) · [Explorer](https://explorer.elyon.network) · [Live blocks](https://blocks.elyon.network) · [Security](SECURITY.md) · [Decentralization](docs/DECENTRALIZATION.md)
 
 </div>
 
 ---
 
+## What Elyon Chain is
 
-## Table of contents
+Elyon Chain is an EVM-compatible blockchain with its own validators and its own consensus. Wallets,
+contracts and tools built for Ethereum work without changes. **ELN** is its native token and default
+gas currency.
 
-- [Overview](#overview)
-- [How validators earn](#how-validators-earn)
-- [Features](#features)
-- [Requirements](#requirements)
-- [Quick start](#quick-start)
-- [Step‑by‑step setup](#step-by-step-setup)
-- [Configuration](#configuration)
-- [Run with docker‑compose](#run-with-docker-compose)
-- [Put it behind HTTPS (optional)](#put-it-behind-https-optional)
-- [Updating](#updating)
-- [Backups](#backups)
-- [Build from source](#build-from-source)
-- [What's inside](#whats-inside)
-- [Security](#security)
-- [Troubleshooting](#troubleshooting)
-- [FAQ](#faq)
-- [Glossary](#glossary)
-- [License](#license)
+The client is a fork of [Nethermind](https://github.com/NethermindEth/nethermind), a production Ethereum
+client. On top of that base, the Elyon team built:
 
----
+* **APOS consensus**: a proof-of-stake engine with a validator set read from a smart contract, a fixed
+  rotation, and backup validators that step in when a validator misses its slot.
+* **In-block fee settlement**: after each block's transactions run, the priority fee of each one is
+  moved to a registry contract and credited to the RPC node that relayed it, before the block's state
+  root is computed. Every node has to compute the same split or reject the block. Elyon documents this
+  as its settlement layer ("Layer 2"); [docs/LAYER-2.md](docs/LAYER-2.md) explains exactly what that means
+  and what it does not mean.
+* **Relayer attestations (`URELAY1`)**: signed records carried in the block header that bind a
+  transaction to the node that received it.
+* **Node dashboard, block explorer and live block viewer**, all in this repository.
 
-## Overview
+## Capabilities
 
-**Elyon Chain** is an EVM Layer‑2 network running a patched [Nethermind](https://nethermind.io) client with **APOS** (Authorized Proof of Stake) consensus and a native coin, **ELN**. Gas follows the standard Ethereum EIP‑1559 model: the base fee is burned, and the priority tip is split between the **relaying validator** (by tier) and the network.
-
-A **validator node** is an operator‑run node that:
-
-1. Joins an existing Elyon chain and stays in sync.
-2. Stakes ELN through a network‑published **staking package** to become an approved validator.
-3. Relays user transactions through its own RPC and earns a **tier‑based share** of their tips.
-4. Publishes its own **delegator packages** so others can delegate ELN into the validator's pool (which raises the validator's tier).
-
-This repository is a self‑contained package: a `Dockerfile` that builds the validator image on top of the published Elyon chain engine, plus the validator dashboard you'll use day‑to‑day.
-
-## How validators earn
-
-Every transaction pays `gasUsed × effectiveGasPrice`, made of two parts:
-
-| Part | Who gets it |
+| Area | What it does |
 |---|---|
-| **Base fee** (EIP‑1559) | 🔥 **Burned** — nobody receives it |
-| **Priority tip** (`effectiveGasPrice − baseFee`) | Split: **your tier %** to the relaying validator, the remainder to the network |
+| Execution | Full EVM, EIP-1559 fees, standard JSON-RPC |
+| Consensus | APOS proof of stake; 7 validators on mainnet; 2-second rotation; automatic backup on a missed slot |
+| Validators | Staking contract, 100-block unbonding; [new validator entry is currently paused](docs/DECENTRALIZATION.md#why-validator-entry-is-paused) |
+| Fee model | Base fee burned; priority fee split between the relaying node and the network, in the same block |
+| Node operators | Earn a tiered share of the fees of transactions sent through their RPC; can run delegation packages |
+| Node software | One Docker image: client, dashboard, JSON-RPC proxy with method allowlist and rate limits |
+| Transparency | Public source, public chain, [live view of every block](https://blocks.elyon.network) with full header data |
 
-- Your **fee‑share %** is set by the network's **tier curve**: as your **pool** (your own stake **+** your delegators' deposits) crosses each threshold, your share rises to that tier.
-- You earn a tip share **only on transactions relayed through your node's RPC** (your node signs a verified attestation for each one) and **only while you are an `ACTIVE` validator**.
-- Your staking package also accrues **APR** on your own stake, claimable any time.
+## Repository layout
 
-> **Tip:** the network enforces a minimum gas price, so every accepted transaction carries a real tip — there is no "free" transaction that pays validators nothing.
+| Path | What it is |
+|---|---|
+| `src/Nethermind/` | The client. Elyon's consensus engine is in `Nethermind.Consensus.PoS/`, and the live network specs are in `Nethermind.Runner/chainspec/` |
+| `contracts/` | Solidity: `StakingContract`, `UNPRegistry`, `APOSPointer` and others (see note below) |
+| `dashboard/` | Node dashboard, setup wizard and JSON-RPC proxy (Node.js) |
+| `Explorer/` | Block explorer |
+| `BlocksViewer/` | The service behind blocks.elyon.network |
+| `scripts/setup-node.sh` | Installs and starts a node |
+| `Dockerfile.aposunpchain` | Builds the node image from this source |
+| `docs/` | Documentation listed below |
 
-## Features
+`UNPRegistry` and similar names are historical names from an earlier codebase; they are kept because
+deployed contracts and on-chain storage layouts depend on them.
 
-- ✅ One‑command Docker deployment; joins an existing chain via a single `ADMIN_URL`.
-- ✅ Clean web panel at **`/manager`**: My Validator, Delegators, Staking Packages, Send ELN, Fee Earnings, PoS Staking, and a live block Explorer.
-- ✅ Your key signs your transactions on your **own node** — it is never stored on disk and never sent to Elyon or any third party.
-- ✅ Publishes your own delegator packages (rate, lock, minimum, early‑exit penalty).
-- ✅ Runs as a non‑root user inside the container; data persisted to a Docker volume.
-
-## Requirements
-
-| | Minimum | Recommended |
-|---|---|---|
-| **OS** | Linux with Docker 20.10+ | Ubuntu 22.04/24.04 |
-| **CPU / RAM** | 2 vCPU / 4 GB | 4 vCPU / 8 GB |
-| **Disk** | 40 GB SSD | 100 GB+ SSD (grows with the chain) |
-| **Network** | Outbound to the admin node; inbound `30303` for P2P | Static public IP |
-
-**Ports**
-
-| Port | Purpose | Expose publicly? |
-|---|---|---|
-| `3000` | Dashboard + JSON‑RPC proxy | Behind a reverse proxy / firewall |
-| `8545` | JSON‑RPC | Only if you need external RPC |
-| `30303` (TCP+UDP) | P2P with the chain | **Yes** (so the node can peer) |
-
-You also need the **admin node URL** of the chain you're joining, e.g. `http://203.0.113.10:3000`, and some **ELN** in your validator wallet to stake (use the network faucet).
-
-## Quick start
-
-```bash
-docker run -d --name elyon-validator --restart unless-stopped \
-  -p 3000:3000 -p 8545:8545 -p 30303:30303 -p 30303:30303/udp \
-  -v elyon-validator-data:/data \
-  -e ADMIN_URL=http://<ADMIN_NODE_IP>:3000 \
-  elyonchain/node:latest
-```
-
-Then open **`http://<your-server-ip>:3000`** — it lands on the validator panel (`/manager`).
-
-## Step‑by‑step setup
-
-### 1. Start the node
-
-Run the [Quick start](#quick-start) command, replacing `<ADMIN_NODE_IP>` with the chain's admin node IP. Check it's healthy:
-
-```bash
-docker ps                      # STATUS should show "healthy"
-docker logs -f elyon-validator # watch it boot + start syncing
-```
-
-### 2. Open the panel and sign in
-
-Browse to `http://<your-server-ip>:3000`. You'll see the **sign‑in gate**:
-
-- **Have a key file?** Drop your `.txt` key file (or paste a bare 64‑hex private key). This is your validator wallet — it is sent to your own node only to sign your transactions, and is never stored.
-- **New operator?** Click **"Create a key for me & set up this node"** — it generates a fresh key, downloads the backup `.txt` (⚠️ **save it immediately**), joins the chain, and signs you in.
-
-### 3. Join the chain
-
-If you used "Create a key", joining is automatic. Otherwise the node fetches the chain's bootstrap (chainspec + peer) from `ADMIN_URL`, starts its local engine, and begins syncing. Watch **Explorer** — the block height should be climbing.
-
-### 4. Apply as a validator
-
-Open **My Validator → Apply**:
-
-1. Pick one of the network's **staking packages** (each has a lock term, minimum stake, and APR).
-2. Enter your **stake amount** — at least the larger of the network minimum and the package minimum. Your stake **locks for the package term**.
-3. Press **🚀 Apply as Validator**. Your application is now staked and **pending**.
-
-### 5. Get approved
-
-Your application is reviewed and approved, and you receive your **public Elyon code** (e.g. `VAL‑ABC123`). Your panel refreshes automatically to **ACTIVE** and shows the code — share it with delegators so they can fund your pool.
-
-### 6. Publish a package for delegators
-
-Open **My Validator → My Packages → Create a package**:
-
-- **Name**, **Lock (days)**, **Monthly rate %** (capped by your package's APR), **Minimum deposit (ELN)**, **Early‑exit penalty %** (max 20%).
-- Press **📦 Publish package**. Delegators can now join it from your public page; each deposit locks in that package's terms.
-
-### 7. Run, earn, manage
-
-- **Fee Earnings** — your accrued tip share; withdraw any time.
-- **My Validator** — claim daily APR on your stake; watch your pool/tier.
-- **Delegators** — see who has delegated; release funds or send gifts.
-- **Send ELN** — transfer the native coin.
-
-> Keep your pool **≥ the network minimum**. If it drops below, your fee share pauses (status `BELOW_MIN`) until you top up or receive new delegations — then it auto‑restores.
-
-## Configuration
-
-All settings are environment variables — no rebuild needed.
-
-| Variable | Default | Description |
-|---|---|---|
-| `ADMIN_URL` | — | **Required.** Admin node URL to bootstrap/join from, e.g. `http://203.0.113.10:3000`. |
-| `NODE_ROLE` | `operator` | Fixed to `operator` in this image (validator). |
-| `DASHBOARD_PORT` | `3000` | Dashboard + RPC‑proxy port. |
-| `RPC_URL` | local node | Override the chain RPC the dashboard reads/writes (advanced). |
-| `DATA_DIR` | `/data` | Persisted chainspec, DB, keys, config. Mount a volume here. |
-| `NODE_LABEL` | `Elyon Validator Node` | Display name in the panel. |
-
-**Always** mount a volume at `/data` so your keys, config, and chain DB survive restarts:
-
-```bash
--v elyon-validator-data:/data
-```
-
-## Run with docker‑compose
-
-```yaml
-# docker-compose.yml
-services:
-  validator:
-    image: elyonchain/node:latest
-    container_name: elyon-validator
-    restart: unless-stopped
-    environment:
-      ADMIN_URL: "http://<ADMIN_NODE_IP>:3000"
-    ports:
-      - "3000:3000"
-      - "8545:8545"
-      - "30303:30303"
-      - "30303:30303/udp"
-    volumes:
-      - elyon-validator-data:/data
-    healthcheck:
-      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:3000/api/auth/status"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
-volumes:
-  elyon-validator-data:
-```
-
-```bash
-docker compose up -d
-```
-
-## Put it behind HTTPS (optional)
-
-The container serves plain HTTP on `3000`; front it with your own reverse proxy for TLS. Minimal Nginx:
-
-```nginx
-server {
-    listen 443 ssl;
-    server_name validator.example.com;
-    ssl_certificate     /etc/letsencrypt/live/validator.example.com/fullchain.pem;
-    ssl_certificate_key /etc/letsencrypt/live/validator.example.com/privkey.pem;
-    location / {
-        proxy_pass         http://127.0.0.1:3000;
-        proxy_set_header   Host $host;
-        proxy_set_header   X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header   X-Forwarded-Proto $scheme;
-    }
-}
-```
-
-> The dashboard already trusts the loopback proxy and reads the real client IP from `X-Forwarded-For`.
-
-## Updating
-
-```bash
-docker pull elyonchain/node:latest
-docker rm -f elyon-validator
-# re-run the same `docker run …` command — your /data volume is preserved
-```
-
-Your chain DB, keys, and config live in the `/data` volume and survive the upgrade.
-
-## Backups
-
-Two things matter:
-
-1. **Your key file** (`.txt`) — back it up offline the moment it's generated. Losing it means losing access to your validator wallet and its staked funds.
-2. **The `/data` volume** — holds chain DB + node config. To snapshot:
-
-```bash
-docker run --rm -v elyon-validator-data:/data -v "$PWD":/backup alpine \
-  tar czf /backup/elyon-validator-data.tgz -C /data .
-```
-
-## Build from source
+## Run a node
 
 ```bash
 git clone https://github.com/ElyonNetwork/elyon-validator-node.git
 cd elyon-validator-node
-docker build -t elyonchain/node:latest .
+docker build -f Dockerfile.aposunpchain -t elyon-node:local .
+sudo bash scripts/setup-node.sh --image elyon-node:local --public-ip <your-public-ip>
 ```
 
-The image builds **on top of the published chain engine** (`FROM elyonchain/adminnode`), which supplies the patched Nethermind binaries and entrypoint; this repo replaces the dashboard with the validator‑only build.
+The full guide covers requirements, verification, serving RPC, registering to earn fees and becoming a
+validator: **[docs/NODE-SETUP.md](docs/NODE-SETUP.md)**.
 
-## What's inside
+## Networks
 
-```
-.
-├── Dockerfile          # builds the validator image (FROM elyonchain/adminnode)
-├── README.md
-└── dashboard/          # the validator-only web app (Node.js + Express)
-    ├── server.js       #   routes + JSON-RPC proxy
-    ├── apos.js         #   validator/delegator + read endpoints
-    ├── operator-panel.js, simple-admin.js, leaderboard.js, bridge.js
-    ├── *-build.json    #   contract ABIs/bytecode (registry, pointer, token, staking)
-    └── public/
-        ├── simple-admin/   # /manager — the validator panel
-        ├── operator/       # /node    — join / earnings portal
-        ├── owner.html      #            delegator portal
-        ├── validator.html  #            your public validator page
-        └── …               #            explorer, leaderboard, assets
-```
+| | Mainnet | Testnet |
+|---|---|---|
+| Chain ID | 55452773 | 55452774 |
+| RPC | https://mainnet.elyon.network/rpc | https://testnet.elyon.network/rpc |
+| Explorer | https://explorer.elyon.network | https://explorertestnet.elyon.network |
+| Staking contract | `0x04250541308a1d1c633de3d435e361402505cf29` | see testnet dashboard |
+
+Add ELN to a wallet as a custom network using the values above. Currency symbol **ELN**, 18 decimals.
+
+## Documentation
+
+| Document | Contents |
+|---|---|
+| [NODE-SETUP.md](docs/NODE-SETUP.md) | How to run a node, step by step |
+| [ARCHITECTURE.md](docs/ARCHITECTURE.md) | How the parts fit together |
+| [CONSENSUS.md](docs/CONSENSUS.md) | How blocks are formed and validated |
+| [FEES-AND-REWARDS.md](docs/FEES-AND-REWARDS.md) | Who earns what, and how the split works |
+| [LAYER-2.md](docs/LAYER-2.md) | What "Layer 2" means here |
+| [DECENTRALIZATION.md](docs/DECENTRALIZATION.md) | Exactly how decentralized the network is today |
+| [EXCHANGE-INTEGRATION.md](docs/EXCHANGE-INTEGRATION.md) | Parameters and guidance for exchanges |
+| [SECURITY.md](SECURITY.md) | Security review: findings, fixes and open items |
 
 ## Security
 
-- 🔑 **Your key is used only by your own node.** When you act, your key is sent to *this* node’s dashboard (which you run) to sign the transaction, and is **never written to disk or logged** and **never sent to Elyon or any third party**. Run the node on a host only you control, and treat the key file like cash.
-- 👤 The container runs the dashboard as a **non‑root** user; code under `/dashboard` and `/nethermind` is read‑only.
-- 🌐 Don't expose port `3000` directly to the internet without a reverse proxy + access control. Expose `30303` for P2P.
-- 💾 Treat your key file like cash. Anyone with it controls your validator wallet.
+The team's November 2026 review covered the consensus engine, fee settlement, node software, contracts and public
+infrastructure. [SECURITY.md](SECURITY.md) lists every finding, what was fixed and deployed, and what is still open.
+It was an internal review; an independent audit is still recommended.
 
-## Troubleshooting
+Report vulnerabilities privately through GitHub: **Security → Report a vulnerability** on this repository. Please do
+not open a public issue.
 
-| Symptom | Likely cause / fix |
+## How decentralized is it?
+
+| | Today |
 |---|---|
-| Panel loads but block height stays `0` | Can't reach the admin node. Check `ADMIN_URL`, that the admin node is up, and that outbound + `30303` are open. |
-| `Peers: 0` / not syncing | Inbound `30303` (TCP **and** UDP) is firewalled. Open it; restart the container. |
-| "key does not match an authorized address" | You're signing with a key this node isn't configured for. Use the key you set this node up with, or re‑run setup with your key. |
-| Transaction rejected as too cheap | The chain enforces a minimum gas price. Use the node's suggested gas price (the wallet does this automatically). |
-| `Pruned history unavailable` on a receipt | A harmless race right after a tx mines; the dashboard retries automatically. |
-| Apply fails: "stake below minimum" | Stake at least the larger of the network minimum and the package minimum. |
-| Can't withdraw stake yet | Your package lock hasn't elapsed. Withdrawals are allowed once the lock has elapsed. |
-| Container unhealthy | `docker logs elyon-validator` — usually a missing `ADMIN_URL` or unreachable admin node. |
+| Validators producing blocks | 7, on separate servers, each with its own key |
+| Who operates them | The Elyon team |
+| Becoming a validator | Open by design in the staking contract, currently paused until an offline validator can be removed |
+| Running a full node | Open to anyone |
+| Earning as an RPC operator | Open, after approval in the registry |
+| Administrative control | One key today; moving to multi-signature control is planned |
+| Slashing and finality gadget | Not implemented |
 
-## FAQ
+Elyon Chain is **not yet decentralized in the sense of independent operators**. Seven validators give it real
+availability and fault tolerance, and [docs/DECENTRALIZATION.md](docs/DECENTRALIZATION.md) states exactly what would
+change the rest.
 
-**Do I need the whole chain history?** No — the node syncs from its peers and prunes history; you don't reburn genesis.
+## License and credits
 
-
-**How much do I need to stake?** At least the larger of the network minimum and your chosen package's minimum. More stake (and more delegations) raises your tier and fee share.
-
-**When do I get paid?** Tip shares accrue per block to your on‑chain balance; withdraw any time from **Fee Earnings**. Package APR accrues on your stake and is claimable from **My Validator**.
-
-**What happens if I withdraw all my own stake?** If delegators keep your pool above the network minimum, you stay `ACTIVE` and keep earning; otherwise you drop to `BELOW_MIN` and stop earning until the pool recovers.
-
-**Can a validator take a delegator's funds?** No. Delegator principal is segregated and only ever returns to the delegator. The only delegator funds a validator receives is a delegator's own early‑exit penalty.
-
-## Glossary
-
-- **ELN** — Elyon Chain's native coin (gas + staking).
-- **APOS** — Authorized Proof of Stake, Elyon's consensus.
-- **Pool** — your own stake **+** delegators' deposits; drives your tier.
-- **Tier** — pool threshold → fee‑share %, set by the network's tier curve.
-- **Staking package** — network‑published terms (lock, min, APR) you stake through.
-- **Delegator package** — terms **you** publish for delegators (rate, lock, min, penalty).
-- **Elyon code** — your public validator code (e.g. `VAL‑ABC123`) for delegators.
-
-## License
-
-Released under the [MIT License](LICENSE).
-
----
-
-<div align="center">
-Made for the Elyon Chain community. Run a node, grow your pool, earn your share. 🟢
-</div>
+The client in `src/Nethermind/` is derived from [Nethermind](https://github.com/NethermindEth/nethermind)
+and remains under the **LGPL-3.0** (see `LICENSE-LGPL`, and `LICENSE-GPL` for the parts that use GPL-3.0).
+Elyon's changes to those files are released under the same license. Everything else in this repository
+is released under the **MIT License** (see `LICENSE`) unless a file states otherwise. Solidity contracts
+carry their own SPDX headers.

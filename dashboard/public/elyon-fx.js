@@ -38,7 +38,7 @@
       if (!btn || btn.dataset.loading === '1') return fn();
       var orig = btn.innerHTML;
       btn.dataset.loading = '1'; btn.disabled = true;
-      btn.innerHTML = '<span class="btn-spin" style="display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;vertical-align:-2px;margin-right:6px;animation:elxSpin .7s linear infinite"></span>' + (loadingText || 'Working…');
+      btn.innerHTML = '<span class="btn-spin" style="display:inline-block;width:13px;height:13px;border:2px solid rgba(2,10,24,.4);border-top-color:#fff;border-radius:50%;vertical-align:-2px;margin-right:6px;animation:elxSpin .7s linear infinite"></span>' + (loadingText || 'Working…');
       try { return await fn(); }
       finally { delete btn.dataset.loading; btn.disabled = false; btn.innerHTML = orig; }
     };
@@ -117,10 +117,10 @@
     var SPL = document.createElement('canvas'); SPL.width = SPL.height = 64;
     (function () {
       var c = SPL.getContext('2d'), g = c.createRadialGradient(32, 32, 0, 32, 32, 32);
-      g.addColorStop(0, 'rgba(14,125,90,.9)');
-      g.addColorStop(0.25, 'rgba(21,168,120,.40)');
-      g.addColorStop(0.6, 'rgba(21,168,120,.10)');
-      g.addColorStop(1, 'rgba(21,168,120,0)');
+      g.addColorStop(0, 'rgba(31,107,255,.9)');
+      g.addColorStop(0.25, 'rgba(56,130,255,.40)');
+      g.addColorStop(0.6, 'rgba(56,130,255,.10)');
+      g.addColorStop(1, 'rgba(56,130,255,0)');
       c.fillStyle = g; c.fillRect(0, 0, 64, 64);
     })();
 
@@ -184,7 +184,7 @@
         var dx = nodes[i].px - nodes[j].px, dy = nodes[i].py - nodes[j].py, d2 = dx * dx + dy * dy;
         if (d2 > LINK * LINK) continue;
         a = (1 - Math.sqrt(d2) / LINK) * 0.30 * AMP * breathe + Math.min(0.5, (nodes[i].hot + nodes[j].hot) * 0.4);
-        ctx.strokeStyle = 'rgba(14,125,90,' + a.toFixed(3) + ')';
+        ctx.strokeStyle = 'rgba(31,107,255,' + a.toFixed(3) + ')';
         ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(nodes[i].px, nodes[i].py); ctx.lineTo(nodes[j].px, nodes[j].py); ctx.stroke();
       }
@@ -196,7 +196,7 @@
         ctx.globalAlpha = Math.min(1, (0.5 + 0.5 * n.hot) * tw * AMP);
         ctx.drawImage(SPL, n.px - s / 2, n.py - s / 2, s, s);
         ctx.globalAlpha = Math.min(1, (0.85 * tw + n.hot) * AMP);
-        ctx.fillStyle = 'rgba(14,125,90,1)';
+        ctx.fillStyle = 'rgba(31,107,255,1)';
         ctx.beginPath(); ctx.arc(n.px, n.py, n.r * (1 + 0.7 * n.hot), 0, 6.283); ctx.fill();
       }
       ctx.globalAlpha = 1;
@@ -215,12 +215,12 @@
           A = nodes[u.p[u.seg]]; B = nodes[u.p[u.seg + 1]];
         }
         var hx = A.px + (B.px - A.px) * u.k, hy = A.py + (B.py - A.py) * u.k;
-        ctx.strokeStyle = 'rgba(14,125,90,' + (0.55 * AMP).toFixed(3) + ')';
+        ctx.strokeStyle = 'rgba(31,107,255,' + (0.55 * AMP).toFixed(3) + ')';
         ctx.lineWidth = 1.6;
         ctx.beginPath(); ctx.moveTo(A.px, A.py); ctx.lineTo(hx, hy); ctx.stroke();
         ctx.globalAlpha = AMP;
         ctx.drawImage(SPL, hx - 9, hy - 9, 18, 18);
-        ctx.fillStyle = '#0e7d5a';
+        ctx.fillStyle = '#7db2ff';
         ctx.beginPath(); ctx.arc(hx, hy, 1.8, 0, 6.283); ctx.fill();
         ctx.globalAlpha = 1;
       }
@@ -260,7 +260,7 @@
       if (noFx(el)) return;
       el.innerHTML = '<svg viewBox="0 0 1200 60" preserveAspectRatio="none" aria-hidden="true">' +
         '<defs><linearGradient id="fxdivg" x1="0" y1="0" x2="1" y2="0">' +
-        '<stop offset="0" stop-color="#15a878"/><stop offset=".5" stop-color="#0c8f68"/><stop offset="1" stop-color="#0e7d5a"/>' +
+        '<stop offset="0" stop-color="#3882ff"/><stop offset=".5" stop-color="#5ea0ff"/><stop offset="1" stop-color="#7db2ff"/>' +
         '</linearGradient></defs>' +
         '<path d="M0,30 C200,6 340,54 600,30 S1000,8 1200,30" pathLength="1" fill="none" stroke="url(#fxdivg)" stroke-width="2"/>' +
         '<circle cx="600" cy="30" r="3.5"/></svg>';
@@ -360,7 +360,7 @@
       var ic = document.createElement('i');
       ic.className = 'fa-solid ' + pickIcon(label) + ' fx-float';
       ic.setAttribute('data-fx-ignore', '1');
-      ic.style.cssText = 'position:absolute;top:14px;right:16px;font-size:1.35rem;color:rgba(21,168,120,.26);pointer-events:none';
+      ic.style.cssText = 'position:absolute;top:14px;right:16px;font-size:1.35rem;color:rgba(56,130,255,.26);pointer-events:none';
       el.appendChild(ic);
       // count-up numeric value (decimals + separators + suffix)
       var valEl = el.querySelector('.val, .stat-value, .value');

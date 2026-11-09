@@ -1,0 +1,121 @@
+# =============================================================================
+# UNPChain APOS — All-in-One Docker Image (multi-stage)
+#
+# Includes:
+#   * Patched Nethermind node (with PoS / APOS consensus plugin) — built
+#     INSIDE this Dockerfile so Linux binaries are guaranteed regardless of
+#     the host OS (previous "host machine builds publish/ first" workflow
+#     shipped Windows DLLs when a developer rebuilt on Windows).
+#   * Wizard / Operator / Admin / Public Dashboard (Node.js + Express)
+#   * Smart contracts:  StakingContract, UNPRegistry (APOS), UNPToken
+#
+# Run:
+#   docker run -d --name unp -p 3000:3000 -p 8545:8545 -p 30303:30303 \
+#              -v unp-data:/data marcotrip/aposunpchain:latest
+#   open http://localhost:3000
+# =============================================================================
+
+# --- Stage 1: build Nethermind from source -----------------------------------
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS nethermind-builder
+WORKDIR /src
+# Copy only the Nethermind C# tree so Docker can cache this layer when only
+# dashboard/contract files change. The `.dockerignore` already excludes
+# artifacts/, bin/, obj/, *.Test/ etc.
+COPY src/Nethermind/                                     ./src/Nethermind/
+# v7.1.0: NoWarn NU1903 + NU1701 — upstream Nethermind references Snappier
+# 1.2.0 (NU1903) and SCrypt 2.0.0.2 / .NET Framework target (NU1701). Both
+# are upstream issues outside our patch scope. Suppress the warning-as-error.
+RUN dotnet publish src/Nethermind/Nethermind.Runner \
+        -c Release \
+        -o /publish \
+        -p:NoWarn=NU1902%3BNU1903%3BNU1701 \
+    && rm -rf /publish/*.pdb
+
+# --- Stage 2: runtime image --------------------------------------------------
+FROM mcr.microsoft.com/dotnet/aspnet:9.0
+
+# --- OS packages: Node.js 20 + curl -----------------------------------------
+# v7.8-no-ssl: Caddy / libcap2-bin / debian-keyring stripped. The dashboard
+# no longer manages TLS — operators front it with their own reverse proxy.
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl ca-certificates gnupg && \
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt-get install -y --no-install-recommends nodejs && \
+    rm -rf /var/lib/apt/lists/*
+
+# --- Nethermind binaries (from builder stage) -------------------------------
+WORKDIR /nethermind
+COPY --from=nethermind-builder /publish/                 ./
+COPY src/Nethermind/Nethermind.Runner/chainspec/         ./chainspec/
+
+# --- Smart-contract source + compiled artifacts -----------------------------
+WORKDIR /contracts
+COPY contracts/                                          ./
+
+# --- Dashboard / Wizard (Node.js) -------------------------------------------
+WORKDIR /dashboard
+COPY dashboard/package.json                              ./package.json
+COPY dashboard/server.js                                 ./server.js
+COPY dashboard/apos.js                                   ./apos.js
+COPY dashboard/bridge.js                                 ./bridge.js
+COPY dashboard/operator-panel.js                         ./operator-panel.js
+COPY dashboard/simple-admin.js                           ./simple-admin.js
+COPY dashboard/apos-compile.js                           ./apos-compile.js
+COPY dashboard/apos-registry-build.json                  ./apos-registry-build.json
+COPY dashboard/apos-pointer-build.json                   ./apos-pointer-build.json
+COPY dashboard/unp-token-build.json                      ./unp-token-build.json
+COPY dashboard/staking-build.json                        ./staking-build.json
+COPY dashboard/elntst-build.json                         ./elntst-build.json
+COPY dashboard/faucet-build.json                         ./faucet-build.json
+COPY dashboard/faucet-v2.js                              ./faucet-v2.js
+COPY dashboard/faucet-guard.js                           ./faucet-guard.js
+COPY dashboard/claim-guard.js                            ./claim-guard.js
+COPY dashboard/reread-fees.js                            ./reread-fees.js
+COPY dashboard/leaderboard-build.json                    ./leaderboard-build.json
+COPY dashboard/leaderboard.js                            ./leaderboard.js
+COPY dashboard/deploy_staking.js                         ./deploy_staking.js
+COPY dashboard/public/                                   ./public/
+RUN npm install --production --silent
+
+# --- Persistent data volume (chainspec, db, keys, wizard config) ------------
+VOLUME /data
+
+# --- Runtime configuration ---------------------------------------------------
+ARG IMAGE_VERSION=dev
+RUN echo "$IMAGE_VERSION" > /image-version
+ENV NODE_ENV=production \
+    STANDALONE=true \
+    NETHERMIND_PATH=/nethermind \
+    DATA_DIR=/data \
+    DASHBOARD_PORT=3000 \
+    NODE_ROLE=admin \
+    NODE_LABEL="UNPChain APOS Validator" \
+    IMAGE_VERSION=${IMAGE_VERSION}
+
+# v7.1.0 (audit I-C4): drop root. Create a non-privileged uid that owns
+# only the writable runtime paths (/data, /nethermind/logs/keystore).
+# Code under /dashboard, /contracts, /nethermind binaries stay root-owned
+# and read-only — RCE inside Node can't rewrite server.js or Nethermind.
+# v7.8-no-ssl: Caddy gone; no need to grant CAP_NET_BIND_SERVICE anywhere.
+RUN useradd -u 1001 -m -d /home/unp -s /usr/sbin/nologin unp \
+ && mkdir -p /data /nethermind/logs /nethermind/keystore /nethermind/db \
+ && chown -R unp:unp /data /nethermind/logs /nethermind/keystore /nethermind/db \
+ && chmod -R go-w /dashboard /contracts /nethermind/nethermind.dll 2>/dev/null || true
+
+# Entrypoint runs briefly as root: re-applies the Caddy file cap (which
+# BuildKit / registry transports sometimes strip from the image layer),
+# fixes /data ownership for fresh volumes, then drops privileges to uid
+# 1001 (unp) before exec'ing the dashboard. Result: a container restart
+# or VM reboot always boots into a working TLS state.
+COPY scripts/chain-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
+
+# Healthcheck so orchestrators can detect crashed-but-still-running processes.
+HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
+  CMD curl -fsS http://127.0.0.1:3000/api/auth/status > /dev/null || exit 1
+
+EXPOSE 3000 4000 5000 8545 30303 30303/udp
+
+CMD ["node", "server.js"]

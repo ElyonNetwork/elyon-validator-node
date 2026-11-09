@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin · Elyon Explorer</title>
+<link rel="icon" type="image/png" href="/img/favicon.png">
+<link rel="apple-touch-icon" href="/img/favicon.png">
+<link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+<main class="page">
+  <div class="container" style="max-width:720px">
+    <div class="page-title"><h1>Explorer admin</h1></div>
+    <div id="content"></div>
+  </div>
+</main>
+
+<script type="module">
+import { renderLayout } from '/js/layout.js?v=2';
+import { api, esc } from '/js/common.js';
+
+await renderLayout();
+
+const content = document.getElementById('content');
+let token = localStorage.getItem('elyon.explorer.admin');
+
+function renderLogin() {
+  content.innerHTML = `
+    <div class="card">
+      <div class="card-body padded">
+        <h3 style="margin-top:0">Sign in</h3>
+        <div class="field"><label>Admin password</label><input id="pw" type="password" autocomplete="current-password"></div>
+        <div id="login-msg"></div>
+        <button id="login-btn" class="btn primary">Sign in</button>
+      </div>
+    </div>`;
+  document.getElementById('login-btn').addEventListener('click', async () => {
+    const password = document.getElementById('pw').value;
+    const msg = document.getElementById('login-msg');
+    msg.innerHTML = '';
+    try {
+      const r = await api('/api/admin/login', { method: 'POST', body: { password } });
+      token = r.token;
+      localStorage.setItem('elyon.explorer.admin', token);
+      renderPanel();
+    } catch (e) { msg.innerHTML = `<div class="alert err">${esc(e.message)}</div>`; }
+  });
+}
+
+async function renderPanel() {
+  content.innerHTML = `<div class="card card-body padded"><span class="spin"></span> Loading…</div>`;
+  let state;
+  try { state = await api('/api/admin/domain'); }
+  catch { state = null; }
+  const running = state?.running;
+  content.innerHTML = `
+    <div class="card" style="margin-bottom:18px">
+      <div class="card-header">
+        <h3>Custom domain &amp; free SSL</h3>
+        <button class="btn ghost" id="logout">Sign out</button>
+      </div>
+      <div class="card-body padded">
+        <p class="muted">Point your domain's A record at this server, then save below. Caddy obtains a free Let's Encrypt cert automatically. Ports <code>80</code> and <code>443</code> must be mapped through to this container.</p>
+        <div style="background:var(--bg-soft);border-radius:8px;padding:12px 14px;margin:14px 0;display:flex;gap:18px;align-items:center;flex-wrap:wrap">
+          <div><strong>Current domain:</strong> ${state?.domain ? esc(state.domain) : '<em>none</em>'}</div>
+          <div><strong>Caddy:</strong> ${running ? '<span class="badge ok">running</span>' : '<span class="badge gray">stopped</span>'}</div>
+        </div>
+        <div class="field"><label>Domain</label><input id="dom" type="text" placeholder="explorer.example.com" value="${esc(state?.domain || '')}"></div>
+        <div class="field"><label>ACME contact email (optional)</label><input id="em" type="email" placeholder="admin@example.com" value="${esc(state?.acmeEmail || '')}"><div class="hint">Defaults to <code>admin@&lt;domain&gt;</code>.</div></div>
+        <div id="dom-msg"></div>
+        <div style="display:flex;gap:10px">
+          <button id="save" class="btn primary">Save &amp; start Caddy</button>
+          <button id="clear" class="btn">Clear domain</button>
+        </div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><h3>Indexer state</h3></div>
+      <div class="card-body padded" id="indexer-state"><span class="spin"></span> Loading…</div>
+    </div>`;
+
+  document.getElementById('logout').addEventListener('click', () => {
+    localStorage.removeItem('elyon.explorer.admin'); token = null; renderLogin();
+  });
+  document.getElementById('save').addEventListener('click', async () => {
+    const msg = document.getElementById('dom-msg');
+    msg.innerHTML = '<span class="muted">Saving…</span>';
+    try {
+      await api('/api/admin/domain', {
+        method: 'POST',
+        headers: { 'Authorization': 'Bearer ' + token },
+        body: { domain: document.getElementById('dom').value.trim().toLowerCase(),
+                acmeEmail: document.getElementById('em').value.trim() || null },
+      });
+      msg.innerHTML = '<div class="alert ok">Saved.</div>';
+      setTimeout(renderPanel, 600);
+    } catch (e) { msg.innerHTML = `<div class="alert err">${esc(e.message)}</div>`; }
+  });
+  document.getElementById('clear').addEventListener('click', async () => {
+    if (!confirm('Stop Caddy and remove the custom domain?')) return;
+    try {
+      await api('/api/admin/domain', { method: 'DELETE', headers: { 'Authorization': 'Bearer ' + token } });
+      renderPanel();
+    } catch (e) { document.getElementById('dom-msg').innerHTML = `<div class="alert err">${esc(e.message)}</div>`; }
+  });
+
+  // Indexer state
+  try {
+    const stats = await api('/api/stats');
+    const ch = await api('/api/chain');
+    document.getElementById('indexer-state').innerHTML = `
+      <table class="t">
+        <tbody>
+          <tr><td class="muted">Connected RPC</td><td class="mono">${esc(ch.rpcUrl)}</td></tr>
+          <tr><td class="muted">Chain</td><td>${esc(ch.chainName)} · id ${ch.chainId}</td></tr>
+          <tr><td class="muted">Latest indexed block</td><td>${stats.latestBlock.toLocaleString()}</td></tr>
+          <tr><td class="muted">Total transactions</td><td>${stats.totalTxs.toLocaleString()}</td></tr>
+          <tr><td class="muted">Total addresses</td><td>${stats.totalAddresses.toLocaleString()}</td></tr>
+          <tr><td class="muted">Total contracts</td><td>${stats.totalContracts.toLocaleString()}</td></tr>
+          <tr><td class="muted">Total tokens</td><td>${stats.totalTokens.toLocaleString()}</td></tr>
+        </tbody>
+      </table>`;
+  } catch (e) {
+    document.getElementById('indexer-state').innerHTML = `<div class="alert err">${esc(e.message)}</div>`;
+  }
+}
+
+token ? renderPanel() : renderLogin();
+</script>
+</body>
+</html>

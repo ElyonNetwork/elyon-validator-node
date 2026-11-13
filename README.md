@@ -59,10 +59,18 @@ go test ./...                  # unit tests
 scripts/build.sh               # dist/ with all five binaries and SHA256SUMS
 ```
 
-The build is reproducible (`CGO_ENABLED=0`, `-trimpath`, `-buildvcs=false`, no build id, Go toolchain pinned to
-1.27.4 in `go.mod`), so you can compare your own `dist/SHA256SUMS` with the published one. Build the release itself:
-the tag (`git checkout v0.1.0`) or the unpacked source archive, which carries the release commit in its `RELEASE`
-file. Both give byte-identical binaries.
+The release build is reproducible: anyone can rebuild the published binaries byte for byte and compare
+`dist/SHA256SUMS` with the published one. With Docker installed, in the release tag (`git checkout v0.1.0`) or in
+the unpacked source archive (its `RELEASE` file names the release commit):
+
+```sh
+scripts/release-build.sh       # runs scripts/build.sh in golang:1.27.4-alpine: same toolchain and paths everywhere
+cat dist/SHA256SUMS            # identical to the published SHA256SUMS
+```
+
+`scripts/build.sh` alone uses your local Go: the program is the same, but Go records the location of its module
+cache in one assembly file, so the bytes differ unless the paths match the release build's. The Docker image built
+with the `Dockerfile` contains exactly the published Linux x86-64 binary.
 
 ## Quick start
 

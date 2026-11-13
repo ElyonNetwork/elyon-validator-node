@@ -1,12 +1,17 @@
 #!/usr/bin/env sh
-# Reproducible release build: static binaries (CGO disabled, paths trimmed, no build id) for every supported
-# platform, plus SHA256SUMS. Usage: scripts/build.sh [version]   (default: the VERSION file)
+# Release build: static binaries (CGO disabled, paths trimmed, no build id) for every supported platform, plus
+# SHA256SUMS. Usage: scripts/build.sh [version]   (default: the VERSION file)
+# Uses your local Go. For byte-identical copies of the published binaries use scripts/release-build.sh, which runs
+# this script in the official Go container (same toolchain and same paths on every machine).
 set -eu
 cd "$(dirname "$0")/.."
 VERSION="${1:-$(cat VERSION)}"
-# Release metadata goes into the binary (`elyon version`). A source archive has no .git: it carries the release's
-# commit and date in its RELEASE file instead, so building it gives byte-identical binaries to the published ones.
-if [ -f RELEASE ]; then
+# Release metadata goes into the binary (`elyon version`): from ELYON_COMMIT/ELYON_DATE (set by
+# scripts/release-build.sh), from the RELEASE file of a source archive (which has no .git), or from git.
+if [ -n "${ELYON_COMMIT:-}" ]; then
+  COMMIT="$ELYON_COMMIT"
+  DATE="${ELYON_DATE:-unknown}"
+elif [ -f RELEASE ]; then
   COMMIT="$(sed -n 's/^commit=//p' RELEASE)"
   DATE="$(sed -n 's/^date=//p' RELEASE)"
 else

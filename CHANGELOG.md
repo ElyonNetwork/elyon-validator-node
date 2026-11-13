@@ -13,9 +13,10 @@ build; only how it is built and documented changed:
   Python-on-Windows walkthrough, the command-line route, batch files and bots in their own Docker container
   (generated from `examples/` by `scripts/gen-examples-doc.py`).
 - New examples: Ruby, and the Windows Command Prompt (`curl.exe`, read-only).
-- `scripts/build.sh` builds with `-buildvcs=false` and reads the release commit and date from a `RELEASE` file
-  when there is no `.git`, so the git tag and the source archive both rebuild the published binaries byte for byte.
-- The Docker image built from the source archive contains exactly the published Linux x86-64 binary.
+- Reproducible release build: `scripts/release-build.sh` runs `scripts/build.sh` (now with `-buildvcs=false`) in
+  `golang:1.27.4-alpine`, so the release tag and the source archive (whose `RELEASE` file names the release commit)
+  rebuild the published binaries byte for byte on any machine with Docker. The Docker image built from the
+  `Dockerfile` contains exactly the published Linux x86-64 binary.
 
 ## [0.1.0] — 2026-11-13
 

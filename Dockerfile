@@ -5,7 +5,7 @@
 #   docker attach elyon   # type the password, then detach with Ctrl+P Ctrl+Q
 # See docs/install-docker.md.
 
-FROM golang:1.27-alpine AS build
+FROM golang:1.27.4-alpine AS build
 WORKDIR /src
 COPY go.mod go.sum ./
 RUN go mod download && go mod verify

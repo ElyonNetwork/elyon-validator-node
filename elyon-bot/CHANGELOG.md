@@ -2,6 +2,14 @@
 
 All notable changes to elyon-bot. Versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased
+
+- Dependency: `github.com/gorilla/websocket` v1.5.0 → v1.5.3 for GO-2026-6278 (weak random mask key in WebSocket
+  client frames). elyon reaches ElyonChain over HTTPS by default and only uses WebSocket when you configure a `ws://`
+  or `wss://` RPC address; even then the mask key protects proxies against crafted frames and carries no secret.
+  `govulncheck ./...` now reports no vulnerabilities. The 0.1.0 binaries keep v1.5.0 (their tag is immutable);
+  the next release includes the update.
+
 ## 0.1.0 release build — 2026-11-13
 
 The published 0.1.0 binaries are built from the tag `elyon-bot-v0.1.0` of

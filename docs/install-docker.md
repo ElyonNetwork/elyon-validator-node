@@ -11,8 +11,8 @@ docker build -t elyon-bot:local .
 docker run --rm elyon-bot:local version
 ```
 
-No git? Download `elyon-bot-0.1.0-source.tar.gz` from the [download table](https://dex.elyon.network/bots#download),
-check it against `SHA256SUMS`, unpack it (`tar xzf elyon-bot-0.1.0-source.tar.gz && cd elyon-bot-0.1.0`) and run the same
+No git? Download `elyon-bot-0.1.1-source.tar.gz` from the [download table](https://dex.elyon.network/bots#download),
+check it against `SHA256SUMS`, unpack it (`tar xzf elyon-bot-0.1.1-source.tar.gz && cd elyon-bot-0.1.1`) and run the same
 `docker build`.
 
 ![Building the image and checking the version](screenshots/docker-1-start.png)

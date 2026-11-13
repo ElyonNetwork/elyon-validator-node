@@ -14,7 +14,7 @@ COPY internal ./internal
 COPY VERSION ./
 ARG COMMIT=unknown
 ARG BUILD_DATE=unknown
-RUN CGO_ENABLED=0 go build -trimpath \
+RUN CGO_ENABLED=0 go build -trimpath -buildvcs=false \
       -ldflags "-s -w -buildid= -X github.com/elyon-chain/elyon-bot/internal/version.Version=$(cat VERSION) -X github.com/elyon-chain/elyon-bot/internal/version.Commit=${COMMIT} -X github.com/elyon-chain/elyon-bot/internal/version.Date=${BUILD_DATE}" \
       -o /out/elyon ./cmd/elyon
 

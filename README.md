@@ -59,9 +59,10 @@ go test ./...                  # unit tests
 scripts/build.sh               # dist/ with all five binaries and SHA256SUMS
 ```
 
-The build is reproducible (`CGO_ENABLED=0`, `-trimpath`, no build id, Go toolchain pinned to 1.27.4 in `go.mod`), so
-you can compare your own `SHA256SUMS` with the published one. Build the release itself: the tag
-(`git checkout v0.1.0`) or the unpacked source archive, which carries the release commit in its `RELEASE` file.
+The build is reproducible (`CGO_ENABLED=0`, `-trimpath`, `-buildvcs=false`, no build id, Go toolchain pinned to
+1.27.4 in `go.mod`), so you can compare your own `dist/SHA256SUMS` with the published one. Build the release itself:
+the tag (`git checkout v0.1.0`) or the unpacked source archive, which carries the release commit in its `RELEASE`
+file. Both give byte-identical binaries.
 
 ## Quick start
 

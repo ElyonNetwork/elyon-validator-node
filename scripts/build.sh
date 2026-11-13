@@ -21,6 +21,8 @@ for target in linux/amd64 linux/arm64 darwin/amd64 darwin/arm64 windows/amd64; d
   name="elyon-$VERSION-$os-$arch"
   [ "$os" = windows ] && name="$name.exe"
   echo "building dist/$name"
-  CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -trimpath -ldflags "$LDFLAGS" -o "dist/$name" ./cmd/elyon
+  # -buildvcs=false: the git state is not embedded (only COMMIT/DATE above), so a git checkout and the source
+  # archive build the same bytes, wherever they are unpacked.
+  CGO_ENABLED=0 GOOS=$os GOARCH=$arch go build -trimpath -buildvcs=false -ldflags "$LDFLAGS" -o "dist/$name" ./cmd/elyon
 done
 cd dist && sha256sum elyon-* > SHA256SUMS && cat SHA256SUMS

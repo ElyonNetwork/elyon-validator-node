@@ -2,7 +2,10 @@
 
 All notable changes to elyon-bot. Versions follow [Semantic Versioning](https://semver.org/).
 
-## Unreleased (documentation only, the 0.1.0 binaries are unchanged)
+## 0.1.0 release build — 2026-11-13
+
+The published 0.1.0 binaries are built from the `v0.1.0` tag. The program code is the same as in the first
+build; only how it is built and documented changed:
 
 - Guides with screenshots for Windows, macOS, Linux and Docker; quick start, funding, backup and restore,
   troubleshooting.
@@ -10,8 +13,8 @@ All notable changes to elyon-bot. Versions follow [Semantic Versioning](https://
   Python-on-Windows walkthrough, the command-line route, batch files and bots in their own Docker container
   (generated from `examples/` by `scripts/gen-examples-doc.py`).
 - New examples: Ruby, and the Windows Command Prompt (`curl.exe`, read-only).
-- `scripts/build.sh` reads the release commit and date from a `RELEASE` file when there is no `.git`, so the
-  source archive rebuilds the published binaries byte for byte.
+- `scripts/build.sh` builds with `-buildvcs=false` and reads the release commit and date from a `RELEASE` file
+  when there is no `.git`, so the git tag and the source archive both rebuild the published binaries byte for byte.
 
 ## [0.1.0] — 2026-11-13
 

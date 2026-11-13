@@ -19,6 +19,12 @@ First release.
   required), optional per-token daily limits, refusal of contract/zero/self destinations.
 - Opt-in unattended mode with `ELYON_PASSWORD_FILE` / `ELYON_PASSWORD` (always warned).
 
+- Hidden password prompts: echo off before the prompt is printed, type-ahead discarded (like readpassphrase),
+  terminal restored on Ctrl+C, and every prompt shown before any network activity. Fixes a report that
+  `elyon serve` showed the password in clear when it was typed while the client was still connecting (the
+  prompt used to appear only after an RPC round-trip, and text typed before it was echoed by the terminal and
+  then accepted as the password). Regression tests run the CLI on a pseudo-terminal.
+
 ### Trading (mirrors dex.elyon.network)
 - Spot: `markets`, `price`, `quote`, `buy` (spend wUSDT or exact amount), `sell` (amount or all), `swap`
   (two tokens through the wUSDT hub). Pool-sync wait, 0.5 % default slippage, 15 % impact limit, exact

@@ -438,7 +438,7 @@ func (a *App) RunBatch(ctx context.Context, b *Batch, req Request) ([]StepResult
 			sr.Command = cmd.ID()
 			var p Params
 			if p, err = ParamsFromJSON(step.Params); err == nil {
-				res, err = a.Run(ctx, cmd, p, Request{Source: "batch", ClientIP: req.ClientIP})
+				res, err = a.Run(ctx, cmd, p, Request{Source: "batch", ClientIP: req.ClientIP, Password: req.Password})
 			}
 		}
 		if res != nil {

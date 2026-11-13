@@ -70,22 +70,22 @@ func serve(a *app.App, p app.Params) error {
 	if err != nil {
 		return errs.New(errs.InvalidInput, err.Error())
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
-	// Check the network before asking for the password.
-	if _, err := a.Chain(ctx); err != nil {
-		return err
-	}
 	fmt.Fprintf(os.Stderr, "%s\nWallet %s\n", version.String(), f.Address)
-	pw, err := askPassword(ctx, "Wallet password (unlocks trading for this session)")
+	// The password is asked first, before any network activity, so the prompt appears at once and echo is off
+	// from that moment (anything typed earlier is discarded, never used).
+	pw, err := askPassword(context.Background(), "Wallet password (unlocks trading for this session)")
 	if err != nil {
 		return err
 	}
 	u, err := a.Unlock(pw)
-	for i := range pw {
-		pw[i] = 0
-	}
+	wipe(pw)
 	if err != nil {
+		return err
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	if _, err := a.Chain(ctx); err != nil {
+		a.Session.Lock()
 		return err
 	}
 	st := u.File.Meta.PasswordStatus(time.Now())

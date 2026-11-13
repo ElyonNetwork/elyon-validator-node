@@ -43,6 +43,11 @@ you, SYSTEM and administrators. Do not move the elyon home to a shared folder.
 - The daemon blocks password checks for 15 minutes after **5 wrong passwords** (unlock, transfers,
   allowlist changes), so a stolen API token cannot be used to guess the password over HTTP.
 - The password is never accepted as a command-line argument (it would land in your shell history).
+- **Hidden input.** Every password and recovery-phrase prompt switches terminal echo off *before* the prompt is
+  printed, and discards anything typed before the prompt appeared (the terminal had already displayed it in
+  clear, so it is never used as the password — type it again at the prompt). Echo is restored afterwards, also
+  on Ctrl+C. Prompts come before any network activity (`serve`, one-shot trading commands, `wallet allow`,
+  `wallet limit`, batches), so they appear immediately.
 
 ## The recovery phrase ("you get your key once")
 

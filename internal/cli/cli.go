@@ -13,9 +13,13 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/ethereum/go-ethereum/common"
+
 	"github.com/elyon-chain/elyon-bot/internal/app"
 	"github.com/elyon-chain/elyon-bot/internal/config"
 	"github.com/elyon-chain/elyon-bot/internal/errs"
+	"github.com/elyon-chain/elyon-bot/internal/guard"
+	"github.com/elyon-chain/elyon-bot/internal/keystore"
 	"github.com/elyon-chain/elyon-bot/internal/version"
 )
 
@@ -129,11 +133,32 @@ func Main(args []string) int {
 			return runRemote(g, a, r, cmd, p)
 		}
 	}
+	req := app.Request{Source: "cli"}
+	if needsPassword(cmd) && keystore.Exists(a.Home) {
+		// Ask before any network work: the prompt appears at once and echo is off from that moment.
+		pw, err := askPassword(context.Background(), "Wallet password")
+		if err != nil {
+			return fail(g, cmd.ID(), err)
+		}
+		req.Password = pw
+		defer wipe(pw)
+	}
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
-	res, err := a.Run(ctx, cmd, p, app.Request{Source: "cli"})
+	res, err := a.Run(ctx, cmd, p, req)
 	a.Session.Lock()
 	return output(g, a.MakeEnvelope(cmd.ID(), res, err))
+}
+
+// needsPassword reports whether a command run locally will need the wallet password.
+func needsPassword(cmd *app.Command) bool {
+	return cmd.Access == app.KeyNeeded || cmd.Name == "wallet allow" || cmd.Name == "wallet limit"
+}
+
+func wipe(b []byte) {
+	for i := range b {
+		b[i] = 0
+	}
 }
 
 func parseGlobals(args []string) (globals, []string, error) {
@@ -249,12 +274,13 @@ func runRemote(g globals, a *app.App, r *remote, cmd *app.Command, p app.Params)
 	if !g.json && !g.quiet {
 		fmt.Fprintf(os.Stderr, "… sent to the running elyon daemon (%s)\n", r.url)
 	}
-	if cmd.Name == "unlock" {
-		pw, err := readHidden("Wallet password")
+	if cmd.Name == "unlock" || (cmd.Name == "wallet send" && !approvedLocally(a, p.Str("to"))) {
+		pw, err := askPassword(context.Background(), "Wallet password")
 		if err != nil {
 			return fail(g, cmd.ID(), err)
 		}
 		p["password"] = string(pw)
+		wipe(pw)
 	}
 	env, err := r.call(cmd.Path(), p)
 	if err != nil {
@@ -273,6 +299,15 @@ func runRemote(g globals, a *app.App, r *remote, cmd *app.Command, p app.Params)
 		}
 	}
 	return output(g, *env)
+}
+
+// approvedLocally reads the approved-destination list from wallet.json (the daemon re-verifies it).
+func approvedLocally(a *app.App, to string) bool {
+	f, err := a.WalletFile()
+	if err != nil || !common.IsHexAddress(to) {
+		return false
+	}
+	return guard.Allowed(f.Meta.Allowlist, common.HexToAddress(to))
 }
 
 func runBatch(g globals, a *app.App, p app.Params) int {
@@ -301,9 +336,18 @@ func runBatch(g globals, a *app.App, p app.Params) int {
 			return fail(g, "batch", err)
 		}
 	} else {
+		req := app.Request{Source: "cli"}
+		if needsPw := batchNeedsPassword(b); needsPw && keystore.Exists(a.Home) {
+			pw, err := askPassword(context.Background(), "Wallet password")
+			if err != nil {
+				return fail(g, "batch", err)
+			}
+			req.Password = pw
+			defer wipe(pw)
+		}
 		ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 		defer stop()
-		steps, ok := a.RunBatch(ctx, b, app.Request{Source: "cli"})
+		steps, ok := a.RunBatch(ctx, b, req)
 		a.Session.Lock()
 		env = &app.BatchEnvelope{OK: ok, Command: "batch", Steps: steps}
 	}
@@ -332,6 +376,15 @@ func runBatch(g globals, a *app.App, p app.Params) int {
 		return 1
 	}
 	return 0
+}
+
+func batchNeedsPassword(b *app.Batch) bool {
+	for _, s := range b.Commands {
+		if c := app.Lookup(s.Command); c != nil && needsPassword(c) {
+			return true
+		}
+	}
+	return false
 }
 
 func done(g globals, cmd *app.Command, err error) int {

@@ -66,9 +66,7 @@ func readHidden(prompt string) ([]byte, error) {
 		return nil, errs.New(errs.TerminalRequired, "No terminal to ask for the wallet password.").
 			WithHint("Run the command in a terminal, start the daemon (`elyon serve`) and send commands to it, or use the unattended mode with ELYON_PASSWORD_FILE (see SECURITY.md).")
 	}
-	fmt.Fprintf(os.Stderr, "%s: ", prompt)
-	b, err := term.ReadPassword(int(os.Stdin.Fd()))
-	fmt.Fprintln(os.Stderr)
+	b, err := readSecret(int(os.Stdin.Fd()), prompt+": ", os.Stderr)
 	if err != nil {
 		return nil, errs.Newf(errs.TerminalRequired, "Could not read from the terminal: %v", err)
 	}

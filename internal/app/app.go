@@ -249,6 +249,9 @@ func (a *App) mapUnlockErr(err error) error {
 type Request struct {
 	Source   string // cli, http, batch
 	ClientIP string
+	// Password is the wallet password the command line collected before the command started (so the prompt
+	// appears at once, never after network work). The HTTP API passes passwords as a "password" field instead.
+	Password []byte
 }
 
 // Ctx is passed to command handlers.
@@ -288,6 +291,9 @@ func (x *Ctx) Address() (common.Address, error) {
 func (x *Ctx) password(why string) ([]byte, error) {
 	if pw := x.P["password"]; pw != "" {
 		return []byte(pw), nil
+	}
+	if len(x.Req.Password) > 0 {
+		return x.Req.Password, nil
 	}
 	if x.AskPassword != nil {
 		return x.AskPassword(context.Background(), why)

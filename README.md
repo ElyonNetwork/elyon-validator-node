@@ -36,7 +36,8 @@ key **encrypted on that computer only**, and signs the transactions itself.
 
 ## Install
 
-Download the binary for your system from the release (or build it, see below) and check its checksum:
+Download the binary for your system from [dex.elyon.network/bots](https://dex.elyon.network/bots#download) or the GitHub release
+(or build it, see below) and check its checksum:
 
 | System | File |
 |---|---|
@@ -49,10 +50,11 @@ Download the binary for your system from the release (or build it, see below) an
 Step-by-step guides: [Windows](docs/install-windows.md) · [macOS](docs/install-macos.md) ·
 [Linux](docs/install-linux.md) · [Docker](docs/install-docker.md).
 
-Build from source (Go 1.26 or newer):
+Build from source (Go 1.26 or newer) — clone the repository or download `elyon-bot-0.1.0-source.tar.gz` from
+[dex.elyon.network/bots](https://dex.elyon.network/bots#download):
 
 ```sh
-git clone https://github.com/elyon-chain/elyon-bot && cd elyon-bot
+git clone https://github.com/ElyonNetwork/elyon-bot && cd elyon-bot
 go test ./...                  # unit tests
 scripts/build.sh               # dist/ with all five binaries and SHA256SUMS
 ```

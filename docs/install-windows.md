@@ -30,6 +30,8 @@ elyon version
 If Windows SmartScreen warns about an unknown publisher, click **More info → Run anyway** (the program is
 open source; you verified its checksum above).
 
+![Checking the download with Get-FileHash and running elyon version in PowerShell](screenshots/windows-1-verify.png)
+
 ## 3. Create your wallet
 
 ```powershell
@@ -42,6 +44,10 @@ Your data is stored in `%APPDATA%\Elyon` (for example `C:\Users\you\AppData\Roam
 belongs to your Windows user: other users of the computer cannot open it. Do not move it to a shared or
 cloud-synced folder.
 
+![elyon setup on Windows: the new wallet and its recovery phrase (hidden here)](screenshots/windows-2-setup.png)
+
+![The backup quiz and the next steps after setup](screenshots/windows-3-backup-quiz.png)
+
 ## 4. Fund it
 
 ```powershell
@@ -53,6 +59,8 @@ wallet to this address. Then:
 elyon wallet balance
 ```
 
+![elyon status and elyon wallet balance after funding](screenshots/windows-4-balance.png)
+
 ## 5. Trade or start the API for your bot
 
 Trade directly:
@@ -62,10 +70,14 @@ elyon futures open long BTC --margin 10 --leverage 5 --stop-loss 62000
 elyon futures positions
 ```
 
+![Opening a futures position and listing positions](screenshots/windows-5-futures.png)
+
 Or start the local API (keep this window open; the password is asked once):
 ```powershell
 elyon serve
 ```
+![elyon serve: the password is asked once (hidden) and the local API starts](screenshots/windows-6-serve.png)
+
 In another window, get the token for your bot:
 ```powershell
 elyon api-token show
@@ -76,6 +88,8 @@ example is in `examples\powershell\bot.ps1`:
 $env:ELYON_TOKEN = (elyon api-token show)
 .\bot.ps1
 ```
+
+![Calling the local API from PowerShell with curl.exe](screenshots/windows-7-api-call.png)
 
 ### Start the API automatically (optional)
 

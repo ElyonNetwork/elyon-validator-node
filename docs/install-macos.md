@@ -25,6 +25,8 @@ elyon version
 ```
 (Without `sudo`: move it to `~/bin` and add `export PATH="$HOME/bin:$PATH"` to `~/.zshrc`.)
 
+![Checking the download and running elyon version on macOS](screenshots/macos-1-verify.png)
+
 ## 3. Create your wallet
 
 ```sh
@@ -33,12 +35,18 @@ elyon setup
 Choose **1**, set a password of 12+ characters, and **write the 24 words on paper** (shown once, then a
 3-word check). Data folder: `~/Library/Application Support/Elyon` (only your user can read it).
 
+![elyon setup: the new wallet and its recovery phrase (hidden here)](screenshots/macos-2-setup.png)
+
+![The backup quiz and the next steps after setup](screenshots/macos-3-backup-quiz.png)
+
 ## 4. Fund it
 
 ```sh
 elyon wallet address
 ```
 Send **wUSDT** and **0.1–0.3 ELN** from your DEX wallet to this address, then `elyon wallet balance`.
+
+![elyon status and elyon wallet balance after funding](screenshots/macos-4-balance.png)
 
 ## 5. Trade or run the API
 
@@ -47,6 +55,12 @@ elyon futures open long BTC --margin 10 --leverage 5 --stop-loss 62000
 elyon serve                   # API for bots on http://127.0.0.1:7457 (password asked once)
 elyon api-token show          # in another Terminal tab: the token for your bot
 ```
+
+![Opening a futures position and listing positions](screenshots/macos-5-futures.png)
+
+![elyon serve: the password is asked once (hidden) and the local API starts](screenshots/macos-6-serve.png)
+
+![Calling the local API with curl](screenshots/macos-7-api-call.png)
 
 ### Keep the API running in the background (optional)
 

@@ -6,10 +6,16 @@ audit log) in the volume mounted at `/data`.
 ## 1. Build the image
 
 ```sh
-git clone https://github.com/elyon-chain/elyon-bot && cd elyon-bot
+git clone https://github.com/ElyonNetwork/elyon-bot && cd elyon-bot
 docker build -t elyon-bot:local .
 docker run --rm elyon-bot:local version
 ```
+
+No git? Download `elyon-bot-0.1.0-source.tar.gz` from the [download table](https://dex.elyon.network/bots#download),
+check it against `SHA256SUMS`, unpack it (`tar xzf elyon-bot-0.1.0-source.tar.gz && cd elyon-bot-0.1.0`) and run the same
+`docker build`.
+
+![Building the image and checking the version](screenshots/docker-1-start.png)
 
 ## 2. Create the wallet (interactive, once)
 
@@ -19,6 +25,12 @@ docker run -it --rm -v elyon-data:/data elyon-bot:local setup
 ```
 Choose **1**, a password, and **write the 24 words on paper**. Show the address any time with
 `docker run --rm -v elyon-data:/data elyon-bot:local wallet address`, and send wUSDT and 0.1–0.3 ELN to it.
+
+![docker run … setup: the new wallet and its recovery phrase (hidden here)](screenshots/docker-2-setup.png)
+
+![The backup quiz and the next steps](screenshots/docker-3-backup-quiz.png)
+
+![Status and balance from the volume](screenshots/docker-4-balance.png)
 
 ## 3. Start the API
 
@@ -31,6 +43,8 @@ docker attach elyon        # type the password, then detach with Ctrl+P then Ctr
 ```
 After a restart of the container you must attach and type the password again (`elyon` stays locked until
 then — this is the point).
+
+![Starting the container and typing the password once with docker attach](screenshots/docker-6-serve.png)
 
 ### Option B — unattended, with a Docker secret
 
@@ -76,6 +90,10 @@ secrets:
 TOKEN=$(docker exec elyon elyon api-token show 2>/dev/null)
 curl -s http://127.0.0.1:7457/v1/status -H "Authorization: Bearer $TOKEN"
 ```
+
+![Calling the local API with the token from the container](screenshots/docker-7-api-call.png)
+
+![A futures order through docker exec](screenshots/docker-5-futures.png)
 
 Network rules built into the image:
 

@@ -17,6 +17,8 @@ elyon version
 
 Build from source instead: install Go 1.26+, then `git clone … && cd elyon-bot && scripts/build.sh`.
 
+![Checking the download and running elyon version on Linux](screenshots/linux-1-verify.png)
+
 ## 2. Create your wallet
 
 ```sh
@@ -25,6 +27,10 @@ elyon setup
 Choose **1**, a password of 12+ characters, and **write the 24 words on paper** (shown once, then a 3-word
 check). Data: `~/.config/elyon` (`$XDG_CONFIG_HOME/elyon`), directory 0700, files 0600.
 
+![elyon setup: the new wallet and its recovery phrase (hidden here)](screenshots/linux-2-setup.png)
+
+![The backup quiz and the next steps after setup](screenshots/linux-3-backup-quiz.png)
+
 ## 3. Fund it and trade
 
 ```sh
@@ -32,6 +38,10 @@ elyon wallet address          # send wUSDT + 0.1–0.3 ELN here from your DEX wa
 elyon wallet balance
 elyon futures open long BTC --margin 10 --leverage 5 --stop-loss 62000
 ```
+
+![elyon status and elyon wallet balance after funding](screenshots/linux-4-balance.png)
+
+![Opening a futures position and listing positions](screenshots/linux-5-futures.png)
 
 ## 4. Run the API for your bot
 
@@ -64,6 +74,10 @@ journalctl --user -u elyon -f      # logs
 ```
 Your bot: `ELYON_TOKEN=$(elyon api-token show)`, then call `http://127.0.0.1:7457` (see
 [examples.md](examples.md)).
+
+![elyon serve: the password is asked once (hidden) and the local API starts](screenshots/linux-6-serve.png)
+
+![Calling the local API with curl](screenshots/linux-7-api-call.png)
 
 ## Firewall
 

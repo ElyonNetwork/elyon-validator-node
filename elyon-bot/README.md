@@ -20,9 +20,10 @@ key **encrypted on that computer only**, and signs the transactions itself.
   [ElyonNetwork/elyon-validator-node](https://github.com/ElyonNetwork/elyon-validator-node), next to the Elyon
   Chain client.
 
-> Status: 0.1.0 — verified end to end on ElyonChain mainnet on 2026-11-13 (46 transactions: spot buy/sell/swap,
-> futures open/TP-SL/partial close/close, limit orders, close-all/cancel-all, batches, gas purchase, wrap,
-> guarded transfers). See [docs/transcripts](docs/transcripts).
+> Status: 0.1.1 (0.1.0 with a dependency security update). 0.1.0 was verified end to end on ElyonChain mainnet on
+> 2026-11-13 (46 transactions: spot buy/sell/swap, futures open/TP-SL/partial close/close, limit orders,
+> close-all/cancel-all, batches, gas purchase, wrap, guarded transfers; see [docs/transcripts](docs/transcripts)), and
+> 0.1.1 was re-tested on mainnet the same day on Linux, Windows and Docker.
 
 ## Why it is safe
 
@@ -44,16 +45,16 @@ it, see below) and check its checksum:
 
 | System | File |
 |---|---|
-| Windows (64-bit) | `elyon-0.1.0-windows-amd64.exe` |
-| macOS Apple Silicon | `elyon-0.1.0-darwin-arm64` |
-| macOS Intel | `elyon-0.1.0-darwin-amd64` |
-| Linux x86-64 | `elyon-0.1.0-linux-amd64` |
-| Linux ARM64 (Raspberry Pi 4/5, Graviton) | `elyon-0.1.0-linux-arm64` |
+| Windows (64-bit) | `elyon-0.1.1-windows-amd64.exe` |
+| macOS Apple Silicon | `elyon-0.1.1-darwin-arm64` |
+| macOS Intel | `elyon-0.1.1-darwin-amd64` |
+| Linux x86-64 | `elyon-0.1.1-linux-amd64` |
+| Linux ARM64 (Raspberry Pi 4/5, Graviton) | `elyon-0.1.1-linux-arm64` |
 
 Step-by-step guides: [Windows](docs/install-windows.md) · [macOS](docs/install-macos.md) ·
 [Linux](docs/install-linux.md) · [Docker](docs/install-docker.md).
 
-Build from source (Go 1.26 or newer) — clone the repository or download `elyon-bot-0.1.0-source.tar.gz` from
+Build from source (Go 1.26 or newer) — clone the repository or download `elyon-bot-0.1.1-source.tar.gz` from
 [dex.elyon.network/bots](https://dex.elyon.network/bots#download):
 
 ```sh
@@ -63,12 +64,12 @@ scripts/build.sh               # dist/ with all five binaries and SHA256SUMS
 ```
 
 The release build is reproducible: anyone can rebuild the published binaries byte for byte and compare
-`dist/SHA256SUMS` with the published one. With Docker installed, build the release tag `elyon-bot-v0.1.0` (its tree
+`dist/SHA256SUMS` with the published one. With Docker installed, build the release tag `elyon-bot-v0.1.1` (its tree
 is this client on its own):
 
 ```sh
 git clone https://github.com/ElyonNetwork/elyon-validator-node elyon-bot-release
-cd elyon-bot-release && git checkout elyon-bot-v0.1.0
+cd elyon-bot-release && git checkout elyon-bot-v0.1.1
 scripts/release-build.sh       # runs scripts/build.sh in golang:1.27.4-alpine: same toolchain and paths everywhere
 cat dist/SHA256SUMS            # identical to the published SHA256SUMS
 ```

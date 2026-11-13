@@ -10,7 +10,7 @@ import (
 
 var (
 	// Version is the release version, e.g. "0.1.0".
-	Version = "0.1.0-dev"
+	Version = "0.1.1-dev"
 	// Commit is the git commit the binary was built from.
 	Commit = ""
 	// Date is the build date (UTC, RFC 3339).

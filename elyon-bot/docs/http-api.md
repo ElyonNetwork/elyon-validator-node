@@ -102,7 +102,7 @@ Error (HTTP 4xx/5xx):
 
 | Method | Path | Fields | Needs |
 |---|---|---|---|
-| GET | `/v1/health` | — (no token needed; answers `{"ok":true,"service":"elyon","version":"0.1.0"}`) | nothing |
+| GET | `/v1/health` | — (no token needed; answers `{"ok":true,"service":"elyon","version":"0.1.1"}`) | nothing |
 | GET/POST | `/v1/status` | — | nothing |
 | GET/POST | `/v1/version` | — | nothing |
 | GET/POST | `/v1/commands` | — (machine-readable catalogue of every command) | nothing |

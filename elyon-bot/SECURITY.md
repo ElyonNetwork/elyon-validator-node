@@ -17,7 +17,7 @@ Elyon team (security contact on https://dex.elyon.network) before publishing the
    `internal/dex/client.go` and `internal/chain/client.go` — there is no other networking code.
 3. **Everything is open source and reproducible.** The source is public in the
    [`elyon-bot/` folder](https://github.com/ElyonNetwork/elyon-validator-node/tree/master/elyon-bot) of ElyonNetwork/elyon-validator-node. Build the release tag
-   `elyon-bot-v0.1.0` yourself (`scripts/release-build.sh`, see the README) and compare the checksums with the
+   `elyon-bot-v0.1.1` yourself (`scripts/release-build.sh`, see the README) and compare the checksums with the
    published `SHA256SUMS`: they are identical.
 
 ## How the key is stored (`wallet.json`, mode 0600)

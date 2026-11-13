@@ -7,7 +7,7 @@ dependencies.
 
 ```sh
 ARCH=$(uname -m | sed 's/x86_64/amd64/; s/aarch64/arm64/')
-VERSION=0.1.0
+VERSION=0.1.1
 # download elyon-$VERSION-linux-$ARCH and SHA256SUMS from the release page, then:
 sha256sum --check --ignore-missing SHA256SUMS      # must print: elyon-…: OK
 install -m 0755 elyon-$VERSION-linux-$ARCH ~/.local/bin/elyon   # or: sudo install … /usr/local/bin/elyon

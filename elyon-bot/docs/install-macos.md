@@ -4,12 +4,12 @@ Works on macOS 12 or newer, Apple Silicon (M1–M4) and Intel.
 
 ## 1. Download
 
-Which file? Apple menu → **About This Mac**: "Chip Apple M…" → `elyon-0.1.0-darwin-arm64`;
-"Processor Intel" → `elyon-0.1.0-darwin-amd64`. Download it and `SHA256SUMS`, then open **Terminal**
+Which file? Apple menu → **About This Mac**: "Chip Apple M…" → `elyon-0.1.1-darwin-arm64`;
+"Processor Intel" → `elyon-0.1.1-darwin-amd64`. Download it and `SHA256SUMS`, then open **Terminal**
 (Applications → Utilities) and check the file:
 ```sh
 cd ~/Downloads
-shasum -a 256 elyon-0.1.0-darwin-arm64      # use the name of your file
+shasum -a 256 elyon-0.1.1-darwin-arm64      # use the name of your file
 grep darwin SHA256SUMS
 ```
 Both hashes must be identical.
@@ -17,10 +17,10 @@ Both hashes must be identical.
 ## 2. Install
 
 ```sh
-chmod +x elyon-0.1.0-darwin-arm64
-xattr -d com.apple.quarantine elyon-0.1.0-darwin-arm64   # allow a downloaded command-line program to run
+chmod +x elyon-0.1.1-darwin-arm64
+xattr -d com.apple.quarantine elyon-0.1.1-darwin-arm64   # allow a downloaded command-line program to run
 sudo mkdir -p /usr/local/bin
-sudo mv elyon-0.1.0-darwin-arm64 /usr/local/bin/elyon
+sudo mv elyon-0.1.1-darwin-arm64 /usr/local/bin/elyon
 elyon version
 ```
 (Without `sudo`: move it to `~/bin` and add `export PATH="$HOME/bin:$PATH"` to `~/.zshrc`.)

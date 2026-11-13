@@ -4,12 +4,12 @@ Works on Windows 10 and 11 (64-bit). No installer, no administrator rights: elyo
 
 ## 1. Download
 
-1. Download `elyon-0.1.0-windows-amd64.exe` and `SHA256SUMS` from the release page.
+1. Download `elyon-0.1.1-windows-amd64.exe` and `SHA256SUMS` from the release page.
 2. Check that the file is genuine. Open **PowerShell** (Start menu → type `PowerShell`) in your Downloads
    folder and run:
    ```powershell
    cd $HOME\Downloads
-   Get-FileHash .\elyon-0.1.0-windows-amd64.exe -Algorithm SHA256
+   Get-FileHash .\elyon-0.1.1-windows-amd64.exe -Algorithm SHA256
    Get-Content .\SHA256SUMS
    ```
    The long hash shown by `Get-FileHash` must be **exactly** the one written next to the file name in
@@ -19,7 +19,7 @@ Works on Windows 10 and 11 (64-bit). No installer, no administrator rights: elyo
 
 ```powershell
 New-Item -ItemType Directory -Force $HOME\elyon | Out-Null
-Move-Item .\elyon-0.1.0-windows-amd64.exe $HOME\elyon\elyon.exe
+Move-Item .\elyon-0.1.1-windows-amd64.exe $HOME\elyon\elyon.exe
 # make "elyon" available in every new PowerShell window:
 [Environment]::SetEnvironmentVariable("Path", $env:Path + ";$HOME\elyon", "User")
 ```

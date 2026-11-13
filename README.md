@@ -53,6 +53,7 @@ client. On top of that base, the Elyon team built:
 | `dashboard/` | Node dashboard, setup wizard and JSON-RPC proxy (Node.js) |
 | `Explorer/` | Block explorer |
 | `BlocksViewer/` | The service behind blocks.elyon.network |
+| `elyon-bot/` | `elyon`, the trading-bot client for ElyonDex: command line and local API, with the key kept on the user's computer |
 | `scripts/setup-node.sh` | Installs and starts a node |
 | `Dockerfile.aposunpchain` | Builds the node image from this source |
 | `docs/` | Documentation listed below |
@@ -71,6 +72,17 @@ sudo bash scripts/setup-node.sh --image elyon-node:local --public-ip <your-publi
 
 The full guide covers requirements, verification, serving RPC, registering to earn fees and becoming a
 validator: **[docs/NODE-SETUP.md](docs/NODE-SETUP.md)**.
+
+## Trading bots on ElyonDex
+
+[`elyon-bot/`](elyon-bot) is `elyon`, the open-source client that lets a trading bot use every spot and futures
+feature of [ElyonDex](https://dex.elyon.network) by command, from any programming language. The bot's key is
+created on the user's own computer, stored encrypted with the user's password, and never sent anywhere.
+
+* Downloads for Windows, macOS, Linux and Docker, with step-by-step guides: **[dex.elyon.network/bots](https://dex.elyon.network/bots)**
+* Commands, local HTTP API and security model: [elyon-bot/README.md](elyon-bot/README.md)
+* Reproducible release: the tag `elyon-bot-v0.1.0` rebuilds the published binaries byte for byte
+  (`git checkout elyon-bot-v0.1.0 && scripts/release-build.sh`, with Docker installed)
 
 ## Networks
 
@@ -95,6 +107,7 @@ Add ELN to a wallet as a custom network using the values above. Currency symbol 
 | [DECENTRALIZATION.md](docs/DECENTRALIZATION.md) | Exactly how decentralized the network is today |
 | [EXCHANGE-INTEGRATION.md](docs/EXCHANGE-INTEGRATION.md) | Parameters and guidance for exchanges |
 | [SECURITY.md](SECURITY.md) | Security review: findings, fixes and open items |
+| [elyon-bot/README.md](elyon-bot/README.md) | The trading-bot client: install, commands, local API, key security |
 
 ## Security
 

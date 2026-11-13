@@ -6,7 +6,7 @@ audit log) in the volume mounted at `/data`.
 ## 1. Build the image
 
 ```sh
-git clone https://github.com/ElyonNetwork/elyon-bot && cd elyon-bot
+git clone https://github.com/ElyonNetwork/elyon-validator-node && cd elyon-validator-node/elyon-bot
 docker build -t elyon-bot:local .
 docker run --rm elyon-bot:local version
 ```

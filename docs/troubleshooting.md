@@ -29,7 +29,7 @@ The complete list is in the [HTTP API reference](http-api.md#error-codes).
 
 **Does Elyon ever see my key or my password?**
 No. Both stay on your computer. elyon only talks to the ElyonChain RPC (`https://mainnet.elyon.network/rpc`) and the
-ElyonDex public API (`https://dex.elyon.network`), and the source code is public so anyone can check.
+ElyonDex public API (`https://dex.elyon.network`), and the [source code is public](https://github.com/ElyonNetwork/elyon-validator-node/tree/master/elyon-bot) so anyone can check.
 
 **My computer was stolen. What can the thief do?**
 Without your password: nothing — the wallet file is encrypted and the daemon is not running. Restore the wallet on

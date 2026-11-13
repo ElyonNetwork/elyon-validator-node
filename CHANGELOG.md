@@ -4,7 +4,9 @@ All notable changes to elyon-bot. Versions follow [Semantic Versioning](https://
 
 ## 0.1.0 release build — 2026-11-13
 
-The published 0.1.0 binaries are built from the `v0.1.0` tag. The program code is the same as in the first
+The published 0.1.0 binaries are built from the tag `elyon-bot-v0.1.0` of
+[ElyonNetwork/elyon-validator-node](https://github.com/ElyonNetwork/elyon-validator-node), where this client is
+published in the `elyon-bot/` folder. The program code is the same as in the first
 build; only how it is built and documented changed:
 
 - Guides with screenshots for Windows, macOS, Linux and Docker; quick start, funding, backup and restore,

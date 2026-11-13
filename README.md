@@ -15,7 +15,10 @@ key **encrypted on that computer only**, and signs the transactions itself.
 - **Aggregate commands:** a batch of commands in one call (`elyon run batch.json`, `POST /v1/batch`),
   `futures close-all`, `futures cancel-all` and a one-call `portfolio` snapshot.
 - **Open source, no telemetry.** It only talks to the Elyon RPC (`https://mainnet.elyon.network/rpc`) and the
-  DEX public API (`https://dex.elyon.network`). Elyon never sees your key or your password.
+  DEX public API (`https://dex.elyon.network`). Elyon never sees your key or your password. The source is the
+  [`elyon-bot/` folder](https://github.com/ElyonNetwork/elyon-validator-node/tree/master/elyon-bot) of Elyon's public repository
+  [ElyonNetwork/elyon-validator-node](https://github.com/ElyonNetwork/elyon-validator-node), next to the Elyon
+  Chain client.
 
 > Status: 0.1.0 — verified end to end on ElyonChain mainnet on 2026-11-13 (46 transactions: spot buy/sell/swap,
 > futures open/TP-SL/partial close/close, limit orders, close-all/cancel-all, batches, gas purchase, wrap,
@@ -36,8 +39,8 @@ key **encrypted on that computer only**, and signs the transactions itself.
 
 ## Install
 
-Download the binary for your system from [dex.elyon.network/bots](https://dex.elyon.network/bots#download) or the GitHub release
-(or build it, see below) and check its checksum:
+Download the binary for your system from [dex.elyon.network/bots](https://dex.elyon.network/bots#download) (or build
+it, see below) and check its checksum:
 
 | System | File |
 |---|---|
@@ -54,19 +57,23 @@ Build from source (Go 1.26 or newer) — clone the repository or download `elyon
 [dex.elyon.network/bots](https://dex.elyon.network/bots#download):
 
 ```sh
-git clone https://github.com/ElyonNetwork/elyon-bot && cd elyon-bot
+git clone https://github.com/ElyonNetwork/elyon-validator-node && cd elyon-validator-node/elyon-bot
 go test ./...                  # unit tests
 scripts/build.sh               # dist/ with all five binaries and SHA256SUMS
 ```
 
 The release build is reproducible: anyone can rebuild the published binaries byte for byte and compare
-`dist/SHA256SUMS` with the published one. With Docker installed, in the release tag (`git checkout v0.1.0`) or in
-the unpacked source archive (its `RELEASE` file names the release commit):
+`dist/SHA256SUMS` with the published one. With Docker installed, build the release tag `elyon-bot-v0.1.0` (its tree
+is this client on its own):
 
 ```sh
+git clone https://github.com/ElyonNetwork/elyon-validator-node elyon-bot-release
+cd elyon-bot-release && git checkout elyon-bot-v0.1.0
 scripts/release-build.sh       # runs scripts/build.sh in golang:1.27.4-alpine: same toolchain and paths everywhere
 cat dist/SHA256SUMS            # identical to the published SHA256SUMS
 ```
+
+The unpacked source archive works the same way: its `RELEASE` file names the release commit.
 
 `scripts/build.sh` alone uses your local Go: the program is the same, but Go records the location of its module
 cache in one assembly file, so the bytes differ unless the paths match the release build's. The Docker image built

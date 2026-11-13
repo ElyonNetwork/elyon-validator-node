@@ -1,0 +1,19 @@
+# build output
+/dist/
+/elyon
+/elyon.exe
+*.test
+coverage.out
+
+# never commit wallets, tokens, passwords or local runtime files
+wallet.json
+api-token
+audit.log*
+transfers.json
+daemon.json
+*.password
+.e2e/
+.env
+
+# written only into source archives (release commit and date for scripts/build.sh)
+/RELEASE

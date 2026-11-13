@@ -1,0 +1,45 @@
+$ elyon futures limit long BTC --price 50000 --margin 1 --leverage 2 --expires 1d
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: approve wUSDT for the futures limit-order contract…
+… Confirmed: approve wUSDT for the futures limit-order contract (0x8d04e21b493ed71a886dc979c98056f4ddf75dd34af7d4d1b572774d22d18b35)
+… Sending: place limit long BTC 2x…
+… Confirmed: place limit long BTC 2x (0xc6dba596fc4efd4b2645f869f9b67b5ed09c9264c6c6a632dc5468a30670c403)
+Limit order #4 placed: LONG BTC 2x at 50,000.00 wUSDT or better
+  Margin / size      1 wUSDT / 2 wUSDT
+  Taken when filled  1.002 wUSDT (margin + fee); nothing was taken now
+  Expires            2026-11-14 16:10 UTC
+  Take profit        none
+  Stop loss          none
+  Transaction        0xc6dba596fc4efd4b2645f869f9b67b5ed09c9264c6c6a632dc5468a30670c403
+  Keep the cost in the wallet until it fills; otherwise the order is closed without a fill.
+  Transactions:
+    approve wUSDT for the futures limit-order contract 0x8d04e21b493ed71a886dc979c98056f4ddf75dd34af7d4d1b572774d22d18b35
+    place limit long BTC 2x            0xc6dba596fc4efd4b2645f869f9b67b5ed09c9264c6c6a632dc5468a30670c403
+[exit code 0]
+
+$ elyon futures orders
+Order #4  LONG BTC_USDT 2x at 50,000.00  [open]
+  Margin / cost      1 wUSDT / 1.002 wUSDT when filled
+  Expires            2026-11-14 16:10 UTC
+  TP / SL            none / none
+[exit code 0]
+
+$ elyon futures cancel 4
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: cancel limit order #4…
+… Confirmed: cancel limit order #4 (0xd563a8703e72c718b58c6aee9416b8466bbba1d3e73641e4119918806ab3b02e)
+Cancelled limit order #4. Nothing was taken from the wallet.
+  Transaction        0xd563a8703e72c718b58c6aee9416b8466bbba1d3e73641e4119918806ab3b02e
+[exit code 0]
+
+$ elyon futures orders
+No open limit orders.
+[exit code 0]
+
+$ elyon futures orders --all
+Order #4  LONG BTC_USDT 2x at 50,000.00  [cancelled]
+  Margin / cost      1 wUSDT / 1.002 wUSDT when filled
+  Expires            2026-11-14 16:10 UTC
+  TP / SL            none / none
+[exit code 0]
+

@@ -1,0 +1,38 @@
+$ curl -s -X POST http://127.0.0.1:7457/v1/lock -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{}'
+{
+  "ok": true,
+  "command": "lock",
+  "result": {
+    "locked": true
+  },
+  "text": "Locked: the key was wiped from memory. Unlock again with `elyon unlock`.\n"
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/futures/open -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"side":"long","market":"BTC","margin":"1","leverage":2}'
+{
+  "ok": false,
+  "command": "futures.open",
+  "error": {
+    "code": "WALLET_LOCKED",
+    "message": "The wallet is locked.",
+    "hint": "Unlock it with `elyon unlock` (or POST /v1/unlock with the password)."
+  }
+}
+
+[HTTP 409]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/unlock -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"password":"<redacted>"}'
+{
+  "ok": true,
+  "command": "unlock",
+  "result": {
+    "address": "0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7",
+    "unlocked": true
+  },
+  "text": "Unlocked: the daemon can trade again.\n"
+}
+
+[HTTP 200]
+

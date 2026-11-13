@@ -1,0 +1,5 @@
+$ elyon wallet backup
+Error: Your backup was already confirmed on 2026-11-13, so the recovery secret is not shown again.
+  → Only if you really must see it again (for example to make a second paper copy), run: elyon wallet backup --show-again-i-understand-the-risk
+[exit code 1]
+

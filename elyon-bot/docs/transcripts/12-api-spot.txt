@@ -1,0 +1,86 @@
+$ curl -s -X POST http://127.0.0.1:7457/v1/spot/buy -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"market":"ETH","spend":"0.5"}'
+{
+  "ok": true,
+  "command": "spot.buy",
+  "result": {
+    "amount_in": "0.5",
+    "amount_out": "0.000257401808542026",
+    "average_price_wusdt": "1942.488294204681",
+    "exact": "input",
+    "get": "wETH",
+    "give": "wUSDT",
+    "min_out": "0.000256114799499315",
+    "paid": "0.5",
+    "pool_fee_pct": 0.3,
+    "price_impact_pct": 0,
+    "received": "0.000257401808542026",
+    "route": "wUSDT → wETH",
+    "slippage_pct": 0.5,
+    "tx": "0xae53bdb0e4e9b5f1f3f91428ea450fda9d1ee21f1fb0a7afbc5bb289030b9d72"
+  },
+  "text": "Bought: paid 0.5 wUSDT, received 0.0002574018 wETH\n  Average price      1,942.49 wUSDT per wETH\n  Route              wUSDT → wETH\n  Price impact       0.00%\n  Transaction        0xae53bdb0e4e9b5f1f3f91428ea450fda9d1ee21f1fb0a7afbc5bb289030b9d72\n  Network fee        0.000230004 ELN\n",
+  "transactions": [
+    {
+      "label": "approve wUSDT for the spot router",
+      "hash": "0x4e0d584e922ad719c935ed33ba45c85e719f7d12a5df3d77123849794aaf3fd4",
+      "block": 5904299,
+      "gas_used": 46119,
+      "fee_eln": "0.000092238",
+      "explorer": "https://explorer.elyon.network/tx/0x4e0d584e922ad719c935ed33ba45c85e719f7d12a5df3d77123849794aaf3fd4"
+    },
+    {
+      "label": "swap wUSDT → wETH",
+      "hash": "0xae53bdb0e4e9b5f1f3f91428ea450fda9d1ee21f1fb0a7afbc5bb289030b9d72",
+      "block": 5904300,
+      "gas_used": 115002,
+      "fee_eln": "0.000230004",
+      "explorer": "https://explorer.elyon.network/tx/0xae53bdb0e4e9b5f1f3f91428ea450fda9d1ee21f1fb0a7afbc5bb289030b9d72"
+    }
+  ]
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/spot/sell -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"market":"wETH","amount":"all"}'
+{
+  "ok": true,
+  "command": "spot.sell",
+  "result": {
+    "amount_in": "0.000257401808542026",
+    "amount_out": "0.497004",
+    "average_price_wusdt": "1930.8489043458067",
+    "exact": "input",
+    "get": "wUSDT",
+    "give": "wETH",
+    "min_out": "0.494518",
+    "paid": "0.000257401808542026",
+    "pool_fee_pct": 0.3,
+    "price_impact_pct": 0,
+    "received": "0.497004",
+    "route": "wETH → wUSDT",
+    "slippage_pct": 0.5,
+    "tx": "0xf756616ed00ed9d7e7bb66fee9c45f03938d5098de30cafc9454cef579a9599d"
+  },
+  "text": "Sold: paid 0.0002574018 wETH, received 0.497004 wUSDT\n  Average price      1,930.85 wUSDT per wETH\n  Route              wETH → wUSDT\n  Price impact       0.00%\n  Transaction        0xf756616ed00ed9d7e7bb66fee9c45f03938d5098de30cafc9454cef579a9599d\n  Network fee        0.000186344 ELN\n",
+  "transactions": [
+    {
+      "label": "approve wETH for the spot router",
+      "hash": "0x04bb083d80a781f4f7b56fd188ee13c84764e620bdea4c52f03e7938f45f601d",
+      "block": 5904301,
+      "gas_used": 46155,
+      "fee_eln": "0.00009231",
+      "explorer": "https://explorer.elyon.network/tx/0x04bb083d80a781f4f7b56fd188ee13c84764e620bdea4c52f03e7938f45f601d"
+    },
+    {
+      "label": "swap wETH → wUSDT",
+      "hash": "0xf756616ed00ed9d7e7bb66fee9c45f03938d5098de30cafc9454cef579a9599d",
+      "block": 5904302,
+      "gas_used": 93172,
+      "fee_eln": "0.000186344",
+      "explorer": "https://explorer.elyon.network/tx/0xf756616ed00ed9d7e7bb66fee9c45f03938d5098de30cafc9454cef579a9599d"
+    }
+  ]
+}
+
+[HTTP 200]
+

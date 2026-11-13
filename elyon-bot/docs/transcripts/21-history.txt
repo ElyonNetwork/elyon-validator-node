@@ -1,0 +1,13 @@
+$ elyon futures history --limit 10
+#6255263 LONG BTC_USDT 2x · margin 1.0 · entry 68,584.00 → exit 68,572.20 · PnL -0.000344 · paid 0.997657 wUSDT · closed
+#6255262 SHORT ETH_USDT 2x · margin 1.0 · entry 1,934.21 → exit 1,933.09 · PnL 0.001158 · paid 0.99916 wUSDT · closed
+#6255261 LONG BTC_USDT 2x · margin 1.0 · entry 68,731.10 → exit 68,663.40 · PnL -0.0011 · paid 0.996902 wUSDT · closed
+#6255260 LONG BTC_USDT 2x · margin 1.0 · entry 68,816.10 → exit 68,793.20 · PnL -0.000561 · paid 0.997441 wUSDT · closed
+
+Past limit orders:
+  #5 SHORT BTC_USDT 2x at 90,000.00 — cancelled
+  #4 LONG BTC_USDT 2x at 50,000.00 — cancelled
+
+(History is indexed by the DEX and may lag a few seconds behind the chain.)
+[exit code 0]
+

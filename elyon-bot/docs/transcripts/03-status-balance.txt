@@ -1,0 +1,22 @@
+$ elyon status
+elyon 0.1.0 (commit 9f2dddfadcf8, built 2026-11-13T17:07:19+01:00, go1.27.4, linux/amd64)
+
+  Network            ElyonChain 55452773 via https://mainnet.elyon.network/rpc — block 5,904,228 (0s ago)
+  DEX API            https://dex.elyon.network — ok (96 ms)
+  Wallet             0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7
+  Backup             recovery secret confirmed (quiz)
+  Password           valid until 2027-02-11 (90 days left, max age 90 days)
+  Balances           0.3 ELN (gas) · 6 wUSDT
+  Home               ~/.config/elyon
+[exit code 0]
+
+$ elyon wallet balance
+Balances of 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7
+
+  ELN                                 0.3   
+  wUSDT                                 6   
+
+  Total value (tokens with a market price, ELN excluded) ≈ 6.00 wUSDT
+  1406 tokens checked; zero balances hidden (use --all to list them).
+[exit code 0]
+

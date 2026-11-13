@@ -1,0 +1,47 @@
+$ curl -s -X GET http://127.0.0.1:7457/v1/status -H "Authorization: Bearer $ELYON_TOKEN"
+{
+  "ok": true,
+  "command": "status",
+  "result": {
+    "chain_id": 55452773,
+    "commit": "9f2dddfadcf8",
+    "dex_api": {
+      "latency_ms": 287,
+      "ok": true,
+      "url": "https://dex.elyon.network"
+    },
+    "home": "~/.config/elyon",
+    "mode": "daemon",
+    "network": {
+      "block": 5904289,
+      "block_age_seconds": 0,
+      "latency_ms": 63,
+      "ok": true,
+      "rpc": "https://mainnet.elyon.network/rpc"
+    },
+    "version": "0.1.0",
+    "wallet": {
+      "address": "0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7",
+      "allowlist": 0,
+      "backup_confirmed": true,
+      "daily_limits": 0,
+      "eln": "0.2968485",
+      "kind": "mnemonic",
+      "password": {
+        "changed_at": "2026-11-13T16:08:08Z",
+        "max_age_days": 90,
+        "expires_at": "2027-02-11T16:08:08Z",
+        "days_left": 90,
+        "expired": false,
+        "warn": false
+      },
+      "unlocked": true,
+      "wusdt": "5.99061"
+    },
+    "warnings": null
+  },
+  "text": "elyon 0.1.0 (commit 9f2dddfadcf8, built 2026-11-13T17:07:19+01:00, go1.27.4, linux/amd64)\n\n  Network            ElyonChain 55452773 via https://mainnet.elyon.network/rpc — block 5,904,289 (0s ago)\n  DEX API            https://dex.elyon.network — ok (287 ms)\n  Wallet             0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7\n  Backup             recovery secret confirmed (quiz)\n  Password           valid until 2027-02-11 (90 days left, max age 90 days)\n  Key                unlocked (trading enabled)\n  Balances           0.296848 ELN (gas) · 5.99061 wUSDT\n  Home               ~/.config/elyon\n"
+}
+
+[HTTP 200]
+

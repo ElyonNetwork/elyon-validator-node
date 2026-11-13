@@ -1,0 +1,103 @@
+$ curl -s -X POST http://127.0.0.1:7457/v1/wallet/send -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"0.5","token":"wUSDT","to":"0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27"}'
+{
+  "ok": false,
+  "command": "wallet.send",
+  "error": {
+    "code": "TRANSFER_NOT_ALLOWED",
+    "message": "Sending to 0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27 needs your wallet password, because this address is not on your approved list.",
+    "hint": "Give the password with this request, or approve the address once: `elyon wallet allow 0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27` (asks for the password)."
+  }
+}
+
+[HTTP 403]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/wallet/limit -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"1","token":"wUSDT","password":"<redacted>"}'
+{
+  "ok": true,
+  "command": "wallet.limit",
+  "result": {
+    "limit": "1",
+    "token": "wUSDT"
+  },
+  "text": "Daily limit set: at most 1 wUSDT per rolling 24 hours.\n"
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/wallet/allow -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"address":"0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27","label":"DEX test wallet","password":"<redacted>"}'
+{
+  "ok": true,
+  "command": "wallet.allow",
+  "result": {
+    "address": "0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27",
+    "label": "DEX test wallet"
+  },
+  "text": "Approved 0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27 (DEX test wallet). Transfers to it no longer need the password (daily limits still apply).\n"
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/wallet/send -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"2","token":"wUSDT","to":"0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27"}'
+{
+  "ok": false,
+  "command": "wallet.send",
+  "error": {
+    "code": "DAILY_LIMIT_REACHED",
+    "message": "This would exceed your daily limit of 1 wUSDT: 0 wUSDT were already sent in the last 24 hours, 1 wUSDT are left.",
+    "hint": "Wait, or change the limit with `elyon wallet limit \u003camount\u003e wUSDT` (asks for the password)."
+  }
+}
+
+[HTTP 422]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/wallet/send -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"0.5","token":"wUSDT","to":"0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27"}'
+{
+  "ok": true,
+  "command": "wallet.send",
+  "result": {
+    "amount": "0.5",
+    "to": "0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27",
+    "token": "wUSDT",
+    "token_address": "0x3D768c1838188DcA395489ae5D6b2C897A936f61",
+    "tx": "0x8a8bf604470f6101bb48d5d2a28f7a5e3c0d75f25597ef2fd1a12f7cdd6474bc"
+  },
+  "text": "Sent 0.5 wUSDT to 0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27\n  Transaction        0x8a8bf604470f6101bb48d5d2a28f7a5e3c0d75f25597ef2fd1a12f7cdd6474bc\n  Network fee        0.000068882 ELN\n  Explorer           https://explorer.elyon.network/tx/0x8a8bf604470f6101bb48d5d2a28f7a5e3c0d75f25597ef2fd1a12f7cdd6474bc\n",
+  "transactions": [
+    {
+      "label": "send 0.5 wUSDT",
+      "hash": "0x8a8bf604470f6101bb48d5d2a28f7a5e3c0d75f25597ef2fd1a12f7cdd6474bc",
+      "block": 5904363,
+      "gas_used": 34441,
+      "fee_eln": "0.000068882",
+      "explorer": "https://explorer.elyon.network/tx/0x8a8bf604470f6101bb48d5d2a28f7a5e3c0d75f25597ef2fd1a12f7cdd6474bc"
+    }
+  ]
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/wallet/limit -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"none","token":"wUSDT","password":"<redacted>"}'
+{
+  "ok": true,
+  "command": "wallet.limit",
+  "result": {
+    "limit": null,
+    "token": "wUSDT"
+  },
+  "text": "Removed the daily limit for wUSDT.\n"
+}
+
+[HTTP 200]
+
+$ curl -s -X GET http://127.0.0.1:7457/v1/wallet/limits -H "Authorization: Bearer $ELYON_TOKEN"
+{
+  "ok": true,
+  "command": "wallet.limits",
+  "result": {
+    "limits": null
+  },
+  "text": "No daily transfer limits are set. Set one with `elyon wallet limit 500 wUSDT`.\n"
+}
+
+[HTTP 200]
+

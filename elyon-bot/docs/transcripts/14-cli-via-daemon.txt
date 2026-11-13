@@ -1,0 +1,16 @@
+$ elyon futures open short ETH --margin 1 --leverage 2
+… sent to the running elyon daemon (http://127.0.0.1:7457)
+Opened SHORT ETH 2x at 1,934.21 wUSDT
+  Position           #6255262
+  Margin             1 wUSDT (isolated)
+  Size               2 wUSDT ≈ 0.00103401 ETH
+  Fee paid           0.002 wUSDT
+  Liquidation        2,895.52 wUSDT (+49.70%) — at this price the whole margin is lost
+  Take profit        none
+  Stop loss          none
+  Transaction        0x01ef6e27d810f15d6905c0a5d2b10938c71d479792493877d13e42aa59f14f8e
+  Transactions:
+    approve wUSDT for the futures contract 0x9ef8ddc010c9662096e5806322b8bd5b64e2f5e10bbfa16cedd0d39599ddfc97
+    open short ETH 2x                  0x01ef6e27d810f15d6905c0a5d2b10938c71d479792493877d13e42aa59f14f8e
+[exit code 0]
+

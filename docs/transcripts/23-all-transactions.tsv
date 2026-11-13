@@ -1,0 +1,49 @@
+# All 46 mainnet transactions of the end-to-end run (2026-11-13, UTC), from the audit logs of the two wallets.
+# funder = operator test wallet 0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27 ; client = new wallet 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7
+# time	wallet	source	command	tx
+2026-11-13T16:08:37	funder	cli	wallet.send (6 wUSDT to client)	0x52a584b45e6f8a256e0b37b38cdbca2498f988ac2ce2c709e8e6654a1498b821
+2026-11-13T16:08:42	funder	cli	wallet.send (0.3 ELN to client)	0x476f611c3c6d0a96e8cfbd6a684e8e6556ae0df886565aa5bce03fe7c3be8c34
+2026-11-13T16:09:12	client	cli	spot.buy (approve)	0x9b76887b27731773a2f6d3cd1654e1d7c7e903f7564c97fa2f75c1781ac43621
+2026-11-13T16:09:12	client	cli	spot.buy (swap 1 wUSDT -> wBTC)	0x3f1884675b479a404f1dcd29dae92ac09b2feb7c5104dbbf24392d4533757254
+2026-11-13T16:09:36	client	cli	spot.sell (approve)	0x4c0a54a0718b94e8b2c602e210a27f702095520a4bb0945259dd870658ad77ca
+2026-11-13T16:09:36	client	cli	spot.sell (swap all wBTC -> wUSDT)	0x36a45657397ccf0442f12fce77c9b9bb8369c040b4c58b34a9b8a4c348296a10
+2026-11-13T16:09:45	client	cli	futures.open (approve)	0x580e70ecd0fe8b2f67718a975a0b0c6e1e5841dedccf6c950a70f034a9cfdd7e
+2026-11-13T16:09:45	client	cli	futures.open (long BTC 1x2, #6255260)	0x2757e64b7ab658318955cb3afb5228bb84faa6a96e43b931f8aecd25f4124200
+2026-11-13T16:09:54	client	cli	futures.set-tp-sl (set)	0x15f1c58a476d421c29d6ad75333757eedc3ce83695cf435066c67ff589fbf3b9
+2026-11-13T16:09:57	client	cli	futures.set-tp-sl (change)	0xf2d0cab86938b61dcf13a28c3ce13b2752bc39d841d405cc43653f8764798382
+2026-11-13T16:10:01	client	cli	futures.set-tp-sl (remove)	0xd0ea1bf1ac6cec096f505fc14df05ead2760970f784e418cfa5c7fe649ca3684
+2026-11-13T16:10:10	client	cli	futures.close (50%)	0x6d6bb79550438fa01e8d72fd9cc9b1ddea58e70b63a61c974bf59b03e65ce028
+2026-11-13T16:10:15	client	cli	futures.close (rest)	0xca38700f3a1836c1c57f7cbf8c7f594fb7f873ac2e9b5a0e807536ea8b0da8c7
+2026-11-13T16:10:25	client	cli	futures.limit (approve)	0x8d04e21b493ed71a886dc979c98056f4ddf75dd34af7d4d1b572774d22d18b35
+2026-11-13T16:10:25	client	cli	futures.limit (#4 long BTC at 50000)	0xc6dba596fc4efd4b2645f869f9b67b5ed09c9264c6c6a632dc5468a30670c403
+2026-11-13T16:10:32	client	cli	futures.cancel (#4)	0xd563a8703e72c718b58c6aee9416b8466bbba1d3e73641e4119918806ab3b02e
+2026-11-13T16:11:15	client	http	spot.buy (approve)	0x4e0d584e922ad719c935ed33ba45c85e719f7d12a5df3d77123849794aaf3fd4
+2026-11-13T16:11:15	client	http	spot.buy (swap 0.5 wUSDT -> wETH)	0xae53bdb0e4e9b5f1f3f91428ea450fda9d1ee21f1fb0a7afbc5bb289030b9d72
+2026-11-13T16:11:19	client	http	spot.sell (approve)	0x04bb083d80a781f4f7b56fd188ee13c84764e620bdea4c52f03e7938f45f601d
+2026-11-13T16:11:19	client	http	spot.sell (swap all wETH -> wUSDT)	0xf756616ed00ed9d7e7bb66fee9c45f03938d5098de30cafc9454cef579a9599d
+2026-11-13T16:11:29	client	http	futures.open (approve)	0xe5fab0cf9ca25f9c75c89aed7cf3d78dd68da60c9bd04414da721870f8a5346c
+2026-11-13T16:11:29	client	http	futures.open (long BTC 1x2 with TP/SL, #6255261)	0x58c3bf8f8266b69d5ae2a2b698d345a0aae4180e5a88c7e1f47cf971c083c490
+2026-11-13T16:11:36	client	http	futures.set-tp-sl (change)	0x089f885df706800224f22082c75d974f2425294f9b4e2d8922a7f637122482dc
+2026-11-13T16:11:39	client	http	futures.close (50%)	0x6868d1a0bc08d44c0987c8b2ff622d5eda1694a069c83b5e16861887cf3e9ed4
+2026-11-13T16:11:49	client	http	futures.open (approve; CLI forwarded to daemon)	0x9ef8ddc010c9662096e5806322b8bd5b64e2f5e10bbfa16cedd0d39599ddfc97
+2026-11-13T16:11:49	client	http	futures.open (short ETH 1x2, #6255262)	0x01ef6e27d810f15d6905c0a5d2b10938c71d479792493877d13e42aa59f14f8e
+2026-11-13T16:11:56	client	http	futures.limit (#5 short BTC at 90000)	0x3c2f130fc0d897f5366ede37617c03dd1d388babd126a0d0c95ac8f5cd96992b
+2026-11-13T16:12:13	client	http	futures.close-all (#6255262)	0xc6c007cfd21ad795dc5239b407bc7c091ed6ad192038c24918d07de6c29921ac
+2026-11-13T16:12:13	client	http	futures.close-all (#6255261)	0x18fd555d46e5aa939c9a0e392c3ff913b837269c6d9d93437975a5633a8abbaf
+2026-11-13T16:12:15	client	http	futures.cancel-all (#5)	0xb1e261aae61946efd53d5dcefe162279cb425dcdfb989bb896959a4dd6a01e4d
+2026-11-13T16:12:30	client	batch	futures.open (approve)	0xc4780a3728ae45a3f7d2297a5f9ee0b48fa6891848aec91cddb3c686214e0e6b
+2026-11-13T16:12:30	client	batch	futures.open (long BTC 1x2, #6255263)	0xc8597fba230f8625b77ecdc399b33b204360fb56c771678e013cd4550735ee02
+2026-11-13T16:12:33	client	batch	futures.close-all (#6255263)	0xae62f1e6f77a15b4e295ffd52d018eabf89cba64befec2724a25a0ba70c8459a
+2026-11-13T16:12:54	client	http	gas.buy (approve)	0x02cf46ed1a37e76b141ff41dabd5dbb9a49017af27a4d91d08461e885de81c69
+2026-11-13T16:12:54	client	http	gas.buy (0.1 ELN for 0.08 wUSDT)	0xacdc41b2856a66a42d8afb5fe5726d80c9df9fd7eca67c99ab1bc1863e814edc
+2026-11-13T16:12:55	client	http	wrap (0.01 ELN)	0x58fbc97081f5a1cb05f579ba90fe6f6e95787250b6e20c7b6f1a077ee58004c3
+2026-11-13T16:12:59	client	http	unwrap (all WELN)	0x4f32d3af9d636f1c7a369b600e69cf5cf75b6ccb2efe60310d6d9935ecae40f7
+2026-11-13T16:13:21	client	http	wallet.send (0.5 wUSDT to approved test wallet)	0x8a8bf604470f6101bb48d5d2a28f7a5e3c0d75f25597ef2fd1a12f7cdd6474bc
+2026-11-13T16:13:41	client	http	spot.buy (approve; exact 0.00001 wBTC)	0x772a66ae903568a9d933b5420e526edfe72e45639356686f405fa55d90ef06cc
+2026-11-13T16:13:41	client	http	spot.buy (swap, exact output)	0x85e50be470e677e3157a5c309788604aa7c62d0fe9efbf5130b778270430dedb
+2026-11-13T16:13:45	client	http	spot.swap (approve)	0xddc60e4104b89626559d04a6ea43b1ff6610cb7802ab02a9d13a47ac2b4b370d
+2026-11-13T16:13:45	client	http	spot.swap (wBTC -> wUSDT -> wETH)	0x10311f6b117291c8a625b6c4fc9b66177326c9b19810c1d18c9d7c2f17768a46
+2026-11-13T16:13:55	client	http	spot.sell (approve)	0x8b59a3c45e863f177a76e18de99970160b23f1cf64d974601f2f2e58ff688c49
+2026-11-13T16:13:55	client	http	spot.sell (all wETH)	0xd0affe30dfcdaa959cdb82ed1d8b1390fb3135afd106cbb99507476d7f7be7d8
+2026-11-13T16:14:17	client	http	wallet.send (all 5.386546 wUSDT back)	0x835124e14f98d733a3e4690faaa8a987e3bd3c665d115f3951e35ec5b3a064de
+2026-11-13T16:14:20	client	http	wallet.send (all 0.389900386 ELN back)	0xf9645e9534a5f50fe38048bcd82bef23719752578ba6cfe70ba6f219bf75d5e5

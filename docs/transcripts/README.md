@@ -35,3 +35,4 @@ print its warning.
 | `20-spot-exact-and-swap.txt` | buy an exact amount, two-hop swap wBTC → wUSDT → wETH, sell |
 | `21-history.txt` | futures history |
 | `22-return-funds.txt` | send all wUSDT and all ELN back |
+| `23-all-transactions.tsv` | every transaction hash of the run (46) |

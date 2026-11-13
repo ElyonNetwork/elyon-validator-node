@@ -778,8 +778,12 @@ func futSetTPSLCmd(ctx context.Context, x *Ctx) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	text := fmt.Sprintf("Position #%d (%s %s): take profit %s · stop loss %s\n", p.ID, strings.ToUpper(p.Side), p.Symbol, priceOrNone(tp), priceOrNone(sl)) +
-		line("Transaction", tx.Hash.Hex()) + "  The keeper closes the whole position at the market price within seconds when the last price reaches one of them.\n"
+	text := fmt.Sprintf("Position #%d (%s %s): take profit %s · stop loss %s\n", p.ID, strings.ToUpper(p.Side), p.Symbol, priceOrNone(tp), priceOrNone(sl)) + line("Transaction", tx.Hash.Hex())
+	if tp != nil || sl != nil {
+		text += "  The keeper closes the whole position at the market price within seconds when the last price reaches one of them.\n"
+	} else {
+		text += "  No take profit or stop loss: the position stays open until you close it (or it is liquidated).\n"
+	}
 	return &Result{Data: map[string]any{"position_id": p.ID, "take_profit": optE18(tp), "stop_loss": optE18(sl), "tx": tx.Hash.Hex()}, Text: text}, nil
 }
 

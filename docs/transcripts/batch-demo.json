@@ -1,0 +1,9 @@
+{
+  "stop_on_error": true,
+  "commands": [
+    {"command": "spot price", "params": {"market": "BTC"}},
+    {"command": "spot quote", "params": {"side": "buy", "market": "BTC", "spend": "1"}},
+    {"command": "spot buy", "params": {"market": "ELN", "spend": "1"}},
+    {"command": "futures positions"}
+  ]
+}

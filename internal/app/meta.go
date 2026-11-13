@@ -156,7 +156,7 @@ func portfolioCmd(ctx context.Context, x *Ctx) (*Result, error) {
 		if h.ValueWUSDT != nil && h.Kind != "wusdt" {
 			val = "≈ " + amount.Group(*h.ValueWUSDT) + " wUSDT"
 		}
-		fmt.Fprintf(&b, "  %-12s %22s   %s\n", h.Symbol, amount.Group(amount.FormatSig(raw, h.Decimals, 8)), val)
+		fmt.Fprintf(&b, "  %-12s %22s   %s\n", h.Symbol, amount.Group(displayAmount(raw, h.Decimals)), val)
 	}
 	// Futures.
 	margin, pnl, payout, reserved := 0.0, 0.0, 0.0, 0.0
@@ -287,8 +287,8 @@ func lockCmd(ctx context.Context, x *Ctx) (*Result, error) {
 type CommandInfo struct {
 	Name     string   `json:"name"`
 	ID       string   `json:"id"`
-	Path     string   `json:"http_path"`
-	Methods  []string `json:"http_methods"`
+	Path     string   `json:"http_path,omitempty"`
+	Methods  []string `json:"http_methods,omitempty"`
 	Summary  string   `json:"summary"`
 	Usage    string   `json:"cli_usage"`
 	Params   []string `json:"params"`
@@ -305,6 +305,9 @@ func Describe() []CommandInfo {
 		ci.Methods = []string{"POST"}
 		if c.ReadOnly {
 			ci.Methods = []string{"GET", "POST"}
+		}
+		if c.CLIOnly {
+			ci.Path, ci.Methods, ci.Access = "", nil, "a terminal (interactive)"
 		}
 		for _, p := range c.Params {
 			ci.Params = append(ci.Params, p.Name)
@@ -415,6 +418,9 @@ func (a *App) RunBatch(ctx context.Context, b *Batch, req Request) ([]StepResult
 	for i, step := range b.Commands {
 		sr := StepResult{Index: i, Command: step.Command}
 		cmd := Lookup(step.Command)
+		if cmd != nil {
+			sr.Command = cmd.ID()
+		}
 		if failed && stop {
 			sr.Skipped = true
 			sr.Error = errs.New("SKIPPED", "Skipped because an earlier step failed (stop_on_error).")

@@ -1,0 +1,56 @@
+$ elyon spot price BTC
+wBTC (Bitcoin) / wUSDT
+  Pool price         68,780.63 wUSDT
+  Global price       68,733.33 wUSDT
+  Difference         +6.9 bps (in line, ready to trade)
+  24h change         -4.46%
+  24h volume         1,365,089 wUSDT
+  Pool reserves      17.767125 wBTC / 1,222,034.16 wUSDT
+  Pool fee           0.30 % per trade
+[exit code 0]
+
+$ elyon spot quote buy BTC --spend 1
+Quote: wUSDT → wBTC
+  You pay            1 wUSDT
+  You receive about  0.000014495347 wBTC
+  Minimum received   0.00001442287 wBTC (slippage 0.50%)
+  Price impact       0.00%
+  Pool fee           0.30% of what you pay
+  Pool price         68,780.63 wUSDT per wBTC (global 68,733.33)
+[exit code 0]
+
+$ elyon spot buy BTC --spend 1
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: approve wUSDT for the spot router…
+… Confirmed: approve wUSDT for the spot router (0x9b76887b27731773a2f6d3cd1654e1d7c7e903f7564c97fa2f75c1781ac43621)
+… Sending: swap wUSDT → wBTC…
+… Confirmed: swap wUSDT → wBTC (0x3f1884675b479a404f1dcd29dae92ac09b2feb7c5104dbbf24392d4533757254)
+Bought: paid 1 wUSDT, received 0.000014495347 wBTC
+  Average price      68,987.65 wUSDT per wBTC
+  Route              wUSDT → wBTC
+  Price impact       0.00%
+  Transaction        0x3f1884675b479a404f1dcd29dae92ac09b2feb7c5104dbbf24392d4533757254
+  Network fee        0.000230004 ELN
+  Transactions:
+    approve wUSDT for the spot router  0x9b76887b27731773a2f6d3cd1654e1d7c7e903f7564c97fa2f75c1781ac43621
+    swap wUSDT → wBTC                  0x3f1884675b479a404f1dcd29dae92ac09b2feb7c5104dbbf24392d4533757254
+[exit code 0]
+
+$ elyon spot sell all BTC
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Waiting for the pool to match the global price (market makers keep it in line)…
+… Sending: approve wBTC for the spot router…
+… Confirmed: approve wBTC for the spot router (0x4c0a54a0718b94e8b2c602e210a27f702095520a4bb0945259dd870658ad77ca)
+… Sending: swap wBTC → wUSDT…
+… Confirmed: swap wBTC → wUSDT (0x36a45657397ccf0442f12fce77c9b9bb8369c040b4c58b34a9b8a4c348296a10)
+Sold: paid 0.000014495347 wBTC, received 0.995169 wUSDT
+  Average price      68,654.37 wUSDT per wBTC
+  Route              wBTC → wUSDT
+  Price impact       0.00%
+  Transaction        0x36a45657397ccf0442f12fce77c9b9bb8369c040b4c58b34a9b8a4c348296a10
+  Network fee        0.000186344 ELN
+  Transactions:
+    approve wBTC for the spot router   0x4c0a54a0718b94e8b2c602e210a27f702095520a4bb0945259dd870658ad77ca
+    swap wBTC → wUSDT                  0x36a45657397ccf0442f12fce77c9b9bb8369c040b4c58b34a9b8a4c348296a10
+[exit code 0]
+

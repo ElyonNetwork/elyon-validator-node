@@ -247,3 +247,12 @@ func sortHoldings(hs []Holding) {
 		return hs[i].Symbol < hs[j].Symbol
 	})
 }
+
+// displayAmount shows a balance exactly up to 8 decimals (more for dust, so it never looks like zero).
+func displayAmount(v *big.Int, decimals int) string {
+	s := amount.FormatMax(v, decimals, 8)
+	if s == "0" && v != nil && v.Sign() > 0 {
+		return amount.Format(v, decimals)
+	}
+	return s
+}

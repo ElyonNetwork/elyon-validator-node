@@ -1,0 +1,107 @@
+$ elyon futures open long BTC --margin 1 --leverage 2
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: approve wUSDT for the futures contract…
+… Confirmed: approve wUSDT for the futures contract (0x580e70ecd0fe8b2f67718a975a0b0c6e1e5841dedccf6c950a70f034a9cfdd7e)
+… Fetching a signed market price…
+… Sending: open long BTC 2x…
+… Confirmed: open long BTC 2x (0x2757e64b7ab658318955cb3afb5228bb84faa6a96e43b931f8aecd25f4124200)
+Opened LONG BTC 2x at 68,816.10 wUSDT
+  Position           #6255260
+  Margin             1 wUSDT (isolated)
+  Size               2 wUSDT ≈ 2.9063e-05 BTC
+  Fee paid           0.002 wUSDT
+  Liquidation        34,476.97 wUSDT (-49.90%) — at this price the whole margin is lost
+  Take profit        none
+  Stop loss          none
+  Transaction        0x2757e64b7ab658318955cb3afb5228bb84faa6a96e43b931f8aecd25f4124200
+  Transactions:
+    approve wUSDT for the futures contract 0x580e70ecd0fe8b2f67718a975a0b0c6e1e5841dedccf6c950a70f034a9cfdd7e
+    open long BTC 2x                   0x2757e64b7ab658318955cb3afb5228bb84faa6a96e43b931f8aecd25f4124200
+[exit code 0]
+
+$ elyon futures positions
+#6255260  LONG BTC_USDT 2x  (isolated)
+  Margin / size      1 wUSDT / 2 wUSDT ≈ 0.00002906 BTC
+  Entry / last       68,816.10 / 68,793.20
+  Liquidation        34,476.97
+  PnL                -0.000665 wUSDT (-0.07% on margin)
+  If closed now      receive ≈ 0.997336 wUSDT (after 0.001999 fee and 0 funding)
+  TP / SL            none / none
+
+[exit code 0]
+
+$ elyon futures set-tp-sl 6255260 --take-profit 80000 --stop-loss 60000
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: set TP/SL of position #6255260…
+… Confirmed: set TP/SL of position #6255260 (0x15f1c58a476d421c29d6ad75333757eedc3ce83695cf435066c67ff589fbf3b9)
+Position #6255260 (LONG BTC_USDT): take profit 80,000.00 · stop loss 60,000.00
+  Transaction        0x15f1c58a476d421c29d6ad75333757eedc3ce83695cf435066c67ff589fbf3b9
+  The keeper closes the whole position at the market price within seconds when the last price reaches one of them.
+[exit code 0]
+
+$ elyon futures set-tp-sl 6255260 --take-profit 79000
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: set TP/SL of position #6255260…
+… Confirmed: set TP/SL of position #6255260 (0xf2d0cab86938b61dcf13a28c3ce13b2752bc39d841d405cc43653f8764798382)
+Position #6255260 (LONG BTC_USDT): take profit 79,000.00 · stop loss 60,000.00
+  Transaction        0xf2d0cab86938b61dcf13a28c3ce13b2752bc39d841d405cc43653f8764798382
+  The keeper closes the whole position at the market price within seconds when the last price reaches one of them.
+[exit code 0]
+
+$ elyon futures positions
+#6255260  LONG BTC_USDT 2x  (isolated)
+  Margin / size      1 wUSDT / 2 wUSDT ≈ 0.00002906 BTC
+  Entry / last       68,816.10 / 68,809.90
+  Liquidation        34,476.97
+  PnL                -0.00018 wUSDT (-0.02% on margin)
+  If closed now      receive ≈ 0.997821 wUSDT (after 0.001999 fee and 0 funding)
+  TP / SL            79000 / 60000
+
+[exit code 0]
+
+$ elyon futures set-tp-sl 6255260 --take-profit none --stop-loss none
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: set TP/SL of position #6255260…
+… Confirmed: set TP/SL of position #6255260 (0xd0ea1bf1ac6cec096f505fc14df05ead2760970f784e418cfa5c7fe649ca3684)
+Position #6255260 (LONG BTC_USDT): take profit none · stop loss none
+  Transaction        0xd0ea1bf1ac6cec096f505fc14df05ead2760970f784e418cfa5c7fe649ca3684
+  The keeper closes the whole position at the market price within seconds when the last price reaches one of them.
+[exit code 0]
+
+$ elyon futures close 6255260 --percent 50
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: close 50% of position #6255260…
+… Confirmed: close 50% of position #6255260 (0x6d6bb79550438fa01e8d72fd9cc9b1ddea58e70b63a61c974bf59b03e65ce028)
+Closed 50% of position #6255260 (LONG BTC_USDT)
+  Exit price         68,800.30 wUSDT
+  PnL of the part    -0.000229 wUSDT
+  Closing fee        0.000999 wUSDT
+  Paid to wallet     0.498772 wUSDT
+  Rest               stays open with the same entry price, leverage, liquidation price and TP/SL
+  Transaction        0x6d6bb79550438fa01e8d72fd9cc9b1ddea58e70b63a61c974bf59b03e65ce028
+[exit code 0]
+
+$ elyon futures positions
+#6255260  LONG BTC_USDT 2x  (isolated)
+  Margin / size      0.5 wUSDT / 1 wUSDT ≈ 0.00001453 BTC
+  Entry / last       68,816.10 / 68,793.20
+  Liquidation        34,476.94
+  PnL                -0.000332 wUSDT (-0.07% on margin)
+  If closed now      receive ≈ 0.498669 wUSDT (after 0.000999 fee and 0 funding)
+  TP / SL            none / none
+
+[exit code 0]
+
+$ elyon futures close 6255260
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: close position #6255260…
+… Confirmed: close position #6255260 (0xca38700f3a1836c1c57f7cbf8c7f594fb7f873ac2e9b5a0e807536ea8b0da8c7)
+Closed position #6255260 (LONG BTC_USDT)
+  Exit price         68,793.20 wUSDT (entry 68,816.10)
+  PnL                -0.000332 wUSDT
+  Funding            0 wUSDT
+  Closing fee        0.000999 wUSDT
+  Paid to wallet     0.498669 wUSDT
+  Transaction        0xca38700f3a1836c1c57f7cbf8c7f594fb7f873ac2e9b5a0e807536ea8b0da8c7
+[exit code 0]
+

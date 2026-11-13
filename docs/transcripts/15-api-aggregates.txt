@@ -1,0 +1,244 @@
+$ curl -s -X POST http://127.0.0.1:7457/v1/futures/limit -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"side":"short","market":"BTC","price":"90000","margin":"1","leverage":2,"expires":"2d","take_profit":"80000"}'
+{
+  "ok": true,
+  "command": "futures.limit",
+  "result": {
+    "expires_at": "2026-11-15T16:11:54Z",
+    "leverage": 2,
+    "limit_price": "90000",
+    "margin": "1",
+    "market": "BTC_USDT",
+    "max_cost": "1.002",
+    "order_id": 5,
+    "side": "short",
+    "size_wusdt": "2",
+    "stop_loss": null,
+    "take_profit": "80000",
+    "tx": "0x3c2f130fc0d897f5366ede37617c03dd1d388babd126a0d0c95ac8f5cd96992b"
+  },
+  "text": "Limit order #5 placed: SHORT BTC 2x at 90,000.00 wUSDT or better\n  Margin / size      1 wUSDT / 2 wUSDT\n  Taken when filled  1.002 wUSDT (margin + fee); nothing was taken now\n  Expires            2026-11-15 16:11 UTC\n  Take profit        80,000.00\n  Stop loss          none\n  Transaction        0x3c2f130fc0d897f5366ede37617c03dd1d388babd126a0d0c95ac8f5cd96992b\n  Keep the cost in the wallet until it fills; otherwise the order is closed without a fill.\n",
+  "transactions": [
+    {
+      "label": "place limit short BTC 2x",
+      "hash": "0x3c2f130fc0d897f5366ede37617c03dd1d388babd126a0d0c95ac8f5cd96992b",
+      "block": 5904320,
+      "gas_used": 222424,
+      "fee_eln": "0.000444848",
+      "explorer": "https://explorer.elyon.network/tx/0x3c2f130fc0d897f5366ede37617c03dd1d388babd126a0d0c95ac8f5cd96992b"
+    }
+  ]
+}
+
+[HTTP 200]
+
+$ curl -s -X GET http://127.0.0.1:7457/v1/portfolio -H "Authorization: Bearer $ELYON_TOKEN"
+{
+  "ok": true,
+  "command": "portfolio",
+  "result": {
+    "address": "0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7",
+    "balances": [
+      {
+        "symbol": "ELN",
+        "name": "Elyon (native coin, pays gas)",
+        "address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "kind": "native",
+        "balance": "0.29351368",
+        "balance_raw": "293513680000000000"
+      },
+      {
+        "symbol": "wUSDT",
+        "name": "Tether USD (Elyon)",
+        "address": "0x3d768c1838188dca395489ae5d6b2c897a936f61",
+        "decimals": 6,
+        "kind": "wusdt",
+        "base": "USDT",
+        "balance": "4.482498",
+        "balance_raw": "4482498",
+        "value_wusdt": "4.48"
+      }
+    ],
+    "orders": [
+      {
+        "order_id": 5,
+        "market": "BTC_USDT",
+        "market_id": 0,
+        "long": false,
+        "side": "short",
+        "status": "open",
+        "leverage": 2,
+        "margin": "1",
+        "max_cost": "1.002",
+        "limit_price": "90000",
+        "expires_at": "2026-11-15T16:11:54Z",
+        "placed_at": "2026-11-13T16:11:55Z",
+        "take_profit": "80000",
+        "stop_loss": null
+      }
+    ],
+    "positions": [
+      {
+        "id": 6255262,
+        "contract": "0x808192f498a762fc422cdf387646775414cf7bb2",
+        "router": "0x58a99015b2ddbf98e5b4227449f4a0419c432682",
+        "held_by": "tp-sl-router",
+        "market": "ETH_USDT",
+        "market_id": 1,
+        "long": false,
+        "side": "short",
+        "open": true,
+        "opened_at": "2026-11-13T16:11:49Z",
+        "leverage": 2,
+        "fee_ppm": 1000,
+        "partial_close_available": true,
+        "margin": "1",
+        "size_wusdt": "2",
+        "size_base": "0.001034013886806499",
+        "entry_price": "1934.21000000000003638",
+        "liquidation_price": "2895.522986921159956472",
+        "take_profit": null,
+        "stop_loss": null,
+        "last_price": 1932.86,
+        "mark_price": 1932.9,
+        "unrealized_pnl": "0.001395",
+        "roe_pct": "0.14",
+        "funding_owed": "0",
+        "close_fee": "0.001998",
+        "payout_if_closed_now": "0.999397"
+      },
+      {
+        "id": 6255261,
+        "contract": "0x808192f498a762fc422cdf387646775414cf7bb2",
+        "router": "0x58a99015b2ddbf98e5b4227449f4a0419c432682",
+        "held_by": "tp-sl-router",
+        "market": "BTC_USDT",
+        "market_id": 0,
+        "long": true,
+        "side": "long",
+        "open": true,
+        "opened_at": "2026-11-13T16:11:29Z",
+        "leverage": 2,
+        "fee_ppm": 1000,
+        "partial_close_available": true,
+        "margin": "0.500001",
+        "size_wusdt": "1.000001",
+        "size_base": "0.000014549454322716",
+        "entry_price": "68731.100000000005820766",
+        "liquidation_price": "34434.34996883679150358",
+        "take_profit": "76000",
+        "stop_loss": "63000",
+        "last_price": 68664,
+        "mark_price": 68666.9,
+        "unrealized_pnl": "-0.000976",
+        "roe_pct": "-0.20",
+        "funding_owed": "0",
+        "close_fee": "0.000999",
+        "payout_if_closed_now": "0.498026"
+      }
+    ],
+    "time": "2026-11-13T16:12:03.014145136Z",
+    "totals": {
+      "margin_in_positions_wusdt": "1.500001",
+      "payout_if_all_closed_wusdt": "1.497423",
+      "reserved_for_limit_orders": "1.002000",
+      "total_equity_estimate_wusdt": "5.98",
+      "unrealized_pnl_wusdt": "0.000419",
+      "wallet_value_wusdt": "4.48"
+    }
+  },
+  "text": "Portfolio of 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7 — 2026-11-13 16:12:03 UTC\n\nBALANCES\n  ELN                      0.29351368   \n  wUSDT                      4.482498   \n\nOPEN POSITIONS\n  #6255262  SHORT ETH_USDT 2x  (isolated)\n    Margin / size      1 wUSDT / 2 wUSDT ≈ 0.00103401 ETH\n    Entry / last       1,934.21 / 1,932.86\n    Liquidation        2,895.52\n    PnL                0.001395 wUSDT (0.14% on margin)\n    If closed now      receive ≈ 0.999397 wUSDT (after 0.001998 fee and 0 funding)\n    TP / SL            none / none\n  \n  #6255261  LONG BTC_USDT 2x  (isolated)\n    Margin / size      0.500001 wUSDT / 1.000001 wUSDT ≈ 0.00001454 BTC\n    Entry / last       68,731.10 / 68,664.00\n    Liquidation        34,434.35\n    PnL                -0.000976 wUSDT (-0.20% on margin)\n    If closed now      receive ≈ 0.498026 wUSDT (after 0.000999 fee and 0 funding)\n    TP / SL            76000 / 63000\n\nOPEN LIMIT ORDERS\n  Order #5  SHORT BTC_USDT 2x at 90,000.00  [open]\n    Margin / cost      1 wUSDT / 1.002 wUSDT when filled\n    Expires            2026-11-15 16:11 UTC\n    TP / SL            80000 / none\n\nTOTALS (estimates, ELN excluded)\n  Wallet value       4.48 wUSDT\n  Margin in use      1.500001 wUSDT\n  Unrealized PnL     0.000419 wUSDT\n  Equity             5.98 wUSDT (wallet + positions if closed now)\n  Limit orders       1.002000 wUSDT must stay in the wallet for open orders\n"
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/futures/close-all -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{}'
+{
+  "ok": true,
+  "command": "futures.close-all",
+  "result": {
+    "closed": 2,
+    "failed": 0,
+    "results": [
+      {
+        "exit_price": "1933.089999999999918145",
+        "fee": "0.001998",
+        "funding": "0",
+        "market": "ETH_USDT",
+        "ok": true,
+        "partial": false,
+        "payout": "0.99916",
+        "pnl": "0.001158",
+        "position_id": 6255262,
+        "side": "short",
+        "tx": "0xc6c007cfd21ad795dc5239b407bc7c091ed6ad192038c24918d07de6c29921ac"
+      },
+      {
+        "exit_price": "68663.399999999994179234",
+        "fee": "0.000999",
+        "funding": "0",
+        "market": "BTC_USDT",
+        "ok": true,
+        "partial": false,
+        "payout": "0.498018",
+        "pnl": "-0.000984",
+        "position_id": 6255261,
+        "side": "long",
+        "tx": "0x18fd555d46e5aa939c9a0e392c3ff913b837269c6d9d93437975a5633a8abbaf"
+      }
+    ]
+  },
+  "text": "Closed position #6255262 (SHORT ETH_USDT)\n  Exit price         1,933.09 wUSDT (entry 1,934.21)\n  PnL                +0.001158 wUSDT\n  Funding            0 wUSDT\n  Closing fee        0.001998 wUSDT\n  Paid to wallet     0.99916 wUSDT\n  Transaction        0xc6c007cfd21ad795dc5239b407bc7c091ed6ad192038c24918d07de6c29921ac\nClosed position #6255261 (LONG BTC_USDT)\n  Exit price         68,663.40 wUSDT (entry 68,731.10)\n  PnL                -0.000984 wUSDT\n  Funding            0 wUSDT\n  Closing fee        0.000999 wUSDT\n  Paid to wallet     0.498018 wUSDT\n  Transaction        0x18fd555d46e5aa939c9a0e392c3ff913b837269c6d9d93437975a5633a8abbaf\n\nClosed 2 position(s).\n",
+  "transactions": [
+    {
+      "label": "close position #6255262",
+      "hash": "0xc6c007cfd21ad795dc5239b407bc7c091ed6ad192038c24918d07de6c29921ac",
+      "block": 5904328,
+      "gas_used": 159579,
+      "fee_eln": "0.000319158",
+      "explorer": "https://explorer.elyon.network/tx/0xc6c007cfd21ad795dc5239b407bc7c091ed6ad192038c24918d07de6c29921ac"
+    },
+    {
+      "label": "close position #6255261",
+      "hash": "0x18fd555d46e5aa939c9a0e392c3ff913b837269c6d9d93437975a5633a8abbaf",
+      "block": 5904329,
+      "gas_used": 161689,
+      "fee_eln": "0.000323378",
+      "explorer": "https://explorer.elyon.network/tx/0x18fd555d46e5aa939c9a0e392c3ff913b837269c6d9d93437975a5633a8abbaf"
+    }
+  ]
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/futures/cancel-all -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{}'
+{
+  "ok": true,
+  "command": "futures.cancel-all",
+  "result": {
+    "cancelled": 1,
+    "failed": 0,
+    "results": [
+      {
+        "cancelled": true,
+        "ok": true,
+        "order_id": 5,
+        "tx": "0xb1e261aae61946efd53d5dcefe162279cb425dcdfb989bb896959a4dd6a01e4d"
+      }
+    ]
+  },
+  "text": "Cancelled limit order #5. Nothing was taken from the wallet.\n  Transaction        0xb1e261aae61946efd53d5dcefe162279cb425dcdfb989bb896959a4dd6a01e4d\n",
+  "transactions": [
+    {
+      "label": "cancel limit order #5",
+      "hash": "0xb1e261aae61946efd53d5dcefe162279cb425dcdfb989bb896959a4dd6a01e4d",
+      "block": 5904330,
+      "gas_used": 28784,
+      "fee_eln": "0.000057568",
+      "explorer": "https://explorer.elyon.network/tx/0xb1e261aae61946efd53d5dcefe162279cb425dcdfb989bb896959a4dd6a01e4d"
+    }
+  ]
+}
+
+[HTTP 200]
+

@@ -423,7 +423,10 @@ func (a *App) Run(ctx context.Context, cmd *Command, p Params, req Request) (res
 		}
 	}
 	if cmd.Access == KeyNeeded {
-		if _, err := x.Unlocked(); err != nil {
+		// The daemon fails fast when locked. On the command line the password is asked only right before the
+		// first signature, so an invalid command is reported without unlocking anything.
+		if a.Mode == ModeDaemon && !a.Session.Unlocked() {
+			_, err := x.Unlocked()
 			return res, err
 		}
 		// One signing command at a time per process: nonces and balance checks stay consistent.

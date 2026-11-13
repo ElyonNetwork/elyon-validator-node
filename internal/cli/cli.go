@@ -394,6 +394,7 @@ func printError(e *errs.E) {
 
 func printJSON(v any) {
 	enc := json.NewEncoder(os.Stdout)
+	enc.SetEscapeHTML(false)
 	enc.SetIndent("", "  ")
 	_ = enc.Encode(v)
 }
@@ -485,7 +486,11 @@ func printCommandHelp(c *app.Command) {
 			if p.Name == "password" {
 				continue
 			}
-			fmt.Printf("  %-34s %s\n", p.Flag(), p.Help)
+			help := p.Help
+			if help == "" {
+				help = defaultHelp[p.Name]
+			}
+			fmt.Printf("  %-34s %s\n", p.Flag(), help)
 		}
 	}
 	if len(c.Examples) > 0 {
@@ -494,4 +499,22 @@ func printCommandHelp(c *app.Command) {
 			fmt.Println("  " + e)
 		}
 	}
+}
+
+// defaultHelp describes parameters that are self-explanatory in most commands.
+var defaultHelp = map[string]string{
+	"market":   "market ticker, e.g. BTC (also BTC_USDT, wBTC, btc-usdt)",
+	"side":     "long or short",
+	"id":       "position or order id (a number)",
+	"search":   "text to look for in tickers and names",
+	"limit":    "how many rows to show (0 = all)",
+	"from":     "token you give, e.g. wUSDT or wBTC",
+	"to":       "token you get, or destination address",
+	"amount":   "amount (a plain number such as 0.5), or all",
+	"hash":     "transaction hash (0x…)",
+	"all":      "include everything (no value needed)",
+	"token":    "ELN, wUSDT, WELN, a ticker such as wBTC, or a token address",
+	"file":     "batch file (JSON), or - for standard input",
+	"spend":    "wUSDT to spend",
+	"category": "crypto, metals, indices, energy, forex or stocks",
 }

@@ -1,0 +1,30 @@
+$ elyon wallet balance
+Balances of 0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27
+
+  ELN                           1.2744573   
+  wUSDT                         200.51878   
+
+  Total value (tokens with a market price, ELN excluded) ≈ 200.51 wUSDT
+  1406 tokens checked; zero balances hidden (use --all to list them).
+[exit code 0]
+
+$ elyon wallet send 6 wUSDT to 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: send 6 wUSDT…
+… Confirmed: send 6 wUSDT (0x52a584b45e6f8a256e0b37b38cdbca2498f988ac2ce2c709e8e6654a1498b821)
+Sent 6 wUSDT to 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7
+  Transaction        0x52a584b45e6f8a256e0b37b38cdbca2498f988ac2ce2c709e8e6654a1498b821
+  Network fee        0.000103082 ELN
+  Explorer           https://explorer.elyon.network/tx/0x52a584b45e6f8a256e0b37b38cdbca2498f988ac2ce2c709e8e6654a1498b821
+[exit code 0]
+
+$ elyon wallet send 0.3 ELN to 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7
+WARNING: using the wallet password from ELYON_PASSWORD_FILE (unattended mode). Anyone who can read that file can use your wallet. See SECURITY.md.
+… Sending: send 0.3 ELN…
+… Confirmed: send 0.3 ELN (0x476f611c3c6d0a96e8cfbd6a684e8e6556ae0df886565aa5bce03fe7c3be8c34)
+Sent 0.3 ELN to 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7
+  Transaction        0x476f611c3c6d0a96e8cfbd6a684e8e6556ae0df886565aa5bce03fe7c3be8c34
+  Network fee        0.000042 ELN
+  Explorer           https://explorer.elyon.network/tx/0x476f611c3c6d0a96e8cfbd6a684e8e6556ae0df886565aa5bce03fe7c3be8c34
+[exit code 0]
+

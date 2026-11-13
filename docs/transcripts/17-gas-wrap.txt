@@ -1,0 +1,96 @@
+$ curl -s -X GET http://127.0.0.1:7457/v1/gas/price -H "Authorization: Bearer $ELYON_TOKEN"
+{
+  "ok": true,
+  "command": "gas.price",
+  "result": {
+    "daily_max_eln": "100",
+    "inventory_eln": "9999",
+    "max_eln": "50",
+    "min_eln": "0.1",
+    "paused": false,
+    "price_wusdt": "0.8",
+    "remaining_today_eln": "100"
+  },
+  "text": "Buy ELN for gas (fixed price, paid in wUSDT)\n  Price              0.8 wUSDT per ELN\n  Per purchase       0.1 to 50 ELN\n  Per wallet per day 100 ELN (resets 00:00 UTC)\n  Left today         100 ELN\n  Available          9999 ELN\n  Status             open\n  ELN bought here is for network fees only. It cannot be sold on ElyonDex.\n"
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/gas/buy -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"0.1"}'
+{
+  "ok": true,
+  "command": "gas.buy",
+  "result": {
+    "cost_wusdt": "0.08",
+    "eln": "0.1",
+    "tx": "0xacdc41b2856a66a42d8afb5fe5726d80c9df9fd7eca67c99ab1bc1863e814edc"
+  },
+  "text": "You received 0.1 ELN for 0.08 wUSDT.\n  Transaction        0xacdc41b2856a66a42d8afb5fe5726d80c9df9fd7eca67c99ab1bc1863e814edc\n",
+  "transactions": [
+    {
+      "label": "approve wUSDT for the ELN gas sale",
+      "hash": "0x02cf46ed1a37e76b141ff41dabd5dbb9a49017af27a4d91d08461e885de81c69",
+      "block": 5904348,
+      "gas_used": 46119,
+      "fee_eln": "0.000092238",
+      "explorer": "https://explorer.elyon.network/tx/0x02cf46ed1a37e76b141ff41dabd5dbb9a49017af27a4d91d08461e885de81c69"
+    },
+    {
+      "label": "buy 0.1 ELN for gas",
+      "hash": "0xacdc41b2856a66a42d8afb5fe5726d80c9df9fd7eca67c99ab1bc1863e814edc",
+      "block": 5904349,
+      "gas_used": 90292,
+      "fee_eln": "0.000180584",
+      "explorer": "https://explorer.elyon.network/tx/0xacdc41b2856a66a42d8afb5fe5726d80c9df9fd7eca67c99ab1bc1863e814edc"
+    }
+  ]
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/wrap -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"0.01"}'
+{
+  "ok": true,
+  "command": "wrap",
+  "result": {
+    "tx": "0x58fbc97081f5a1cb05f579ba90fe6f6e95787250b6e20c7b6f1a077ee58004c3",
+    "wrapped_eln": "0.01"
+  },
+  "text": "Wrapped 0.01 ELN into WELN.\n  Transaction        0x58fbc97081f5a1cb05f579ba90fe6f6e95787250b6e20c7b6f1a077ee58004c3\n",
+  "transactions": [
+    {
+      "label": "wrap 0.01 ELN",
+      "hash": "0x58fbc97081f5a1cb05f579ba90fe6f6e95787250b6e20c7b6f1a077ee58004c3",
+      "block": 5904350,
+      "gas_used": 44978,
+      "fee_eln": "0.000089956",
+      "explorer": "https://explorer.elyon.network/tx/0x58fbc97081f5a1cb05f579ba90fe6f6e95787250b6e20c7b6f1a077ee58004c3"
+    }
+  ]
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/unwrap -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"all"}'
+{
+  "ok": true,
+  "command": "unwrap",
+  "result": {
+    "tx": "0x4f32d3af9d636f1c7a369b600e69cf5cf75b6ccb2efe60310d6d9935ecae40f7",
+    "unwrapped_weln": "0.01"
+  },
+  "text": "Unwrapped 0.01 WELN into ELN.\n  Transaction        0x4f32d3af9d636f1c7a369b600e69cf5cf75b6ccb2efe60310d6d9935ecae40f7\n",
+  "transactions": [
+    {
+      "label": "unwrap 0.01 WELN",
+      "hash": "0x4f32d3af9d636f1c7a369b600e69cf5cf75b6ccb2efe60310d6d9935ecae40f7",
+      "block": 5904351,
+      "gas_used": 30457,
+      "fee_eln": "0.000060914",
+      "explorer": "https://explorer.elyon.network/tx/0x4f32d3af9d636f1c7a369b600e69cf5cf75b6ccb2efe60310d6d9935ecae40f7"
+    }
+  ]
+}
+
+[HTTP 200]
+

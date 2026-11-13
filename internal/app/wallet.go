@@ -111,7 +111,7 @@ func walletBalance(ctx context.Context, x *Ctx) (*Result, error) {
 			val = "≈ " + amount.Group(*h.ValueWUSDT) + " wUSDT"
 		}
 		raw, _ := new(big.Int).SetString(h.Raw, 10)
-		fmt.Fprintf(&b, "  %-14s %24s   %s\n", h.Symbol, amount.Group(amount.FormatSig(raw, h.Decimals, 8)), val)
+		fmt.Fprintf(&b, "  %-14s %24s   %s\n", h.Symbol, amount.Group(displayAmount(raw, h.Decimals)), val)
 	}
 	fmt.Fprintf(&b, "\n  Total value (tokens with a market price, ELN excluded) ≈ %s wUSDT\n", amount.Group(fmt.Sprintf("%.2f", total)))
 	if !all {
@@ -125,11 +125,10 @@ func walletSend(ctx context.Context, x *Ctx) (*Result, error) {
 	if err != nil {
 		return nil, err
 	}
-	u, err := x.Unlocked()
+	from, err := x.Address()
 	if err != nil {
 		return nil, err
 	}
-	from := u.Address
 	to, err := x.P.Address("to")
 	if err != nil {
 		return nil, err
@@ -204,6 +203,10 @@ func walletSend(ctx context.Context, x *Ctx) (*Result, error) {
 	}
 
 	// Protections: approved destination or password, and the daily limit (file re-checked against the key).
+	u, err := x.Unlocked()
+	if err != nil {
+		return nil, err
+	}
 	if err := u.Reload(); err != nil {
 		return nil, errs.As(x.mapUnlockErr(err))
 	}

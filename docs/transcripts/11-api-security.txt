@@ -1,0 +1,50 @@
+$ curl -s http://127.0.0.1:7457/v1/wallet/balance        # no token
+{
+  "ok": false,
+  "command": "",
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Missing API token.",
+    "hint": "Send the header `Authorization: Bearer \u003ctoken\u003e`; show the token with `elyon api-token show`."
+  }
+}
+
+[HTTP 401]
+
+$ curl -s http://127.0.0.1:7457/v1/wallet/balance -H "Authorization: Bearer elyon_wrong"
+{
+  "ok": false,
+  "command": "",
+  "error": {
+    "code": "UNAUTHORIZED",
+    "message": "Wrong API token.",
+    "hint": "Show the current token with `elyon api-token show`."
+  }
+}
+
+[HTTP 401]
+
+$ curl -s http://127.0.0.1:7457/v1/status -H "Host: attacker.example" -H "Authorization: Bearer $ELYON_TOKEN"   # DNS rebinding attempt
+{
+  "ok": false,
+  "command": "",
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Bad Host header: call the API as http://127.0.0.1:\u003cport\u003e or http://localhost:\u003cport\u003e."
+  }
+}
+
+[HTTP 403]
+
+$ curl -s http://127.0.0.1:7457/v1/status -H "Origin: https://attacker.example" -H "Authorization: Bearer $ELYON_TOKEN"   # browser cross-site request
+{
+  "ok": false,
+  "command": "",
+  "error": {
+    "code": "FORBIDDEN",
+    "message": "Browser requests from other sites are refused."
+  }
+}
+
+[HTTP 403]
+

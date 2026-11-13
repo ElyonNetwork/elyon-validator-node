@@ -1,0 +1,55 @@
+$ elyon setup
+Welcome to elyon, the command-line trading client for the Elyon DEX.
+Your key is created and kept on this computer only, encrypted with your password. Elyon never sees it.
+Data folder: ~/.config/elyon
+
+  1) Create a new wallet (recommended for a trading bot)
+  2) Restore a wallet from its recovery phrase or private key
+Choose 1 or 2: 1
+Choose a password of at least 12 characters (a short sentence is easy to remember and hard to guess).
+It protects the key on this computer and must be changed every 90 days by default.
+New password: 
+Repeat the new password: 
+Creating the wallet (deriving the encryption key takes a second)…
+
+New wallet created. Address on ElyonChain:
+
+  0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7
+
+Now write down your recovery phrase. You get it only this once.
+────────────────────────────────────────────────────────────────────
+  YOUR RECOVERY PHRASE (24 WORDS)
+  Write it on paper, in this order, and keep it offline and private.
+  Anyone who sees it can take everything in this wallet. Elyon will never ask for it.
+  Do not photograph it, do not paste it into chats, e-mails or websites.
+────────────────────────────────────────────────────────────────────
+   1. ••••••        7. ••••••       13. ••••••         19. ••••••      
+   2. ••••••         8. ••••••       14. ••••••       20. ••••••    
+   3. ••••••         9. ••••••        15. ••••••        21. ••••••     
+   4. ••••••         10. ••••••       16. ••••••          22. ••••••       
+   5. ••••••        11. ••••••         17. ••••••           23. ••••••       
+   6. ••••••          12. ••••••           18. ••••••       24. ••••••      
+────────────────────────────────────────────────────────────────────
+Press Enter when everything is written down (the screen will be cleared)… 
+
+[screen cleared]
+
+Let's check your copy: type word number 3, 10 and 15 from your paper (input is hidden).
+Word #3: 
+Word #10: 
+Word #15: 
+
+✓ Backup confirmed. The recovery phrase will not be shown again (unless you insist with --show-again-i-understand-the-risk).
+  With it you can restore this wallet on any computer: `elyon wallet restore` (it also imports into MetaMask).
+
+A secret API token for bots was created in ~/.config/elyon/api-token (show it with `elyon api-token show`).
+
+Next steps
+  1. On the DEX website, deposit USDT the usual way to get wUSDT.
+  2. From your DEX wallet, send wUSDT (for trading) and a little ELN (for network fees,
+     0.1–0.3 ELN is plenty) to this client's address:
+         0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7
+  3. Check:            elyon wallet balance
+  4. Start the API:    elyon serve          (your bot then calls http://127.0.0.1:7457)
+     or trade directly: elyon futures open long BTC --margin 10 --leverage 5
+  Help: elyon help    ·    Docs: README.md, docs/commands.md, docs/http-api.md

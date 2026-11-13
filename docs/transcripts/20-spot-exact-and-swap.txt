@@ -1,0 +1,38 @@
+$ elyon spot buy 0.00001 BTC
+… sent to the running elyon daemon (http://127.0.0.1:7457)
+Bought: paid 0.688346 wUSDT, received 0.00001 wBTC
+  Average price      68,834.60 wUSDT per wBTC
+  Route              wUSDT → wBTC
+  Price impact       0.00%
+  Transaction        0x85e50be470e677e3157a5c309788604aa7c62d0fe9efbf5130b778270430dedb
+  Network fee        0.000239474 ELN
+  Transactions:
+    approve wUSDT for the spot router  0x772a66ae903568a9d933b5420e526edfe72e45639356686f405fa55d90ef06cc
+    swap wUSDT → wBTC                  0x85e50be470e677e3157a5c309788604aa7c62d0fe9efbf5130b778270430dedb
+[exit code 0]
+
+$ elyon spot swap all wBTC to wETH
+… sent to the running elyon daemon (http://127.0.0.1:7457)
+Swapped: paid 0.00001 wBTC, received 0.00035301849 wETH
+  Route              wBTC → wUSDT → wETH
+  Price impact       0.00%
+  Transaction        0x10311f6b117291c8a625b6c4fc9b66177326c9b19810c1d18c9d7c2f17768a46
+  Network fee        0.000333014 ELN
+  Transactions:
+    approve wBTC for the spot router   0xddc60e4104b89626559d04a6ea43b1ff6610cb7802ab02a9d13a47ac2b4b370d
+    swap wBTC → wETH                   0x10311f6b117291c8a625b6c4fc9b66177326c9b19810c1d18c9d7c2f17768a46
+[exit code 0]
+
+$ elyon spot sell all ETH
+… sent to the running elyon daemon (http://127.0.0.1:7457)
+Sold: paid 0.00035301849 wETH, received 0.679559 wUSDT
+  Average price      1,925.00 wUSDT per wETH
+  Route              wETH → wUSDT
+  Price impact       0.00%
+  Transaction        0xd0affe30dfcdaa959cdb82ed1d8b1390fb3135afd106cbb99507476d7f7be7d8
+  Network fee        0.000186368 ELN
+  Transactions:
+    approve wETH for the spot router   0x8b59a3c45e863f177a76e18de99970160b23f1cf64d974601f2f2e58ff688c49
+    swap wETH → wUSDT                  0xd0affe30dfcdaa959cdb82ed1d8b1390fb3135afd106cbb99507476d7f7be7d8
+[exit code 0]
+

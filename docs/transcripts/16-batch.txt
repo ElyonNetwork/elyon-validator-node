@@ -1,0 +1,212 @@
+$ curl -s -X POST http://127.0.0.1:7457/v1/batch -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"stop_on_error": true, "commands": [{"command": "futures price", "params": {"market": "BTC"}}, {"command": "futures open", "params": {"side": "long", "market": "BTC", "margin": "1", "leverage": 2, "stop_loss": "60000"}}, {"command": "futures positions"}, {"command": "futures close-all", "params": {"market": "BTC"}}, {"command": "wallet balance", "params": {"token": "wUSDT"}}]}'
+{
+  "ok": true,
+  "command": "batch",
+  "steps": [
+    {
+      "index": 0,
+      "command": "futures.price",
+      "ok": true,
+      "result": {
+        "market": {
+          "symbol": "BTC_USDT",
+          "base": "BTC",
+          "name": null,
+          "category": "crypto",
+          "id": 0,
+          "maxLeverage": 500,
+          "mmrPpm": 1000,
+          "feePpm": 1000,
+          "feeRate": 0.001,
+          "last": 68606.4,
+          "fair": 68606.4,
+          "index": 68623.8,
+          "fundingRate": 0.000049,
+          "amount24": 435273.9,
+          "trades24h": 17627,
+          "change24Pct": -0.38,
+          "high24": 72194,
+          "low24": 67490,
+          "closed": false,
+          "closeOnly": false,
+          "at": "2026-11-13T16:12:24.700Z"
+        },
+        "safe_max_leverage": 499
+      },
+      "text": "BTC/wUSDT perpetual (BTC_USDT)\n  Last price         68,606.40 wUSDT  (positions open and close at this price)\n  Mark price         68,606.40 wUSDT\n  Index price        68,623.80 wUSDT\n  24h change         -0.38%  (high 72,194.00, low 67,490.00)\n  Funding / 8h       0.0049% (longs pay shorts)\n  Max leverage       500x (safe max 499x with fees)\n  Fee                0.100% of the position size, on open and on close\n  Maintenance        0.10%\n  Status             open for trading\n"
+    },
+    {
+      "index": 1,
+      "command": "futures.open",
+      "ok": true,
+      "result": {
+        "entry_price": "68584",
+        "fee_paid": "0.002",
+        "leverage": 2,
+        "liquidation_price": "34360.687082165301202201",
+        "margin": "1",
+        "market": "BTC_USDT",
+        "position_id": 6255263,
+        "quote_price": 68584,
+        "side": "long",
+        "size_wusdt": "2",
+        "stop_loss": "60000",
+        "tx": "0xc8597fba230f8625b77ecdc399b33b204360fb56c771678e013cd4550735ee02"
+      },
+      "text": "Opened LONG BTC 2x at 68,584.00 wUSDT\n  Position           #6255263\n  Margin             1 wUSDT (isolated)\n  Size               2 wUSDT ≈ 2.91613e-05 BTC\n  Fee paid           0.002 wUSDT\n  Liquidation        34,360.69 wUSDT (-49.90%) — at this price the whole margin is lost\n  Take profit        none\n  Stop loss          60,000.00\n  Transaction        0xc8597fba230f8625b77ecdc399b33b204360fb56c771678e013cd4550735ee02\n",
+      "transactions": [
+        {
+          "label": "approve wUSDT for the futures contract",
+          "hash": "0xc4780a3728ae45a3f7d2297a5f9ee0b48fa6891848aec91cddb3c686214e0e6b",
+          "block": 5904336,
+          "gas_used": 29019,
+          "fee_eln": "0.000058038",
+          "explorer": "https://explorer.elyon.network/tx/0xc4780a3728ae45a3f7d2297a5f9ee0b48fa6891848aec91cddb3c686214e0e6b"
+        },
+        {
+          "label": "open long BTC 2x",
+          "hash": "0xc8597fba230f8625b77ecdc399b33b204360fb56c771678e013cd4550735ee02",
+          "block": 5904337,
+          "gas_used": 451092,
+          "fee_eln": "0.000902184",
+          "explorer": "https://explorer.elyon.network/tx/0xc8597fba230f8625b77ecdc399b33b204360fb56c771678e013cd4550735ee02"
+        }
+      ]
+    },
+    {
+      "index": 2,
+      "command": "futures.positions",
+      "ok": true,
+      "result": {
+        "count": 1,
+        "positions": [
+          {
+            "id": 6255263,
+            "contract": "0x808192f498a762fc422cdf387646775414cf7bb2",
+            "router": "0x58a99015b2ddbf98e5b4227449f4a0419c432682",
+            "held_by": "tp-sl-router",
+            "market": "BTC_USDT",
+            "market_id": 0,
+            "long": true,
+            "side": "long",
+            "open": true,
+            "opened_at": "2026-11-13T16:12:29Z",
+            "leverage": 2,
+            "fee_ppm": 1000,
+            "partial_close_available": true,
+            "margin": "1",
+            "size_wusdt": "2",
+            "size_base": "0.000029161320424588",
+            "entry_price": "68584",
+            "liquidation_price": "34360.687082165301202201",
+            "take_profit": null,
+            "stop_loss": "60000",
+            "last_price": 68572.2,
+            "mark_price": 68573.4,
+            "unrealized_pnl": "-0.000344",
+            "roe_pct": "-0.03",
+            "funding_owed": "0",
+            "close_fee": "0.001999",
+            "payout_if_closed_now": "0.997657"
+          }
+        ]
+      },
+      "text": "#6255263  LONG BTC_USDT 2x  (isolated)\n  Margin / size      1 wUSDT / 2 wUSDT ≈ 0.00002916 BTC\n  Entry / last       68,584.00 / 68,572.20\n  Liquidation        34,360.69\n  PnL                -0.000344 wUSDT (-0.03% on margin)\n  If closed now      receive ≈ 0.997657 wUSDT (after 0.001999 fee and 0 funding)\n  TP / SL            none / 60000\n\n"
+    },
+    {
+      "index": 3,
+      "command": "futures.close-all",
+      "ok": true,
+      "result": {
+        "closed": 1,
+        "failed": 0,
+        "results": [
+          {
+            "exit_price": "68572.199999999997089617",
+            "fee": "0.001999",
+            "funding": "0",
+            "market": "BTC_USDT",
+            "ok": true,
+            "partial": false,
+            "payout": "0.997657",
+            "pnl": "-0.000344",
+            "position_id": 6255263,
+            "side": "long",
+            "tx": "0xae62f1e6f77a15b4e295ffd52d018eabf89cba64befec2724a25a0ba70c8459a"
+          }
+        ]
+      },
+      "text": "Closed position #6255263 (LONG BTC_USDT)\n  Exit price         68,572.20 wUSDT (entry 68,584.00)\n  PnL                -0.000344 wUSDT\n  Funding            0 wUSDT\n  Closing fee        0.001999 wUSDT\n  Paid to wallet     0.997657 wUSDT\n  Transaction        0xae62f1e6f77a15b4e295ffd52d018eabf89cba64befec2724a25a0ba70c8459a\n\nClosed 1 position(s).\n",
+      "transactions": [
+        {
+          "label": "close position #6255263",
+          "hash": "0xae62f1e6f77a15b4e295ffd52d018eabf89cba64befec2724a25a0ba70c8459a",
+          "block": 5904339,
+          "gas_used": 161699,
+          "fee_eln": "0.000323398",
+          "explorer": "https://explorer.elyon.network/tx/0xae62f1e6f77a15b4e295ffd52d018eabf89cba64befec2724a25a0ba70c8459a"
+        }
+      ]
+    },
+    {
+      "index": 4,
+      "command": "wallet.balance",
+      "ok": true,
+      "result": {
+        "address": "0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7",
+        "balances": [
+          {
+            "symbol": "wUSDT",
+            "name": "Tether USD (Elyon)",
+            "address": "0x3d768c1838188dca395489ae5d6b2c897a936f61",
+            "decimals": 6,
+            "kind": "wusdt",
+            "base": "USDT",
+            "balance": "5.975333",
+            "balance_raw": "5975333",
+            "value_wusdt": "5.97"
+          }
+        ],
+        "tokens_checked": 1,
+        "total_value_wusdt": "5.97"
+      },
+      "text": "Balances of 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7\n\n  wUSDT                          5.975333   \n\n  Total value (tokens with a market price, ELN excluded) ≈ 5.97 wUSDT\n"
+    }
+  ]
+}
+
+[HTTP 200]
+
+$ cat batch-demo.json
+{
+  "stop_on_error": true,
+  "commands": [
+    {"command": "spot price", "params": {"market": "BTC"}},
+    {"command": "spot quote", "params": {"side": "buy", "market": "BTC", "spend": "1"}},
+    {"command": "spot buy", "params": {"market": "ELN", "spend": "1"}},
+    {"command": "futures positions"}
+  ]
+}
+$ elyon run batch-demo.json
+── step 1: spot.price — OK
+wBTC (Bitcoin) / wUSDT
+  Pool price         68,671.66 wUSDT
+  Global price       68,623.26 wUSDT
+  Difference         +7.1 bps (in line, ready to trade)
+  24h change         -4.78%
+  24h volume         1,365,936 wUSDT
+  Pool reserves      17.781347 wBTC / 1,221,074.64 wUSDT
+  Pool fee           0.30 % per trade
+── step 2: spot.quote — OK
+Quote: wUSDT → wBTC
+  You pay            1 wUSDT
+  You receive about  0.000014518349 wBTC
+  Minimum received   0.000014445758 wBTC (slippage 0.50%)
+  Price impact       0.00%
+  Pool fee           0.30% of what you pay
+  Pool price         68,671.66 wUSDT per wBTC (global 68,623.26)
+── step 3: spot.buy — FAILED
+  ELN is not traded on ElyonDex until its exchange listing. To pay network fees, buy ELN for gas at a fixed price with wUSDT: `elyon gas buy <ELN amount>`.
+── step 4: futures positions — SKIPPED
+[exit code 1]
+

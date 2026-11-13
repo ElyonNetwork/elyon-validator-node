@@ -1,0 +1,126 @@
+$ curl -s -X GET http://127.0.0.1:7457/v1/wallet/balance -H "Authorization: Bearer $ELYON_TOKEN"
+{
+  "ok": true,
+  "command": "wallet.balance",
+  "result": {
+    "address": "0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7",
+    "balances": [
+      {
+        "symbol": "ELN",
+        "name": "Elyon (native coin, pays gas)",
+        "address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "kind": "native",
+        "balance": "0.390001668",
+        "balance_raw": "390001668000000000"
+      },
+      {
+        "symbol": "wUSDT",
+        "name": "Tether USD (Elyon)",
+        "address": "0x3d768c1838188dca395489ae5d6b2c897a936f61",
+        "decimals": 6,
+        "kind": "wusdt",
+        "base": "USDT",
+        "balance": "5.386546",
+        "balance_raw": "5386546",
+        "value_wusdt": "5.38"
+      }
+    ],
+    "tokens_checked": 1406,
+    "total_value_wusdt": "5.38"
+  },
+  "text": "Balances of 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7\n\n  ELN                          0.39000166   \n  wUSDT                          5.386546   \n\n  Total value (tokens with a market price, ELN excluded) ≈ 5.38 wUSDT\n  1406 tokens checked; zero balances hidden (use --all to list them).\n"
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/wallet/send -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"all","token":"wUSDT","to":"0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27"}'
+{
+  "ok": true,
+  "command": "wallet.send",
+  "result": {
+    "amount": "5.386546",
+    "to": "0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27",
+    "token": "wUSDT",
+    "token_address": "0x3D768c1838188DcA395489ae5D6b2C897A936f61",
+    "tx": "0x835124e14f98d733a3e4690faaa8a987e3bd3c665d115f3951e35ec5b3a064de"
+  },
+  "text": "Sent 5.386546 wUSDT to 0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27\n  Transaction        0x835124e14f98d733a3e4690faaa8a987e3bd3c665d115f3951e35ec5b3a064de\n  Network fee        0.000059282 ELN\n  Explorer           https://explorer.elyon.network/tx/0x835124e14f98d733a3e4690faaa8a987e3bd3c665d115f3951e35ec5b3a064de\n",
+  "transactions": [
+    {
+      "label": "send 5.386546 wUSDT",
+      "hash": "0x835124e14f98d733a3e4690faaa8a987e3bd3c665d115f3951e35ec5b3a064de",
+      "block": 5904391,
+      "gas_used": 29641,
+      "fee_eln": "0.000059282",
+      "explorer": "https://explorer.elyon.network/tx/0x835124e14f98d733a3e4690faaa8a987e3bd3c665d115f3951e35ec5b3a064de"
+    }
+  ]
+}
+
+[HTTP 200]
+
+$ curl -s -X POST http://127.0.0.1:7457/v1/wallet/send -H "Authorization: Bearer $ELYON_TOKEN" -H "Content-Type: application/json" -d '{"amount":"all","token":"ELN","to":"0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27"}'
+{
+  "ok": true,
+  "command": "wallet.send",
+  "result": {
+    "amount": "0.389900385999853",
+    "to": "0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27",
+    "token": "ELN",
+    "token_address": null,
+    "tx": "0xf9645e9534a5f50fe38048bcd82bef23719752578ba6cfe70ba6f219bf75d5e5"
+  },
+  "text": "Sent 0.389900385999853 ELN to 0x0E0bB1BDEc7248eBac6eFBE624ceAEd86bda3e27\n  Transaction        0xf9645e9534a5f50fe38048bcd82bef23719752578ba6cfe70ba6f219bf75d5e5\n  Network fee        0.000042 ELN\n  Explorer           https://explorer.elyon.network/tx/0xf9645e9534a5f50fe38048bcd82bef23719752578ba6cfe70ba6f219bf75d5e5\n",
+  "warnings": [
+    "Low gas: the wallet holds only 0.000000000000147 ELN. Send a little ELN to 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7 or run `elyon gas buy 0.5`."
+  ],
+  "transactions": [
+    {
+      "label": "send 0.389900385999853 ELN",
+      "hash": "0xf9645e9534a5f50fe38048bcd82bef23719752578ba6cfe70ba6f219bf75d5e5",
+      "block": 5904392,
+      "gas_used": 21000,
+      "fee_eln": "0.000042",
+      "explorer": "https://explorer.elyon.network/tx/0xf9645e9534a5f50fe38048bcd82bef23719752578ba6cfe70ba6f219bf75d5e5"
+    }
+  ]
+}
+
+[HTTP 200]
+
+$ curl -s -X GET http://127.0.0.1:7457/v1/wallet/balance -H "Authorization: Bearer $ELYON_TOKEN"
+{
+  "ok": true,
+  "command": "wallet.balance",
+  "result": {
+    "address": "0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7",
+    "balances": [
+      {
+        "symbol": "ELN",
+        "name": "Elyon (native coin, pays gas)",
+        "address": "0x0000000000000000000000000000000000000000",
+        "decimals": 18,
+        "kind": "native",
+        "balance": "0.000000000000147",
+        "balance_raw": "147000"
+      },
+      {
+        "symbol": "wUSDT",
+        "name": "Tether USD (Elyon)",
+        "address": "0x3d768c1838188dca395489ae5d6b2c897a936f61",
+        "decimals": 6,
+        "kind": "wusdt",
+        "base": "USDT",
+        "balance": "0",
+        "balance_raw": "0"
+      }
+    ],
+    "tokens_checked": 1406,
+    "total_value_wusdt": "0.00"
+  },
+  "text": "Balances of 0xe60Cb95FbB1647AfB982C4f2c5D19F475fd7ebD7\n\n  ELN                   0.000000000000147   \n  wUSDT                                 0   \n\n  Total value (tokens with a market price, ELN excluded) ≈ 0.00 wUSDT\n  1406 tokens checked; zero balances hidden (use --all to list them).\n"
+}
+
+[HTTP 200]
+

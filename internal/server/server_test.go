@@ -287,3 +287,27 @@ func TestConstantTimeEqual(t *testing.T) {
 		t.Fatalf("token format %q", tok)
 	}
 }
+
+func TestIdleTimerTouchedByAnyCommand(t *testing.T) {
+	keystore.ScryptN = 1 << 14
+	s, tok := newTestServer(t, "127.0.0.1:7457", nil, 1000)
+	if _, err := keystore.ImportMnemonic(s.App.Home, "test test test test test test test test test test test junk", []byte("a long test passphrase"), time.Now()); err != nil {
+		t.Fatal(err)
+	}
+	h := s.Handler()
+	if r := do(t, h, "POST", "/v1/unlock", tok, `{"password":"a long test passphrase"}`); !r.env.OK {
+		t.Fatal(r.raw)
+	}
+	time.Sleep(60 * time.Millisecond)
+	before := s.App.Session.IdleFor()
+	do(t, h, "GET", "/v1/version", tok, "")
+	if after := s.App.Session.IdleFor(); after >= before {
+		t.Fatalf("a read-only command did not reset the idle timer (%s → %s)", before, after)
+	}
+	do(t, h, "GET", "/v1/version", "elyon_wrong_token_wrong_token_wrong_token_wrong_tok", "")
+	time.Sleep(30 * time.Millisecond)
+	if s.App.Session.IdleFor() < 30*time.Millisecond {
+		t.Fatal("an unauthenticated request must not count as activity")
+	}
+	s.App.Session.Lock()
+}

@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -52,6 +53,10 @@ func findDaemon(a *app.App) *remote {
 	}
 	var d daemonInfo
 	if json.Unmarshal(b, &d) != nil || !strings.HasPrefix(d.URL, "http://") {
+		return nil
+	}
+	// The CLI sends the API token (and, for a transfer, the password) to this URL: only ever to this machine.
+	if u, err := url.Parse(d.URL); err != nil || !isLoopbackHost(u.Hostname()) {
 		return nil
 	}
 	tok, err := apitoken.Load(a.Home)
@@ -115,3 +120,11 @@ func (r *remote) batch(raw []byte) (*app.BatchEnvelope, error) {
 }
 
 func (r *remote) String() string { return fmt.Sprintf("daemon %s", r.url) }
+
+func isLoopbackHost(h string) bool {
+	if h == "localhost" {
+		return true
+	}
+	ip := net.ParseIP(h)
+	return ip != nil && ip.IsLoopback()
+}

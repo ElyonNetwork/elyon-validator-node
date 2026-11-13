@@ -278,6 +278,7 @@ func (s *Server) authed(h func(w http.ResponseWriter, r *http.Request, ip string
 			fail(w, errs.New(errs.Unauthorized, "Wrong API token.").WithHint("Show the current token with `elyon api-token show`."))
 			return
 		}
+		s.App.Session.Touch() // activity: restarts the idle auto-lock timer
 		h(w, r, ip)
 	}
 }

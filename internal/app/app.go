@@ -138,6 +138,15 @@ func (s *Session) Peek() *keystore.Unlocked {
 	return s.u
 }
 
+// Touch restarts the idle timer (any authenticated command counts as activity).
+func (s *Session) Touch() {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	if s.u != nil {
+		s.lastUsed = time.Now()
+	}
+}
+
 // Lock wipes the key from memory.
 func (s *Session) Lock() {
 	s.mu.Lock()
@@ -429,7 +438,10 @@ func (a *App) Run(ctx context.Context, cmd *Command, p Params, req Request) (res
 			_, err := x.Unlocked()
 			return res, err
 		}
-		// One signing command at a time per process: nonces and balance checks stay consistent.
+	}
+	// One state-changing command at a time per process: nonces, balance checks and wallet settings stay
+	// consistent. lock/unlock are exempt so the "lock now" panic button never waits.
+	if !cmd.ReadOnly && cmd.Name != "lock" && cmd.Name != "unlock" {
 		a.txMu.Lock()
 		defer a.txMu.Unlock()
 	}

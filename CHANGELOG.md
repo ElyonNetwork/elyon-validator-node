@@ -15,6 +15,7 @@ build; only how it is built and documented changed:
 - New examples: Ruby, and the Windows Command Prompt (`curl.exe`, read-only).
 - `scripts/build.sh` builds with `-buildvcs=false` and reads the release commit and date from a `RELEASE` file
   when there is no `.git`, so the git tag and the source archive both rebuild the published binaries byte for byte.
+- The Docker image built from the source archive contains exactly the published Linux x86-64 binary.
 
 ## [0.1.0] — 2026-11-13
 

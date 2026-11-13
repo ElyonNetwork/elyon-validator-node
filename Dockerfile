@@ -11,10 +11,14 @@ COPY go.mod go.sum ./
 RUN go mod download && go mod verify
 COPY cmd ./cmd
 COPY internal ./internal
-COPY VERSION ./
+# RELEASE exists only in the source archive: it names the release commit and date, so the image gets the same
+# binary as the published Linux build (same flags as scripts/build.sh).
+COPY VERSION RELEASE* ./
 ARG COMMIT=unknown
 ARG BUILD_DATE=unknown
-RUN CGO_ENABLED=0 go build -trimpath -buildvcs=false \
+RUN if [ -f RELEASE ] && [ "$COMMIT" = unknown ]; then \
+      COMMIT="$(sed -n 's/^commit=//p' RELEASE)"; BUILD_DATE="$(sed -n 's/^date=//p' RELEASE)"; fi \
+ && CGO_ENABLED=0 go build -trimpath -buildvcs=false \
       -ldflags "-s -w -buildid= -X github.com/elyon-chain/elyon-bot/internal/version.Version=$(cat VERSION) -X github.com/elyon-chain/elyon-bot/internal/version.Commit=${COMMIT} -X github.com/elyon-chain/elyon-bot/internal/version.Date=${BUILD_DATE}" \
       -o /out/elyon ./cmd/elyon
 

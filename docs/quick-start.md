@@ -78,8 +78,9 @@ elyon api-token show
 ```
 
 Your bot now calls `http://127.0.0.1:7457` — for example `POST /v1/futures/open` with a JSON body — from any
-programming language. Ready-made bots in Python, JavaScript, Go, C#, Java, PHP, Rust, curl and PowerShell are in
-[Code examples](examples.md); every endpoint is in the [Local HTTP API](http-api.md) reference.
+programming language. [Code examples](examples.md) has complete, tested bots in Python, JavaScript (Node.js), Go, C#,
+Java, PHP, Rust, Ruby, PowerShell, Bash and the Windows Command Prompt, with the exact install and run steps for
+Windows, macOS, Linux and Docker. Every endpoint is in the [Local HTTP API](http-api.md) reference.
 
 ## Keep it safe
 

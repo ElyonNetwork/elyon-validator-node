@@ -4,8 +4,15 @@
 set -eu
 cd "$(dirname "$0")/.."
 VERSION="${1:-$(cat VERSION)}"
-COMMIT="$(git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)"
-DATE="$(git log -1 --format=%cI 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
+# Release metadata goes into the binary (`elyon version`). A source archive has no .git: it carries the release's
+# commit and date in its RELEASE file instead, so building it gives byte-identical binaries to the published ones.
+if [ -f RELEASE ]; then
+  COMMIT="$(sed -n 's/^commit=//p' RELEASE)"
+  DATE="$(sed -n 's/^date=//p' RELEASE)"
+else
+  COMMIT="$(git rev-parse --short=12 HEAD 2>/dev/null || echo unknown)"
+  DATE="$(git log -1 --format=%cI 2>/dev/null || date -u +%Y-%m-%dT%H:%M:%SZ)"
+fi
 PKG=github.com/elyon-chain/elyon-bot/internal/version
 LDFLAGS="-s -w -buildid= -X $PKG.Version=$VERSION -X $PKG.Commit=$COMMIT -X $PKG.Date=$DATE"
 rm -rf dist && mkdir -p dist

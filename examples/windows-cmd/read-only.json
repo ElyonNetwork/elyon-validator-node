@@ -1,0 +1,9 @@
+{
+  "stop_on_error": false,
+  "commands": [
+    {"command": "futures price", "params": {"market": "ETH"}},
+    {"command": "spot price", "params": {"market": "BTC"}},
+    {"command": "futures positions"},
+    {"command": "wallet balance"}
+  ]
+}

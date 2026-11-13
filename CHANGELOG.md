@@ -2,6 +2,17 @@
 
 All notable changes to elyon-bot. Versions follow [Semantic Versioning](https://semver.org/).
 
+## Unreleased (documentation only, the 0.1.0 binaries are unchanged)
+
+- Guides with screenshots for Windows, macOS, Linux and Docker; quick start, funding, backup and restore,
+  troubleshooting.
+- `docs/examples.md`: the complete code of every example with install and run steps per system, a step-by-step
+  Python-on-Windows walkthrough, the command-line route, batch files and bots in their own Docker container
+  (generated from `examples/` by `scripts/gen-examples-doc.py`).
+- New examples: Ruby, and the Windows Command Prompt (`curl.exe`, read-only).
+- `scripts/build.sh` reads the release commit and date from a `RELEASE` file when there is no `.git`, so the
+  source archive rebuilds the published binaries byte for byte.
+
 ## [0.1.0] — 2026-11-13
 
 First release.

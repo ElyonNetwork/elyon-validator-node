@@ -59,8 +59,9 @@ go test ./...                  # unit tests
 scripts/build.sh               # dist/ with all five binaries and SHA256SUMS
 ```
 
-The build is reproducible (`CGO_ENABLED=0`, `-trimpath`, no build id), so you can compare your own
-`SHA256SUMS` with the published one.
+The build is reproducible (`CGO_ENABLED=0`, `-trimpath`, no build id, Go toolchain pinned to 1.27.4 in `go.mod`), so
+you can compare your own `SHA256SUMS` with the published one. Build the release itself: the tag
+(`git checkout v0.1.0`) or the unpacked source archive, which carries the release commit in its `RELEASE` file.
 
 ## Quick start
 
@@ -112,8 +113,9 @@ documented opt-in with a warning; see [SECURITY.md](SECURITY.md#unattended-mode)
 | Automation | `serve`, `unlock`, `lock`, `run <batch.json>`, `tx <hash>`, `commands` |
 
 Full reference with examples and real output: [docs/commands.md](docs/commands.md).
-HTTP API reference: [docs/http-api.md](docs/http-api.md). Sample bots in nine languages: [examples/](examples)
-and [docs/examples.md](docs/examples.md).
+HTTP API reference: [docs/http-api.md](docs/http-api.md). Sample bots in Python, JavaScript (Node.js), Go, C#, Java,
+PHP, Rust, Ruby, PowerShell, Bash and the Windows Command Prompt: [examples/](examples), with the complete code and
+how to run it on every system in [docs/examples.md](docs/examples.md).
 
 ## What the client mirrors from the website
 

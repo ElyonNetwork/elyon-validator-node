@@ -14,3 +14,6 @@ daemon.json
 *.password
 .e2e/
 .env
+
+# written only into source archives (release commit and date for scripts/build.sh)
+/RELEASE
